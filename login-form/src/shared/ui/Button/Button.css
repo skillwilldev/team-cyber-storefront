@@ -1,0 +1,89 @@
+/* ============================================
+   BUTTON COMPONENT
+   States: default, hover, focus, disabled, loading
+   Variants: primary, secondary
+   ============================================ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  user-select: none;
+  position: relative;
+  text-decoration: none;
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--color-primary-ring);
+  outline-offset: 1px;
+}
+
+/* --- Primary variant --- */
+.button--primary {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
+}
+
+.button--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.button--primary:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-xs);
+}
+
+.button--primary:disabled {
+  background-color: #A5B4FC;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* --- Secondary variant --- */
+.button--secondary {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-xs);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: #F9FAFB;
+  border-color: var(--color-border-hover);
+}
+
+.button--secondary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button--secondary:disabled {
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+/* --- Loading state --- */
+.button--loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.button__spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}

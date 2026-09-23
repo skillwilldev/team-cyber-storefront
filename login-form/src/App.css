@@ -1,0 +1,66 @@
+/* ============================================
+   APP LAYOUT
+   Centers the auth card on the page
+   ============================================ */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #EEF2FF 0%, #F1F5F9 50%, #F0FDF4 100%);
+}
+
+.app__card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: var(--space-8) var(--space-6);
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .app__card {
+    padding: var(--space-10) var(--space-8);
+  }
+}
+
+@media (max-width: 400px) {
+  .app {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .app__card {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-6) var(--space-5);
+  }
+}
+
+/* Loading screen */
+.auth-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 200px;
+  color: var(--color-primary);
+}
+
+.auth-loading__text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}

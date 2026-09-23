@@ -1,0 +1,52 @@
+/* ============================================
+   FORM FIELD COMPONENT
+   Label + children (input) + error message
+   ============================================ */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+}
+
+.form-field__label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+}
+
+.form-field__required {
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+.form-field__error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-error);
+  line-height: var(--line-height-normal);
+  margin-top: 2px;
+  animation: formFieldErrorSlideIn 200ms ease-out;
+}
+
+.form-field__error-icon {
+  flex-shrink: 0;
+}
+
+@keyframes formFieldErrorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
