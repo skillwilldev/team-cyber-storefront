@@ -1,7 +1,7 @@
 /**
  * Barrel export for auth feature.
  */
-export { AuthProvider, useAuth } from './context/AuthContext';
+export { AuthProvider } from './context/AuthProvider';
 export { default as ProtectedRoute } from './components/ProtectedRoute';
 export { default as LoginPage } from './pages/LoginPage/LoginPage';
 export { default as RegisterPage } from './pages/RegisterPage/RegisterPage';

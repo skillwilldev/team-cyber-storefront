@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@features/auth/context/AuthContext';
+import { useAuth } from '@features/auth/hooks/useAuth';
 import { Button, IconShield, IconLogOut } from '@shared/ui';
 import './HomePage.css';
 

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiRequest, getToken, setToken, removeToken } from '@shared/api/apiClient';
+import { AuthContext } from './AuthContext';
 
 /**
  * Auth Context — three states:
@@ -10,17 +11,16 @@ import { apiRequest, getToken, setToken, removeToken } from '@shared/api/apiClie
  * This prevents login screen flash on page refresh.
  */
 
-const AuthContext = createContext(null);
+// export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !!getToken());
 
   // Check session on app startup
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      setIsLoading(false);
       return;
     }
 
@@ -64,16 +64,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-/**
- * Hook to access auth context.
- * Throws if used outside AuthProvider.
- */
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { registerSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
-import { useAuth } from '@features/auth/context/AuthContext';
+import { useAuth } from '@features/auth/hooks/useAuth';
 import { Button, Input, PasswordInput, FormField, Alert, IconMail, IconUser } from '@shared/ui';
 import '../LoginPage/LoginPage.css';
 import './RegisterPage.css';

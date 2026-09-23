@@ -1,7 +1,7 @@
-import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@features/auth/context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { IconLoader } from '@shared/ui';
+
 
 /**
  * ProtectedRoute — wraps pages that require authentication.

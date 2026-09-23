@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Shared SVG Icons — no external dependencies.
  * Each icon accepts: className, size (default 20)

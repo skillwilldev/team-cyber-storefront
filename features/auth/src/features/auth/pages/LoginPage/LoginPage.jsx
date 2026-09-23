@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
-import { useAuth } from '@features/auth/context/AuthContext';
+import { useAuth } from '@features/auth/hooks/useAuth';
 import { Button, Input, PasswordInput, FormField, Alert, IconMail } from '@shared/ui';
 import './LoginPage.css';
 
@@ -30,7 +30,7 @@ export default function LoginPage() {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitted },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
     mode: 'onSubmit',
