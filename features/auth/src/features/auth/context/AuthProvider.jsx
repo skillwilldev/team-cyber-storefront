@@ -45,9 +45,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Logout: remove token + clear user
-  const logout = useCallback(() => {
-    removeToken();
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await apiRequest('/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({
+          logoutAt: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error('err logout', error);
+    } finally {
+      removeToken();
+      setUser(null);
+    }
   }, []);
 
   const value = {
