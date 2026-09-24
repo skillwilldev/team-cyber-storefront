@@ -52,6 +52,7 @@ export default function LoginPage() {
 
       login(data.accessToken, data.user);
       console.log('Login successful:', data.user);
+      // console.log('accessToken: ', data.accessToken);
       navigate(from, { replace: true });
     } catch (err) {
       if (err.code === 'INVALID_CREDENTIALS' || err.status === 401) {
