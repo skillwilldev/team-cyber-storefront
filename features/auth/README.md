@@ -57,48 +57,51 @@ This project implements three authentication screens — **Login**, **Register**
 
 ```
 src/
-├── main.jsx                              # App entry point
-├── index.css                             # Design tokens + global CSS reset
-├── App.jsx                               # Root: AuthProvider + BrowserRouter + Routes
-├── App.css                               # Page layout (centered card, gradient background)
+├── main.jsx                            # App entry point
+├── index.css                           # Design tokens + global CSS reset
+├── App.jsx                             # Root: AuthProvider + BrowserRouter + Routes
+├── App.css                             # Page layout (centered card, gradient background)
 │
-├── shared/                               # Reusable across all features
-│   ├── ui/                               # UI component library
+├── shared/                             # Reusable across all features
+│   ├── ui/                             # UI component library
 │   │   ├── Icons/
-│   │   │   └── Icons.jsx                 # 13 SVG icons as React components
+│   │   │   └── Icons.jsx               # 13 SVG icons as React components
 │   │   ├── Button/
-│   │   │   ├── Button.jsx                # Primary/secondary variants, loading state
+│   │   │   ├── Button.jsx              # Primary/secondary variants, loading state
 │   │   │   └── Button.css
 │   │   ├── Input/
-│   │   │   ├── Input.jsx                 # Text input with icon, error state, forwardRef
+│   │   │   ├── Input.jsx               # Text input with icon, error state, forwardRef
 │   │   │   └── Input.css
 │   │   ├── PasswordInput/
-│   │   │   ├── PasswordInput.jsx         # Password field with show/hide toggle, forwardRef
+│   │   │   ├── PasswordInput.jsx       # Password field with show/hide toggle, forwardRef
 │   │   │   └── PasswordInput.css
 │   │   ├── FormField/
-│   │   │   ├── FormField.jsx             # Label + input wrapper + error message
+│   │   │   ├── FormField.jsx           # Label + input wrapper + error message
 │   │   │   └── FormField.css
 │   │   ├── Alert/
-│   │   │   ├── Alert.jsx                 # Success/error/warning banner
+│   │   │   ├── Alert.jsx               # Success/error/warning banner
 │   │   │   └── Alert.css
-│   │   └── index.js                      # Barrel export for all UI components
+│   │   └── index.js                    # Barrel export for all UI components
 │   │
 │   ├── api/
-│   │   └── apiClient.js                  # Centralized fetch wrapper, token management
+│   │   └── apiClient.js                # Centralized fetch wrapper, token management
 │   │
 │   └── lib/
-│       └── validators.js                 # 5 Zod schemas for all forms
+│       └── validators.js               # 5 Zod schemas for all forms
 │
 ├── features/
 │   └── auth/
-│       ├── context/
-│       │   └── AuthContext.jsx            # Auth state provider (3 states)
 │       ├── components/
-│       │   └── ProtectedRoute.jsx         # Route guard with redirect memory
+│       │   └── ProtectedRoute.jsx      # Route guard with redirect memory
+│       ├── context/
+│       │   ├── AuthContext.js          # Auth context definition
+│       │   └── AuthProvider.jsx        # Auth state provider component
+│       ├── hooks/
+│       │   └── useAuth.js              # Custom hook to consume auth context
 │       ├── pages/
 │       │   ├── LoginPage/
 │       │   │   ├── LoginPage.jsx
-│       │   │   └── LoginPage.css          # Shared auth page styles (used by all pages)
+│       │   │   └── LoginPage.css       # Shared auth page styles (used by all pages)
 │       │   ├── RegisterPage/
 │       │   │   ├── RegisterPage.jsx
 │       │   │   └── RegisterPage.css
@@ -106,12 +109,12 @@ src/
 │       │   │   ├── ForgotPasswordPage.jsx # 3-step flow on a single URL
 │       │   │   └── ForgotPasswordPage.css
 │       │   └── HomePage/
-│       │       ├── HomePage.jsx           # Minimal post-login page
+│       │       ├── HomePage.jsx        # Minimal post-login page
 │       │       └── HomePage.css
-│       └── index.js                       # Barrel export for auth feature
+│       └── index.js                    # Barrel export for auth feature
 │
-├── .env                                   # VITE_API_URL
-└── vite.config.js                         # Vite config with path aliases
+├── .env                                # VITE_API_URL
+└── vite.config.js                      # Vite config with path aliases
 ```
 
 ---
