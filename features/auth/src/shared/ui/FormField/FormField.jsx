@@ -1,4 +1,3 @@
-import React from 'react';
 import { IconAlertCircle } from '../Icons/Icons';
 import './FormField.css';
 

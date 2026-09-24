@@ -1,4 +1,3 @@
-import React from 'react';
 import { IconCheckCircle, IconAlertCircle, IconTerminal } from '../Icons/Icons';
 import './Alert.css';
 

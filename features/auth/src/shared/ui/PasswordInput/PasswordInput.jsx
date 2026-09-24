@@ -1,29 +1,27 @@
-import React, { useState, forwardRef } from 'react';
+import { useState } from 'react';
 import Input from '../Input/Input';
 import { IconLock, IconEye, IconEyeOff } from '../Icons/Icons';
 import './PasswordInput.css';
 
 /**
  * Password input with show/hide toggle.
- * Uses forwardRef so React Hook Form's register() can attach its ref.
  *
  * @param {object} props
  * @param {string} [props.id]
  * @param {string} [props.placeholder]
  * @param {string} [props.error]
  * @param {boolean} [props.disabled=false]
+ * @param {React.Ref} [props.ref]
  * @param {object} rest - spread from RHF register()
  */
-const PasswordInput = forwardRef(function PasswordInput(
-  {
-    id,
-    placeholder = '••••••••',
-    error,
-    disabled = false,
-    ...rest
-  },
-  ref
-) {
+function PasswordInput({
+  id,
+  placeholder = '••••••••',
+  error,
+  disabled = false,
+  ref, // prop
+  ...rest
+}) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -49,6 +47,6 @@ const PasswordInput = forwardRef(function PasswordInput(
       </button>
     </div>
   );
-});
+}
 
 export default PasswordInput;
