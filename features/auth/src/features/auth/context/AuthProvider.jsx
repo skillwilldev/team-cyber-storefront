@@ -46,6 +46,11 @@ export function AuthProvider({ children }) {
 
   // Logout: remove token + clear user
   const logout = useCallback(async () => {
+    if (!getToken()) {
+      removeToken();
+      setUser(null);
+      return;
+    }
     try {
       await apiRequest('/auth/logout', {
         method: 'POST',
