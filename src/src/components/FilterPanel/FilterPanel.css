@@ -1,0 +1,78 @@
+.filter + .filter {
+  margin-top: 24px;
+}
+.filter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+  text-align: left;
+}
+.filter__body {
+  padding-top: 16px;
+}
+.filter__body--price {
+  padding-top: 24px;
+  padding-bottom: 16px;
+}
+@media (max-width: 1023px) {
+  .filter__body {
+    padding-top: 24px;
+  }
+}
+.filter__scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 24px;
+}
+.filter__scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.filter__scroll::-webkit-scrollbar-thumb {
+  background: #000;
+  border-radius: 3px;
+}
+.filter__scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #000 transparent;
+}
+.filter__search {
+  position: relative;
+}
+.filter__search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 48px;
+  border-radius: 8px;
+  background: var(--c-input);
+  font-size: 14px;
+  font-weight: 500;
+}
+.filter__search input::placeholder {
+  color: #656565;
+  opacity: 0.5;
+}
+.filter__search label {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  display: flex;
+  color: #656565;
+}
+.filter__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-bottom: 4px;
+}
+.filter__empty {
+  font-size: 14px;
+  color: var(--c-gray);
+}
