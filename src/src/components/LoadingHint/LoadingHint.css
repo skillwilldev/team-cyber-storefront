@@ -1,9 +1,0 @@
-.loading-hint {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: var(--c-surface);
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--c-gray-text);
-}

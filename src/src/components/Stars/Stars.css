@@ -1,8 +1,0 @@
-.stars {
-  display: inline-flex;
-  gap: 4px;
-  color: #ffb547;
-}
-.stars__empty {
-  color: #d9d9d9;
-}
