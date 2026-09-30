@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { useShop } from '@features/shop';
@@ -14,21 +14,51 @@ const NAV = [
   { label: 'Blog', to: '/blog' },
 ];
 
-/** Search box. Rendered with key={q from URL}, so the text follows the URL (logo click, "Reset filters"...). */
-function HeaderSearch({ initialQuery }) {
+const SEARCH_DELAY = 400; // ms — the request is sent when the user stops typing
+
+/**
+ * Search box. Typing updates the URL after SEARCH_DELAY (debounce), Enter searches immediately.
+ * The other filters (category, brand, sort...) stay in the URL; the page goes back to 1.
+ * The text follows the URL when it changes from outside (logo click, "Reset filters"...).
+ */
+function HeaderSearch({ urlQuery }) {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [query, setQuery] = useState(initialQuery);
+  const { pathname } = useLocation();
+  const [query, setQuery] = useState(urlQuery);
+  const [syncedUrlQuery, setSyncedUrlQuery] = useState(urlQuery);
+  const timer = useRef(null);
+
+  if (syncedUrlQuery !== urlQuery) {
+    setSyncedUrlQuery(urlQuery);
+    setQuery(urlQuery);
+  }
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const runSearch = (value, { force = false } = {}) => {
+    const q = value.trim();
+    // read the URL at the moment of searching, so filters changed while typing are not lost
+    const sp = new URLSearchParams(window.location.search);
+    if (!force && (sp.get('q') ?? '') === q) return;
+    if (q) sp.set('q', q);
+    else sp.delete('q');
+    sp.delete('page');
+    const search = sp.toString();
+    // while typing on the catalog, replace the entry so that history is not filled with "s", "so", "sof"...
+    navigate({ pathname: '/', search: search ? `?${search}` : '' }, { replace: pathname === '/' && !force });
+  };
+
+  const onChange = (e) => {
+    const { value } = e.target;
+    setQuery(value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => runSearch(value), SEARCH_DELAY);
+  };
 
   const onSearch = (e) => {
     e.preventDefault();
-    const q = query.trim();
-    const sp = new URLSearchParams();
-    const category = searchParams.get('category');
-    if (category) sp.set('category', category); // search inside the current category
-    if (q) sp.set('q', q);
-    const search = sp.toString();
-    navigate({ pathname: '/', search: search ? `?${search}` : '' });
+    clearTimeout(timer.current);
+    runSearch(query, { force: true });
   };
 
   return (
@@ -42,7 +72,7 @@ function HeaderSearch({ initialQuery }) {
         id="search"
         placeholder="Search"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={onChange}
       />
     </form>
   );
@@ -76,7 +106,7 @@ export default function Header() {
             <Link to="/" className="logo" aria-label="Cyber — home">
               <Logo />
             </Link>
-            <HeaderSearch key={urlQuery} initialQuery={urlQuery} />
+            <HeaderSearch urlQuery={urlQuery} />
           </div>
           <div className="header__nav">
             <nav aria-label="Main">

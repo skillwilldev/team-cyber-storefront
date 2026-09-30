@@ -3,11 +3,13 @@ import { useShop } from '@features/shop';
 import { formatPrice } from '../../lib/format';
 import { HeartIcon } from '../icons/icons';
 import ProductImage from '../ProductImage/ProductImage';
+import Stars from '../Stars/Stars';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
   const { isInWishlist, toggleWishlist } = useShop();
-  const { id, slug, title, image, price, oldPrice, discountPercent, currency, inStock } = product;
+  const { id, slug, title, brand, image, price, oldPrice, discountPercent, currency, rating, reviewsCount, inStock } =
+    product;
 
   const liked = isInWishlist(id);
 
@@ -26,10 +28,18 @@ export default function ProductCard({ product }) {
 
       <Link to={`/product/${slug}`} className="product-card__link">
         <div className="product-card__img">
-          <ProductImage src={image} alt="" width={160} height={160} loading="lazy" />
+          <ProductImage src={image} alt={title} width={160} height={160} loading="lazy" />
         </div>
+        {brand && <p className="product-card__brand">{brand}</p>}
         <h3 className="product-card__title">{title}</h3>
       </Link>
+
+      <p className="product-card__rating">
+        <Stars value={rating ?? 0} size={14} />
+        <span>
+          {Number(rating ?? 0).toFixed(1)} ({reviewsCount ?? 0})
+        </span>
+      </p>
 
       <p className="product-card__price">
         {formatPrice(price, currency)}

@@ -49,7 +49,6 @@ export default function RegisterPage() {
       });
 
       login(data.accessToken, data.user);
-      console.log('Registration successful:', data.user);
       navigate('/', { replace: true });
     } catch (err) {
       if (err.code === 'EMAIL_TAKEN' || err.status === 409) {

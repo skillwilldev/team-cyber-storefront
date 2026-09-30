@@ -139,6 +139,11 @@ export default function CatalogPage() {
             </div>
           )}
 
+          {data && items.length > 0 && (
+            <p className="catalog__range">
+              Showing {(data.page - 1) * data.limit + 1}–{(data.page - 1) * data.limit + items.length} of {data.total}
+            </p>
+          )}
           <Pagination page={Math.min(page, totalPages)} total={totalPages} onChange={setPage} />
         </section>
       </div>

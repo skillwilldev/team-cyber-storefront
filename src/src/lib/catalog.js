@@ -14,6 +14,7 @@ export const SORT_OPTIONS = [
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
   { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
   { value: 'popular', label: 'Most popular' },
   { value: 'title-asc', label: 'Name: A to Z' },
 ];

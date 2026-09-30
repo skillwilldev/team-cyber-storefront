@@ -109,3 +109,11 @@
   font-size: 14px;
   color: #656565;
 }
+
+.catalog__range {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 20px;
+  color: #656565;
+}

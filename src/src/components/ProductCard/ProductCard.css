@@ -127,3 +127,31 @@
     left: 12px;
   }
 }
+
+.product-card__brand {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #a0a0a0;
+  text-transform: uppercase;
+}
+.product-card__brand + .product-card__title {
+  margin-top: 4px;
+}
+.product-card__rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #6b6b6b;
+}
+@media (max-width: 1023px) {
+  .product-card__brand {
+    margin-top: 8px;
+  }
+}

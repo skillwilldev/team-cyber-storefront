@@ -8,7 +8,6 @@ import { parseParams, toSearchParams } from '../lib/catalog';
  */
 export function useCatalogParams() {
   const [sp, setSp] = useSearchParams();
-  console.log(sp);
   const params = useMemo(() => parseParams(sp), [sp]);
 
   return {
