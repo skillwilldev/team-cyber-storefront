@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import { useShop } from '@features/shop';
 import { BurgerIcon, CartIcon, HeartIcon, SearchIcon, UserIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
+import UserMenu from '../UserMenu/UserMenu';
 import './Header.css';
 
 const NAV = [
@@ -49,15 +51,22 @@ function HeaderSearch({ initialQuery }) {
 export default function Header() {
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const { wishlistCount, cartCount } = useShop();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const urlQuery = searchParams.get('q') ?? '';
   const closeMenu = () => setMenuOpen(false);
+  const handleLogout = async () => {
+    closeMenu();
+    await logout();
+    navigate('/', { replace: true });
+  };
   const isActive = (to) =>
     to === '/' ? !NAV.slice(1).some((item) => pathname.startsWith(item.to)) : pathname.startsWith(to);
 
   const profileTo = isAuthenticated ? '/account' : '/login';
-  const profileLabel = isAuthenticated ? `Account (${user?.name ?? 'profile'})` : 'Sign in';
+  const profileLabel = 'Sign in';
 
   return (
     <header className="header">
@@ -81,15 +90,24 @@ export default function Header() {
             </nav>
           </div>
           <div className="header__btns">
-            <button type="button" aria-label="Wishlist">
+            <button
+              type="button"
+              aria-label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : 'Wishlist'}
+            >
               <HeartIcon size={32} />
+              {wishlistCount > 0 && <span className="header__badge">{wishlistCount}</span>}
             </button>
-            <button type="button" aria-label="Cart">
+            <button type="button" aria-label={cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}>
               <CartIcon size={32} />
+              {cartCount > 0 && <span className="header__badge">{cartCount}</span>}
             </button>
-            <Link to={profileTo} className="header__profile" aria-label={profileLabel} title={profileLabel}>
-              <UserIcon size={32} />
-            </Link>
+            {isAuthenticated ? (
+              <UserMenu />
+            ) : (
+              <Link to={profileTo} className="header__profile" aria-label={profileLabel} title={profileLabel}>
+                <UserIcon size={32} />
+              </Link>
+            )}
           </div>
           <button
             type="button"
@@ -119,6 +137,13 @@ export default function Header() {
                   {isAuthenticated ? 'Account' : 'Sign in'}
                 </Link>
               </li>
+              {isAuthenticated && (
+                <li>
+                  <button type="button" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </nav>

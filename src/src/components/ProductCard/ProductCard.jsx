@@ -1,13 +1,15 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useShop } from '@features/shop';
 import { formatPrice } from '../../lib/format';
 import { HeartIcon } from '../icons/icons';
 import ProductImage from '../ProductImage/ProductImage';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
-  const [liked, setLiked] = useState(false);
-  const { slug, title, image, price, oldPrice, discountPercent, currency, inStock } = product;
+  const { isInWishlist, toggleWishlist } = useShop();
+  const { id, slug, title, image, price, oldPrice, discountPercent, currency, inStock } = product;
+
+  const liked = isInWishlist(id);
 
   return (
     <article className="product-card">
@@ -17,7 +19,7 @@ export default function ProductCard({ product }) {
         className="product-card__like"
         aria-label={liked ? 'Remove from wishlist' : 'Add to wishlist'}
         aria-pressed={liked}
-        onClick={() => setLiked((v) => !v)}
+        onClick={() => toggleWishlist(id)}
       >
         <HeartIcon size={24} />
       </button>

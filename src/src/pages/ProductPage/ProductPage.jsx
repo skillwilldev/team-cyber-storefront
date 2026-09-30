@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCategory, useProduct } from '@api/catalogQueries';
+import { useShop } from '@features/shop';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
   BatteryIcon,
@@ -71,6 +72,7 @@ function ProductSkeleton() {
 
 function ProductView({ product }) {
   const { data: category } = useCategory(product.category?.slug);
+  const { isInWishlist, toggleWishlist, addToCart } = useShop();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showMoreSpecs, setShowMoreSpecs] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -185,10 +187,20 @@ function ProductView({ product }) {
             )}
 
             <div className="product__actions">
-              <button type="button" className="btn btn--outline">
-                Add to Wishlist
+              <button
+                type="button"
+                className="btn btn--outline"
+                aria-pressed={isInWishlist(product.id)}
+                onClick={() => toggleWishlist(product.id)}
+              >
+                {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </button>
-              <button type="button" className="btn btn--dark" disabled={!inStock}>
+              <button
+                type="button"
+                className="btn btn--dark"
+                disabled={!inStock}
+                onClick={() => addToCart(product.id)}
+              >
                 {inStock ? 'Add to Cart' : 'Out of stock'}
               </button>
             </div>
