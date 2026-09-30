@@ -44,17 +44,17 @@ body {
   margin: 0 auto;
   padding: 0 10px;
 }
-@media (max-width: 1023px) {
-  .container {
-    padding: 0 16px;
-  }
-}
 
 @media (max-width: 1023px) {
+  .container {
+    padding: 0 10px;
+  }
+
   .only-desktop {
     display: none !important;
   }
 }
+
 
 @media (min-width: 1024px) {
   .only-mobile {
@@ -80,11 +80,13 @@ body {
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
+
 @keyframes skeleton-shimmer {
   to {
     background-position: -200% 0;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
