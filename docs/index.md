@@ -13,6 +13,9 @@ This folder contains the technical documentation for our storefront project (arc
 ### 2. Catalog & Product Page (FE-003)
 * **Server-driven filters:** The filter panel is built from `GET /categories/{slug}` (`checkbox`, `radio`, `color`, `range`), so nothing is hard-coded and any category works. The default category slug is set in one place (`DEFAULT_CATEGORY` in `src/lib/catalog.js`).
 * **State in the URL:** Filters, sorting, page and search live in the query string (`/?category=smartphones&brand=Apple&sort=price-asc&page=2&q=pro`). Links are shareable, the Back button works and a refresh keeps everything. Multiple values of one filter are comma-separated (OR), different filters combine with AND.
+* **Search:** The header search is debounced (400 ms, Enter searches immediately). It keeps the current category and filters, and resets the page to 1.
+* **Sorting & pagination:** Seven sort options (`rating-desc`, `price-asc`, `price-desc`, `newest`, `oldest`, `popular`, `title-asc`). Changing a filter or the sort returns to page 1. Below the grid the page shows "Showing 13–24 of 40" and the page numbers; the page scrolls to the top when the page changes.
+* **Product card:** Image (lazy loaded, `alt` = product title), brand, title, rating with reviews count, price with old price and discount badge, stock state.
 * **Data fetching (TanStack Query):** Query key = the whole request, outdated requests are cancelled via `AbortSignal`, previous results stay on screen (dimmed) while new ones load.
 * **UI states:** Skeleton cards while loading, error with a retry button, empty result with a reset button.
 * **Product page (`/product/:slug`):** Photo gallery, specs table, price, stock, warranty and related products.
