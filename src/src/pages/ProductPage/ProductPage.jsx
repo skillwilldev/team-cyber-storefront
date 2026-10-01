@@ -6,6 +6,7 @@ import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
   BatteryIcon,
   CameraIcon,
+  FrontCameraIcon,
   ChevronIcon,
   CoresIcon,
   CpuIcon,
@@ -33,7 +34,7 @@ const QUICK_ICONS = {
   'პროცესორი': CpuIcon,
   'ოპერატიული მეხსიერება': CoresIcon,
   'ძირითადი კამერა': CameraIcon,
-  'წინა კამერა': CameraIcon,
+  'წინა კამერა': FrontCameraIcon,
   'ბატარეა': BatteryIcon,
 };
 
