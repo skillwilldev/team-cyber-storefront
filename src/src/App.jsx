@@ -19,7 +19,7 @@ import StubPage from './pages/StubPage/StubPage';
  *   /filters           mobile filters screen
  *   /product/:slug     product page
  *   /login /register /forgot-password   public auth screens
- *   /account           protected — redirects to /login when there is no valid token
+ *   /account           protected profile editor (FE-004) — redirects to /login without a valid token
  */
 export default function App() {
   return (
@@ -33,15 +33,17 @@ export default function App() {
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
-          <Route
-            path="account"
-            element={
-              <ProtectedRoute>
-                <AccountPage />
-              </ProtectedRoute>
-            }
-          />
         </Route>
+
+        {/* wide card for the profile form, so it lives outside the narrow AuthLayout */}
+        <Route
+          path="account"
+          element={
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="about" element={<StubPage title="About" />} />
         <Route path="contact" element={<StubPage title="Contact Us" />} />

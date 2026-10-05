@@ -82,12 +82,19 @@ export async function apiRequest(endpoint, { auth = true, ...options } = {}) {
   }
 
   if (!response.ok) {
-    // Central TOKEN_EXPIRED handling — except on auth endpoints where we expect 401
-    const authEndpoints = ['/auth/login', '/auth/me', '/auth/register'];
+    // Central session-lost handling (401 + TOKEN_EXPIRED / INVALID_TOKEN).  Skipped for:
+    //  - /auth/login, /auth/register: a 401 there is a normal form error
+    //  - GET /auth/me: the startup session check — AuthProvider handles it itself, no redirect
+    // PATCH /auth/me (profile edit) is NOT skipped: an expired token there must lead to /login.
+    // Note: a wrong current password is 400 INVALID_CURRENT_PASSWORD, so it never reaches this branch.
+    const method = (options.method || 'GET').toUpperCase();
+    const isFormEndpoint = endpoint === '/auth/login' || endpoint === '/auth/register';
+    const isSessionCheck = endpoint === '/auth/me' && method === 'GET';
     if (
       response.status === 401 &&
-      data.code === 'TOKEN_EXPIRED' &&
-      !authEndpoints.includes(endpoint)
+      (data.code === 'TOKEN_EXPIRED' || data.code === 'INVALID_TOKEN') &&
+      !isFormEndpoint &&
+      !isSessionCheck
     ) {
       removeToken();
       window.location.href = '/login';

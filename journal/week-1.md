@@ -12,3 +12,11 @@
 - **Added User Menu:** After login the header shows an avatar circle with the first letter of the user's name. Clicking it opens a dropdown with the user's name, email, Account link and Logout.
 - **Header counters:** The wishlist and cart icons in the header show the number of added items.
 - **Product actions:** Connected the heart button on product cards and the Add to Wishlist / Add to Cart buttons on the product page.
+- **Implemented FE-004 (Profile edit):** Replaced the placeholder Account page with a profile form (name, email, phone, city, address, new password) connected to `PATCH /auth/me`. Added a Zod `profileSchema` that mirrors the server rules and a "repeat new password" check that stays on the front end.
+- **Profile form behavior:** Only changed fields are sent (React Hook Form `dirtyFields` compared with the server user); an empty phone / city / address clears the value. "Save" is disabled until something changes and blocks double submit. After success the password fields are cleared.
+- **Profile error handling:** `400 INVALID_CURRENT_PASSWORD` shows under *Current password* and keeps the user signed in, `409 EMAIL_TAKEN` under *Email*, `422` messages under their own fields, `errors._` in a top banner.
+- **Instant header update:** The `user` from the `PATCH` response is written to `AuthContext`, so the new name appears in the header and user menu without a page refresh.
+- **API client fix:** The central session-expired redirect now also covers `PATCH /auth/me` and `401 INVALID_TOKEN` (it was skipped for all of `/auth/me`). Only the startup `GET /auth/me`, login and register are excluded.
+- **Layout:** Moved `/account` out of the narrow auth card into a wider responsive layout (360 / 768 / 1440).
+- **ADR-004:** Documented why the current password is a regular form field and not a confirmation modal (`docs/adr/ADR-004-current-password.md`).
+- **FE-004 demo video:** (https://drive.google.com/file/d/1QC058a6wSEBuauudA5qO5BinIUMseQt9/view?usp=sharing)

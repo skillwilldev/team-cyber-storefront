@@ -65,3 +65,35 @@ export const resetPasswordSchema = z.object({
     .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
     .regex(/\d/, 'Password must contain at least one digit'),
 });
+
+// ---- Profile edit (PATCH /auth/me) — FE-004 ----
+// Rules mirror the server. Optional fields: '' is allowed and means "clear" (phone/city/address)
+// or "don't change" (newPassword). The confirmation field exists ONLY on the front end.
+const optionalMin = (min, message) =>
+  z
+    .string()
+    .trim()
+    .refine((v) => v === '' || v.length >= min, message);
+
+export const profileSchema = z
+  .object({
+    name: z.string().trim().min(2, 'Name must be at least 2 characters'),
+    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+    phone: z
+      .string()
+      .trim()
+      .refine((v) => v === '' || /^\+?[\d\s()-]{9,20}$/.test(v), 'Use a format like +995 555 12 34 56'),
+    city: optionalMin(2, 'City must be at least 2 characters'),
+    address: optionalMin(5, 'Address must be at least 5 characters'),
+    newPassword: z
+      .string()
+      .refine((v) => v === '' || v.length >= 8, 'Password must be at least 8 characters')
+      .refine((v) => v === '' || /[a-zA-Z]/.test(v), 'Password must contain at least one letter')
+      .refine((v) => v === '' || /\d/.test(v), 'Password must contain at least one digit'),
+    confirmNewPassword: z.string(),
+    currentPassword: z.string().min(1, 'Enter your current password to save changes'),
+  })
+  .refine((d) => d.newPassword === d.confirmNewPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  });
