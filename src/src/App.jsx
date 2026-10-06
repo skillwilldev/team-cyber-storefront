@@ -7,6 +7,7 @@ import {
   ProtectedRoute,
   RegisterPage,
 } from '@features/auth';
+import { CartPage } from '@features/cart';
 import Layout from './components/Layout/Layout';
 import CatalogPage from './pages/CatalogPage/CatalogPage';
 import FiltersPage from './pages/FiltersPage/FiltersPage';
@@ -20,6 +21,8 @@ import StubPage from './pages/StubPage/StubPage';
  *   /product/:slug     product page
  *   /login /register /forgot-password   public auth screens
  *   /account           protected profile editor (FE-004) — redirects to /login without a valid token
+ *   /cart              protected server cart (FE-005)
+ *   /checkout          protected placeholder until FE-006
  */
 export default function App() {
   return (
@@ -41,6 +44,23 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AccountPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="cart"
+          element={
+            <ProtectedRoute>
+              <CartPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="checkout"
+          element={
+            <ProtectedRoute>
+              <StubPage title="Checkout" text="Checkout is the next task (FE-006)." />
             </ProtectedRoute>
           }
         />

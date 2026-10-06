@@ -3,25 +3,22 @@ import { useAuth } from '@features/auth/hooks/useAuth';
 import { ShopContext } from './ShopContext';
 
 /**
- * Shop Context — cart and wishlist of the signed-in user.
+ * Shop Context — the WISHLIST of the signed-in user.
  *
- * The API has no cart/wishlist endpoints yet, so the data lives in localStorage,
- * one record per user id: `shop:<userId>` → { cart: { [productId]: qty }, wishlist: [productId] }.
+ * The cart is NOT here any more: it lives on the server and is read through TanStack Query
+ * (see src/api/cartQueries.js and src/features/cart). The API has no wishlist endpoints yet,
+ * so the wishlist stays in localStorage, one record per user id: `shop:<userId>` → { wishlist: [productId] }.
  * When the user signs out the state is empty; after the next sign-in it is restored.
- * Later this file can be switched to real API calls — components use only the hook (useShop).
  */
 
-const EMPTY = { cart: {}, wishlist: [] };
+const EMPTY = { wishlist: [] };
 const storageKey = (userId) => `shop:${userId}`;
 
 function load(userId) {
   if (!userId) return EMPTY;
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey(userId)));
-    return {
-      cart: saved?.cart && typeof saved.cart === 'object' ? saved.cart : {},
-      wishlist: Array.isArray(saved?.wishlist) ? saved.wishlist : [],
-    };
+    return { wishlist: Array.isArray(saved?.wishlist) ? saved.wishlist : [] };
   } catch {
     return EMPTY;
   }
@@ -60,21 +57,13 @@ export function ShopProvider({ children }) {
     const wishlist = state.wishlist.includes(id)
       ? state.wishlist.filter((x) => x !== id)
       : [...state.wishlist, id];
-    commit({ cart: state.cart, wishlist });
-  };
-
-  const addToCart = (productId) => {
-    if (!userId) return;
-    const id = String(productId);
-    commit({ cart: { ...state.cart, [id]: (state.cart[id] ?? 0) + 1 }, wishlist: state.wishlist });
+    commit({ wishlist });
   };
 
   const value = {
     wishlistCount: state.wishlist.length,
-    cartCount: Object.values(state.cart).reduce((sum, qty) => sum + qty, 0),
     isInWishlist: (productId) => state.wishlist.includes(String(productId)),
     toggleWishlist,
-    addToCart,
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

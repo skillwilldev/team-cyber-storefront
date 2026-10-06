@@ -19,6 +19,8 @@ export class ApiError extends Error {
     this.status = status;
     this.code = data.code || 'UNKNOWN_ERROR';
     this.errors = data.errors || null;
+    // full error body: INSUFFICIENT_STOCK carries `available`, RESEND_TOO_SOON `retryAfterSeconds`, ...
+    this.data = data;
   }
 }
 

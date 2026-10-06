@@ -1,5 +1,5 @@
 /**
- * Barrel export for shop feature (cart + wishlist).
+ * Barrel export for shop feature (wishlist).
  */
 export { ShopProvider } from './context/ShopProvider';
 export { useShop } from './hooks/useShop';

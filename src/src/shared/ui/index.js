@@ -8,6 +8,8 @@ export { default as Input } from './Input/Input';
 export { default as PasswordInput } from './PasswordInput/PasswordInput';
 export { default as FormField } from './FormField/FormField';
 export { default as Alert } from './Alert/Alert';
+export { ToastProvider } from './Toast/ToastProvider';
+export { useToast } from './Toast/useToast';
 
 // Re-export all icons
 export {

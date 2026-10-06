@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@api/queryKeys';
 import { apiRequest, getToken, setToken, removeToken } from '@shared/api/apiClient';
 import { AuthContext } from './AuthContext';
 
@@ -14,6 +16,7 @@ import { AuthContext } from './AuthContext';
 // export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(() => !!getToken());
 
@@ -39,16 +42,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Login: save token + set user
-  const login = useCallback((accessToken, userData) => {
-    setToken(accessToken);
-    setUser(userData);
-  }, []);
+  // The cart is the user's private data: never let one account see the cache of another one.
+  const login = useCallback(
+    (accessToken, userData) => {
+      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
+      setToken(accessToken);
+      setUser(userData);
+    },
+    [queryClient],
+  );
 
   // Logout: remove token + clear user
   const logout = useCallback(async () => {
     if (!getToken()) {
       removeToken();
       setUser(null);
+      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
       return;
     }
     try {
@@ -63,8 +72,10 @@ export function AuthProvider({ children }) {
     } finally {
       removeToken();
       setUser(null);
+      // the cart stays on the server; the browser must forget it (the next person may use this browser)
+      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
     }
-  }, []);
+  }, [queryClient]);
 
   const value = {
     user,

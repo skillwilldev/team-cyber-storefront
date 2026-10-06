@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import { useCart } from '@features/cart/hooks/useCart';
 import { useShop } from '@features/shop';
 import { BurgerIcon, CartIcon, HeartIcon, SearchIcon, UserIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
@@ -75,7 +76,10 @@ export default function Header() {
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, logout, isLoading } = useAuth();
-  const { wishlistCount, cartCount } = useShop();
+  const { wishlistCount } = useShop();
+  // the badge is the server's `totalQty` from the shared ['cart'] cache (0 for guests / while loading)
+  const { data: cart } = useCart();
+  const cartCount = cart?.totalQty ?? 0;
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const urlQuery = searchParams.get('q') ?? '';
@@ -122,10 +126,10 @@ export default function Header() {
               <HeartIcon size={32} />
               {wishlistCount > 0 && <span className="header__badge">{wishlistCount}</span>}
             </button>
-            <button type="button" aria-label={cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}>
+            <Link to="/cart" className="header__cart" aria-label={cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}>
               <CartIcon size={32} />
               {cartCount > 0 && <span className="header__badge">{cartCount}</span>}
-            </button>
+            </Link>
 
             <div className="header__profile-slot">
               {isLoading ? (
@@ -162,6 +166,11 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
+              <li className={pathname.startsWith('/cart') ? 'active' : undefined}>
+                <Link to="/cart" onClick={closeMenu}>
+                  {cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}
+                </Link>
+              </li>
               <li
                 className={!isLoading && pathname.startsWith(profileTo) ? 'active' : undefined}
                 style={isLoading ? { visibility: 'hidden' } : undefined}
@@ -184,4 +193,4 @@ export default function Header() {
       )}
     </header>
   );
-}
+}

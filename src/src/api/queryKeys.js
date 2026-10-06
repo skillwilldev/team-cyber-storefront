@@ -12,4 +12,8 @@ export const queryKeys = {
     list: (query) => ['products', 'list', query],
     detail: (slug) => ['products', 'detail', slug],
   },
+  // the cart of the signed-in user: ONE entry, read by the header badge, the cart page and (later) checkout
+  cart: {
+    all: ['cart'],
+  },
 };

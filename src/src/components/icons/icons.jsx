@@ -178,3 +178,24 @@ export const InfoIcon = (p) => (
     <path d="M12 11v5M12 8h.01" />
   </Svg>
 );
+
+export const PlusIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+);
+
+export const MinusIcon = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" />
+  </Svg>
+);
+
+export const TrashIcon = (p) => (
+  <Svg {...p}>
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14H6L5 6" />
+    <path d="M10 11v6M14 11v6" />
+  </Svg>
+);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCategory, useProduct } from '@api/catalogQueries';
+import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
@@ -73,7 +74,8 @@ function ProductSkeleton() {
 
 function ProductView({ product }) {
   const { data: category } = useCategory(product.category?.slug);
-  const { isInWishlist, toggleWishlist, addToCart } = useShop();
+  const { isInWishlist, toggleWishlist } = useShop();
+  const { addToCart, isAdding } = useAddToCart();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showMoreSpecs, setShowMoreSpecs] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -199,10 +201,10 @@ function ProductView({ product }) {
               <button
                 type="button"
                 className="btn btn--dark"
-                disabled={!inStock}
-                onClick={() => addToCart(product.id)}
+                disabled={!inStock || isAdding}
+                onClick={() => addToCart(product)}
               >
-                {inStock ? 'Add to Cart' : 'Out of stock'}
+                {!inStock ? 'Out of stock' : isAdding ? 'Adding…' : 'Add to Cart'}
               </button>
             </div>
 

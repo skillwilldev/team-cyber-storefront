@@ -100,6 +100,7 @@
 }
 
 .header__btns button,
+.header__btns .header__cart,
 .header__btns .header__profile {
   position: relative;
   display: block;
@@ -109,11 +110,13 @@
 }
 
 .header__btns button:active,
+.header__btns .header__cart:active,
 .header__btns .header__profile:active {
   transform: scale(98%);
 }
 
 .header__btns button svg,
+.header__btns .header__cart svg,
 .header__btns .header__profile svg {
   display: block;
   width: 100%;
@@ -304,4 +307,4 @@
   100% {
     transform: rotate(360deg);
   }
-}
+}

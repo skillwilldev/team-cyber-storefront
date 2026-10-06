@@ -21,6 +21,8 @@ The API is on free hosting — the first request after a pause can take up to a 
 | `/product/:slug` | Product page |
 | `/login` `/register` `/forgot-password` | Auth (public) |
 | `/account` | Protected page → redirects to `/login` without a valid token |
+| `/cart` | Protected server cart: quantity stepper, remove, totals from the server (FE-005) |
+| `/checkout` | Protected placeholder until FE-006 |
 
 Catalog state lives in the URL, in the same format the API uses:
 `/?category=smartphones&brand=Apple,Samsung&storage=256gb&minPrice=500&maxPrice=3000&inStock=true&sort=price-asc&page=2&q=pro`
@@ -30,11 +32,13 @@ Default category is `smartphones`; any other category slug from `GET /categories
 
 ```
 src/
-  api/          queryClient · queryKeys · catalogApi (plain fetch fns) · catalogQueries (useQuery hooks)
+  api/          queryClient · queryKeys · catalogApi / cartApi (plain fetch fns) · catalogQueries / cartQueries (hooks)
   components/   Header Footer Layout FilterPanel Checkbox PriceRange ProductCard ProductImage
                 ProductCardSkeleton QueryError LoadingHint Pagination SortSelect Breadcrumbs Stars ...
   pages/        CatalogPage FiltersPage ProductPage StubPage
   features/auth/  context · hooks · pages (Login Register ForgotPassword Account) · AuthLayout · ProtectedRoute
+  features/cart/  hooks (useCart · useAddToCart) · components (CartLine · CartSummary · QuantityStepper) · pages/CartPage · lib
+  features/shop/  wishlist only (localStorage, API has no wishlist endpoints)
   shared/       api/apiClient (token, ApiError) · lib/validators (zod) · ui (Button Input Alert ...)
   lib/          catalog (URL ⇄ API mapping) · format · specs · filterLabels
   hooks/        useCatalogParams · useMediaQuery
@@ -54,7 +58,9 @@ src/
    `placeholderData: keepPreviousData` keeps the old page on screen (dimmed) while the next one loads.
 6. `useCategory(slug)` loads the filter definitions; `FilterPanel` renders whatever the API sends
    (`checkbox` / `radio` / `color` / `range`) — nothing is hard-coded, so every category works.
-7. **State split:** server data → TanStack Query · "who is signed in" → `AuthContext` · catalog filters/sort/page → the URL.
+7. **State split:** server data (catalog, **cart**) → TanStack Query · "who is signed in" → `AuthContext` · catalog filters/sort/page → the URL.
+   The cart is ONE cache entry `['cart']` (`useCart()`): every cart request returns the whole cart, which is written
+   straight into the cache — header badge and cart page read the same data. Cleared on login/logout. See `docs/adr/0001-cart-quantity-stepper.md`.
 8. Open the devtools and click around: you can see keys, `fresh`/`stale`, and cache hits when you go back to a page.
 
 ## Notes

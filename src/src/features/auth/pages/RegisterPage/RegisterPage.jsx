@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { registerSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
 import { useAuth } from '@features/auth/hooks/useAuth';
@@ -14,14 +14,21 @@ import './RegisterPage.css';
  *
  * Fields: Name · Email · Password · Confirm Password
  * Validation: name min 2; email valid; password min 8 + letter + digit; confirm must match
- * On submit: POST /auth/register → save token → redirect to /
+ * On submit: POST /auth/register → save token → redirect to where the user came from (or /)
  * Errors: 409 EMAIL_TAKEN → field error; 422 VALIDATION_ERROR → map to fields
  */
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [bannerError, setBannerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // where the guest came from (set by ProtectedRoute / "Add to cart"); default → home
+  const fromLocation = location.state?.from;
+  const from = fromLocation
+    ? `${fromLocation.pathname}${fromLocation.search ?? ''}${fromLocation.hash ?? ''}`
+    : '/';
 
   const {
     register: registerField,
@@ -49,7 +56,7 @@ export default function RegisterPage() {
       });
 
       login(data.accessToken, data.user);
-      navigate('/', { replace: true });
+      navigate(from, { replace: true });
     } catch (err) {
       if (err.code === 'EMAIL_TAKEN' || err.status === 409) {
         setError('email', { message: 'This email is already registered' });
@@ -125,7 +132,7 @@ export default function RegisterPage() {
 
       <p className="auth-page__footer">
         Already have an account?{' '}
-        <Link to="/login" className="auth-page__link">
+        <Link to="/login" state={location.state} className="auth-page__link">
           Sign in
         </Link>
       </p>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
 import { formatPrice } from '../../lib/format';
 import { HeartIcon } from '../icons/icons';
@@ -8,6 +9,7 @@ import './ProductCard.css';
 
 export default function ProductCard({ product }) {
   const { isInWishlist, toggleWishlist } = useShop();
+  const { addToCart, isAdding } = useAddToCart();
   const { id, slug, title, brand, image, price, oldPrice, discountPercent, currency, rating, reviewsCount, inStock } =
     product;
 
@@ -48,8 +50,8 @@ export default function ProductCard({ product }) {
           {oldPrice ? formatPrice(oldPrice, currency) : '\u00A0'}
         </s>
       </p>
-      <button type="button" className="product-card__btn" disabled={!inStock}>
-        {inStock ? 'Buy Now' : 'Out of stock'}
+      <button type="button" className="product-card__btn" disabled={!inStock || isAdding} onClick={() => addToCart(product)}>
+        {!inStock ? 'Out of stock' : isAdding ? 'Adding…' : 'Add to Cart'}
       </button>
     </article>
   );

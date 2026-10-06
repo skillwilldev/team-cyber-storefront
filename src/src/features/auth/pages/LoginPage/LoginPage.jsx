@@ -24,7 +24,11 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Where to redirect after login (saved by ProtectedRoute)
-  const from = location.state?.from?.pathname || '/';
+  // pathname + search + hash: a guest who came from /?category=laptops&page=2 returns to the same filtered page
+  const fromLocation = location.state?.from;
+  const from = fromLocation
+    ? `${fromLocation.pathname}${fromLocation.search ?? ''}${fromLocation.hash ?? ''}`
+    : '/';
 
   const {
     register,
@@ -113,7 +117,7 @@ export default function LoginPage() {
 
       <p className="auth-page__footer">
         Don't have an account?{' '}
-        <Link to="/register" className="auth-page__link">
+        <Link to="/register" state={location.state} className="auth-page__link">
           Create an account
         </Link>
       </p>
