@@ -19,7 +19,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 32px;
-  margin-top: 24px;
+  margin: 24px 0;
 }
 
 .cart-page__list {
@@ -29,7 +29,7 @@
 }
 
 .cart-empty {
-  margin-top: 24px;
+  margin: 24px 0;
   padding: 64px 16px;
   border-radius: 8px;
   background: var(--c-surface);
