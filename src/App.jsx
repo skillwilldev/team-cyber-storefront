@@ -23,6 +23,7 @@ import StubPage from './pages/StubPage/StubPage';
  *   /account           protected profile editor (FE-004) — redirects to /login without a valid token
  *   /cart              protected server cart (FE-005)
  *   /checkout          protected placeholder until FE-006
+ *   /wishlist          placeholder (the API has no wishlist endpoints yet)
  */
 export default function App() {
   return (
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="about" element={<StubPage title="About" />} />
         <Route path="contact" element={<StubPage title="Contact Us" />} />
         <Route path="blog" element={<StubPage title="Blog" />} />
+        <Route path="wishlist" element={<StubPage title="Wishlist" text="The wishlist page is coming soon." />} />
         <Route
           path="*"
           element={<StubPage title="Page not found" text="The page you are looking for does not exist." />}

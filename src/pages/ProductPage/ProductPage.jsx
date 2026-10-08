@@ -22,7 +22,6 @@ import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductImage from '../../components/ProductImage/ProductImage';
 import QueryError from '../../components/QueryError/QueryError';
 import Stars from '../../components/Stars/Stars';
-import { RATING_SUMMARY, REVIEWS } from '../../data/reviews';
 import { formatPrice, formatWarranty } from '../../lib/format';
 import { getColorHex } from '../../lib/filterLabels';
 import { buildSpecGroups, getQuickSpecs, getSpecLabel } from '../../lib/specs';
@@ -78,7 +77,6 @@ function ProductView({ product }) {
   const { addToCart, isAdding } = useAddToCart();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showMoreSpecs, setShowMoreSpecs] = useState(false);
-  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const { title, brand, price, oldPrice, discountPercent, currency, rating, reviewsCount, inStock, stock } = product;
   const gallery = product.images?.length ? product.images : product.image ? [product.image] : [];
@@ -88,9 +86,7 @@ function ProductView({ product }) {
   const storage = product.attributes?.storage;
   const quick = getQuickSpecs(product.specs);
   const groups = buildSpecGroups(product.specs);
-  const related = (product.related ?? []).slice(0, 4);
-  const reviews = showAllReviews ? REVIEWS : REVIEWS.slice(0, 2);
-  const totalVotes = RATING_SUMMARY.distribution.reduce((sum, d) => sum + d.count, 0);
+  const related = product.related ?? [];
 
   const categorySlug = product.category?.slug ?? 'smartphones';
   const categoryLabel = category?.nameEn ?? product.category?.name ?? 'Category';
@@ -265,8 +261,8 @@ function ProductView({ product }) {
         </div>
       </section>
 
-      {/* The API has the rating and the number of reviews, but no reviews endpoint yet:
-          the score comes from the API, the bars and the comments below are demo data (data/reviews.js). */}
+      {/* The API has only the rating and the number of reviews (no reviews endpoint yet),
+          so only the real numbers are shown — no demo reviews. */}
       <section className="reviews">
         <div className="container">
           <h2>Reviews</h2>
@@ -277,51 +273,7 @@ function ProductView({ product }) {
               <span>of {reviewsCount} reviews</span>
               <Stars value={rating} />
             </div>
-            <ul className="reviews__bars">
-              {RATING_SUMMARY.distribution.map((d) => (
-                <li key={d.label}>
-                  <span>{d.label}</span>
-                  <div className="reviews__bar">
-                    <div style={{ width: `${(d.count / totalVotes) * 100}%` }} />
-                  </div>
-                  <em>{Math.round((d.count / totalVotes) * reviewsCount)}</em>
-                </li>
-              ))}
-            </ul>
           </div>
-
-          <label className="sr-only" htmlFor="comment">
-            Leave comment
-          </label>
-          <input id="comment" className="reviews__input" type="text" placeholder="Leave Comment" />
-
-          <ul className="reviews__list">
-            {reviews.map((r) => (
-              <li key={r.id} className="review">
-                <div className="review__avatar" aria-hidden="true">
-                  {r.name
-                    .split(' ')
-                    .map((w) => w[0])
-                    .join('')}
-                </div>
-                <div className="review__body">
-                  <div className="review__head">
-                    <h3>{r.name}</h3>
-                    <time>{r.date}</time>
-                  </div>
-                  <Stars value={r.rating} />
-                  <p>{r.text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {!showAllReviews && (
-            <button type="button" className="btn-more" onClick={() => setShowAllReviews(true)}>
-              View More
-              <ChevronIcon size={16} />
-            </button>
-          )}
         </div>
       </section>
 

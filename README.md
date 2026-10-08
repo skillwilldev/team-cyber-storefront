@@ -23,6 +23,7 @@ The API is on free hosting — the first request after a pause can take up to a 
 | `/account` | Protected page → redirects to `/login` without a valid token |
 | `/cart` | Protected server cart: quantity stepper, remove, totals from the server (FE-005) |
 | `/checkout` | Protected placeholder until FE-006 |
+| `/wishlist` | Placeholder page (the API has no wishlist endpoints yet) |
 
 Catalog state lives in the URL, in the same format the API uses:
 `/?category=smartphones&brand=Apple,Samsung&storage=256gb&minPrice=500&maxPrice=3000&inStock=true&sort=price-asc&page=2&q=pro`
@@ -42,7 +43,6 @@ src/
   shared/       api/apiClient (token, ApiError) · lib/validators (zod) · ui (Button Input Alert ...)
   lib/          catalog (URL ⇄ API mapping) · format · specs · filterLabels
   hooks/        useCatalogParams · useMediaQuery
-  data/         reviews.js (demo only — the API has no reviews endpoint)
   styles/       vars · reset · global · auth-tokens
 ```
 
@@ -60,8 +60,14 @@ src/
    (`checkbox` / `radio` / `color` / `range`) — nothing is hard-coded, so every category works.
 7. **State split:** server data (catalog, **cart**) → TanStack Query · "who is signed in" → `AuthContext` · catalog filters/sort/page → the URL.
    The cart is ONE cache entry `['cart']` (`useCart()`): every cart request returns the whole cart, which is written
-   straight into the cache — header badge and cart page read the same data. Cleared on login/logout. See `docs/adr/0001-cart-quantity-stepper.md`.
+   straight into the cache — header badge and cart page read the same data. Cleared on login/logout. See `docs/adr/0003-cart-quantity-stepper.md`.
 8. Open the devtools and click around: you can see keys, `fresh`/`stale`, and cache hits when you go back to a page.
+
+## Docs
+
+- `docs/index.md` — index of the documentation
+- `docs/adr/` — architecture decision records (stack, token storage, cart quantity stepper)
+- `journal/week-1.md` — weekly journal
 
 ## Notes
 

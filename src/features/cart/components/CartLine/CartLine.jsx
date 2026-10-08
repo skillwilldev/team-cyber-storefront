@@ -13,7 +13,7 @@ import './CartLine.css';
  *
  * Quick clicks: PATCH sets an ABSOLUTE quantity, so three fast "+" computed from the same old number
  * would send the same value three times. That is why the stepper and the trash button are locked
- * while this line's request is in flight (ADR 0001); the number on screen is always the server's answer.
+ * while this line's request is in flight (ADR 0003); the number on screen is always the server's answer.
  */
 export default function CartLine({ item }) {
   const { id, qty, lineTotal, product } = item;

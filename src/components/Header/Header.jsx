@@ -119,13 +119,14 @@ export default function Header() {
             </nav>
           </div>
           <div className="header__btns">
-            <button
-              type="button"
+            <Link
+              to="/wishlist"
+              className="header__cart"
               aria-label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : 'Wishlist'}
             >
               <HeartIcon size={32} />
               {wishlistCount > 0 && <span className="header__badge">{wishlistCount}</span>}
-            </button>
+            </Link>
             <Link to="/cart" className="header__cart" aria-label={cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}>
               <CartIcon size={32} />
               {cartCount > 0 && <span className="header__badge">{cartCount}</span>}

@@ -76,3 +76,16 @@
   font-size: 14px;
   color: var(--c-gray);
 }
+.filter__reset {
+  margin-top: 12px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--c-gray);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.filter__reset:hover {
+  color: #000;
+}

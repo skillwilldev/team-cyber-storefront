@@ -85,7 +85,13 @@ export default function CatalogPage() {
           )}
           {categoryQ.isError && <p className="catalog__filters-error">Could not load the filters.</p>}
           {categoryQ.data && (
-            <FilterPanel groups={groups} value={params.filters} onChange={setFilters} defaultOpen={['brand']} />
+            <FilterPanel
+              groups={groups}
+              value={params.filters}
+              onChange={setFilters}
+              defaultOpen={['price', 'brand']}
+              withPrice
+            />
           )}
         </aside>
 

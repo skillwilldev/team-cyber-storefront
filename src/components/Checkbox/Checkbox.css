@@ -61,3 +61,20 @@
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
+
+/* radio: round control with a dot instead of a tick */
+.checkbox--radio .checkbox__box {
+  border-radius: 50%;
+}
+.checkbox--radio .checkbox__box::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.checkbox--radio .checkbox__input:checked + .checkbox__box::after {
+  opacity: 1;
+}

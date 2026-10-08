@@ -4,7 +4,7 @@ import './QuantityStepper.css';
 
 /**
  * − [qty] +   Bounds: "−" is disabled at 1 (0 is not allowed — use "remove"), "+" at `max` (stock or 99).
- * `disabled` is set by the parent while a request is in flight (see docs/adr/0001-cart-quantity-stepper.md).
+ * `disabled` is set by the parent while a request is in flight (see docs/adr/0003-cart-quantity-stepper.md).
  */
 export default function QuantityStepper({ qty, max, disabled = false, label, onChange }) {
   return (

@@ -32,8 +32,9 @@ function Section({ id, title, open, onToggle, children }) {
   );
 }
 
-function Options({ group, selected, onToggle, scrollable }) {
+function Options({ group, selected, onToggle, onReset, scrollable }) {
   const [query, setQuery] = useState('');
+  const isRadio = group.type === 'radio';
   const searchable = group.options.length > 6;
   const q = query.trim().toLowerCase();
   const options = q
@@ -61,6 +62,8 @@ function Options({ group, selected, onToggle, scrollable }) {
         {options.map((o) => (
           <li key={o.value}>
             <Checkbox
+              type={isRadio ? 'radio' : 'checkbox'}
+              name={isRadio ? `filter-${group.key}` : undefined}
               label={o.label ?? o.value}
               swatch={group.type === 'color' ? getColorHex(o.value) : undefined}
               checked={selected.includes(o.value)}
@@ -70,6 +73,12 @@ function Options({ group, selected, onToggle, scrollable }) {
         ))}
         {options.length === 0 && <li className="filter__empty">Nothing found</li>}
       </ul>
+      {/* a radio can't be unticked by clicking it again, so there is an explicit reset */}
+      {isRadio && selected.length > 0 && (
+        <button type="button" className="filter__reset" onClick={onReset}>
+          Reset
+        </button>
+      )}
     </div>
   );
 }
@@ -100,10 +109,12 @@ export default function FilterPanel({
   const toggleValue = (group, v) => {
     const current = value[group.key] ?? [];
     let next;
-    if (group.type === 'radio') next = current.includes(v) ? [] : [v]; // one value at most
+    if (group.type === 'radio') next = [v]; // one value at most (cleared with the "Reset" button)
     else next = current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
     onChange({ ...value, [group.key]: next });
   };
+
+  const resetGroup = (group) => onChange({ ...value, [group.key]: [] });
 
   const priceGroup = groups.find((g) => g.key === 'price' && g.type === 'range');
   const hasBounds = priceGroup && Number.isFinite(priceGroup.min) && Number.isFinite(priceGroup.max);
@@ -142,6 +153,7 @@ export default function FilterPanel({
             selected={value[group.key] ?? []}
             scrollable={scrollable}
             onToggle={(v) => toggleValue(group, v)}
+            onReset={() => resetGroup(group)}
           />
         </Section>
       ))}
