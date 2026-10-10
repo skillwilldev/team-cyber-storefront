@@ -30,7 +30,7 @@ Copy this when a new decision has to be recorded (next number: `0005`):
 # ADR 000X: Short title of the decision
 
 - **Status:** Proposed | Accepted | Superseded by ADR 000Y
-- **Date:** YYYY-MM-DD
+- **Date:** 2026-10-11
 - **Ticket:** FE-00X
 
 ## Context
@@ -50,7 +50,9 @@ What gets better, what gets worse, what must be remembered later.
 
 - [Week 1](../journal/week-1.md)
 
-## Where the ADRs are referenced in the code
+## Related code
+
+Where each decision is implemented. Only the cart files reference ADR 0003 directly in their comments; the other rows show which code implements the decision.
 
 | Code | ADR |
 | --- | --- |
