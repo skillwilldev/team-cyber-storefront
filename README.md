@@ -21,6 +21,7 @@ It talks to a ready-made REST API and covers the full browsing and account flow:
 - [Catalog URL format](#catalog-url-format)
 - [Working with the API](#working-with-the-api)
 - [Deployment](#deployment)
+- [Documentation](#documentation)
 - [Project status](#project-status)
 - [Troubleshooting](#troubleshooting)
 - [Contributing and code style](#contributing-and-code-style)
@@ -254,6 +255,17 @@ The app is a single-page application, so the host must **rewrite every path to `
 | Firebase Hosting | `"rewrites": [{ "source": "**", "destination": "/index.html" }]` |
 
 Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL` in the host's environment settings if you use a different API.
+
+---
+
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Folder structure, data flow, module and API reference |
+| [`docs/index.md`](./docs/index.md) | Index of the documentation |
+| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md) |
+| [`journal/week-1.md`](./journal/week-1.md) | Weekly development journal |
 
 ---
 

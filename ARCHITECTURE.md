@@ -2,6 +2,8 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password).
+
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
 ---
