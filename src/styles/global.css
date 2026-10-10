@@ -1,0 +1,94 @@
+@import './vars.css';
+@import './reset.css';
+@import './auth-tokens.css';
+
+/* form controls do not inherit the font by default */
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+}
+
+button {
+  cursor: pointer;
+  color: inherit;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-black);
+  outline-offset: 2px;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  color: var(--c-black);
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+@media (max-width: 1023px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .only-desktop {
+    display: none !important;
+  }
+}
+
+
+@media (min-width: 1024px) {
+  .only-mobile {
+    display: none !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* skeleton shimmer (loading placeholders) */
+.skeleton {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
