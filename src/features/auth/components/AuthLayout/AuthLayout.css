@@ -1,0 +1,43 @@
+/* ============================================
+   AUTH LAYOUT — centers the auth card between header and footer
+   ============================================ */
+
+.auth-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  padding: var(--space-10) var(--space-4);
+  background: linear-gradient(135deg, #eef2ff 0%, #f1f5f9 50%, #f0fdf4 100%);
+}
+
+.auth-shell__card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: var(--space-8) var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .auth-shell__card {
+    padding: var(--space-10) var(--space-8);
+  }
+}
+
+@media (max-width: 400px) {
+  .auth-shell {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .auth-shell__card {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    padding: var(--space-6) var(--space-5);
+  }
+}

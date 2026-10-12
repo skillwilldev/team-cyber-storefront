@@ -1,0 +1,36 @@
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.qty-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.qty-stepper button:hover:not(:disabled) {
+  background: var(--c-surface);
+}
+
+.qty-stepper button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.qty-stepper button:disabled {
+  color: #c4c4c4;
+}
+
+.qty-stepper output {
+  min-width: 36px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

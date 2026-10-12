@@ -1,0 +1,78 @@
+/* ============================================
+   INPUT COMPONENT
+   States: default, hover, focus, error, disabled
+   ============================================ */
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper__icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  transition: all var(--transition-normal);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-placeholder);
+}
+
+/* With icon — add left padding */
+.input--with-icon {
+  padding-left: 44px;
+}
+
+/* --- Hover --- */
+.input:hover:not(:disabled):not(.input--error) {
+  border-color: var(--color-border-hover);
+}
+
+/* --- Focus --- */
+.input:focus:not(.input--error) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.input:focus ~ .input-wrapper__icon,
+.input:focus + .input-wrapper__icon {
+  color: var(--color-primary);
+}
+
+/* --- Error state --- */
+.input--error {
+  border-color: var(--color-error);
+}
+
+.input--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-ring);
+}
+
+/* --- Disabled --- */
+.input:disabled {
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+  border-color: #E5E7EB;
+}

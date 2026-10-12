@@ -1,0 +1,118 @@
+/* ============================================
+   ACCOUNT PAGE — profile edit (FE-004)
+   Mobile first: 360 → one column; ≥640 → two-column rows.
+   ============================================ */
+
+.account {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+  background: linear-gradient(135deg, #eef2ff 0%, #f1f5f9 50%, #f0fdf4 100%);
+}
+
+.account__card {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.account__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--space-2);
+}
+
+.account__subtitle,
+.account__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.account__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.account__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.account__section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* the hint sits right under the section title, closer than the other fields */
+.account__section-title + .account__hint {
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.account__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+.account__row > * {
+  min-width: 0; /* lets long values shrink instead of stretching the grid */
+}
+
+.account__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .account {
+    padding: var(--space-10) var(--space-4);
+  }
+
+  .account__card {
+    padding: var(--space-10) var(--space-8);
+  }
+
+  .account__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .account__actions {
+    flex-direction: row-reverse; /* primary action first in DOM → reachable first by keyboard */
+    justify-content: flex-start;
+  }
+
+  .account__actions .button {
+    width: auto;
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 400px) {
+  .account {
+    padding: 0;
+  }
+
+  .account__card {
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
