@@ -3,19 +3,16 @@
  */
 
 /** Fields the user can edit that go to the server as-is. */
-export const PROFILE_FIELDS = ['name', 'email', 'phone', 'city', 'address'];
+export const PROFILE_FIELDS = ['name', 'email'];
 
 /** Everything that is a real form field (used to route server errors to inputs). */
 export const FORM_FIELDS = [...PROFILE_FIELDS, 'newPassword', 'confirmNewPassword', 'currentPassword'];
 
-/** API user → form values. phone/city/address can be null on the server → '' in the form. */
+/** API user → form values. (phone and address live in /addresses now, not in the profile.) */
 export function toFormValues(user) {
   return {
     name: user?.name ?? '',
     email: user?.email ?? '',
-    phone: user?.phone ?? '',
-    city: user?.city ?? '',
-    address: user?.address ?? '',
     newPassword: '',
     confirmNewPassword: '',
     currentPassword: '',
@@ -33,7 +30,7 @@ export function buildPatch({ dirtyFields, values, initial }) {
 
   for (const key of PROFILE_FIELDS) {
     if (dirtyFields[key] && values[key] !== baseline[key]) {
-      patch[key] = values[key]; // '' is sent on purpose: it clears phone/city/address
+      patch[key] = values[key];
     }
   }
   if (values.newPassword) patch.newPassword = values.newPassword;

@@ -1,0 +1,70 @@
+/* Shared by the 3 steps, the code screen and the order page */
+
+.checkout {
+  padding-top: 56px;
+  padding-bottom: 80px;
+}
+
+.checkout__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.checkout-step {
+  margin-bottom: 48px;
+  padding-top: 48px;
+}
+
+.checkout-step__title {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 16px;
+  color: #000000;
+  letter-spacing: 0.03em;
+}
+
+.checkout-step__body {
+  margin-top: 32px;
+}
+
+.checkout-step__hint {
+  margin-top: 16px;
+  color: var(--c-gray-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Back / Next, bottom right like in the mockups */
+.checkout-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.checkout-actions .action-btn {
+  min-width: 200px;
+}
+
+@media (max-width: 767px) {
+  .checkout {
+    padding-top: 24px;
+    padding-bottom: 48px;
+  }
+
+  .checkout-step {
+    margin-top: 32px;
+  }
+
+  .checkout-actions {
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .checkout-actions .action-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 0 16px;
+  }
+}

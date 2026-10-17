@@ -21,10 +21,11 @@ An ADR is a short document about **one** decision: the situation, what was chose
 | [0002](./adr/0002-token-storage.md) | Where to store the access token: `localStorage` vs httpOnly cookie | FE-002 | Accepted |
 | [0003](./adr/0003-cart-quantity-stepper.md) | Cart quantity stepper: how to handle fast clicks | FE-005 | Accepted |
 | [0004](./adr/0004-profile-current-password.md) | Profile page: current password in the form, not in a modal | FE-004 | Accepted |
+| [0005](./adr/0005-checkout-state-in-url.md) | Checkout state: `orderId` and chosen address in the URL, card only in the form | FE-006 | Accepted |
 
 ### ADR template
 
-Copy this when a new decision has to be recorded (next number: `0005`):
+Copy this when a new decision has to be recorded (next number: `0006`):
 
 ```md
 # ADR 000X: Short title of the decision
@@ -49,6 +50,7 @@ What gets better, what gets worse, what must be remembered later.
 ## Journal
 
 - [Week 1](../journal/week-1.md)
+- [Week 2](../journal/week-2.md) (draft)
 
 ## Related code
 
@@ -60,3 +62,4 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/features/cart/components/QuantityStepper/QuantityStepper.jsx` | [0003](./adr/0003-cart-quantity-stepper.md) |
 | `src/shared/api/apiClient.js`, `src/features/auth/context/AuthProvider.jsx` | [0002](./adr/0002-token-storage.md) |
 | `src/features/auth/pages/AccountPage/AccountPage.jsx` | [0004](./adr/0004-profile-current-password.md) |
+| `src/features/checkout/pages/PaymentStep.jsx`, `ConfirmPage.jsx`, `src/features/checkout/lib/checkoutRoutes.js` | [0005](./adr/0005-checkout-state-in-url.md) |

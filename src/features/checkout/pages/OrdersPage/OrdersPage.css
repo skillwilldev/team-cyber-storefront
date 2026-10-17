@@ -1,0 +1,154 @@
+.orders-page {
+  padding-top: 56px;
+  padding-bottom: 80px;
+  max-width: 1140px;
+}
+
+.orders-page__title {
+  margin-bottom: 32px;
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 600;
+}
+
+.orders-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orders-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  color: var(--c-gray-text);
+}
+
+.order-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.order-row:hover {
+  background: var(--c-surface);
+}
+
+.order-row__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.order-row__head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-row__number {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.order-row__date {
+  color: var(--c-gray-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.order-row__status {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.order-row__status--paid {
+  background: #ecfdf5;
+  color: var(--color-success);
+}
+
+.order-row__status--pending_payment {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.order-row__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.order-row__thumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.order-row__thumbs img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: var(--c-surface);
+  mix-blend-mode: multiply;
+}
+
+.order-row__more {
+  color: var(--c-gray-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.order-row__sum {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 2px;
+  color: var(--c-gray-text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.order-row__sum b {
+  color: #000;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .orders-page {
+    padding-top: 24px;
+    padding-bottom: 48px;
+  }
+
+  .orders-page__title {
+    margin-bottom: 20px;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .order-row {
+    padding: 16px;
+  }
+
+  .order-row__thumbs img {
+    width: 44px;
+    height: 44px;
+  }
+}

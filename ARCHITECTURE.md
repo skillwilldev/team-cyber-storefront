@@ -38,7 +38,7 @@ This document explains how the Cyber Shop front end is built: where every piece 
 
 ## 1. Big picture
 
-Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. Checkout, the wishlist page and the About / Contact / Blog pages are placeholders.
+Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. Saved delivery addresses and a 3-step checkout (address → shipping → card → e-mail code → order page) are implemented; the wishlist page and the About / Contact / Blog pages are placeholders.
 
 ```mermaid
 flowchart LR
@@ -236,7 +236,11 @@ All routes are children of one layout route, so the **Header and Footer are alwa
 | `/forgot-password` | `ForgotPasswordPage` (in `AuthLayout`) | public | 3-step password reset. |
 | `/account` | `AccountPage` | **protected** | Profile editor. |
 | `/cart` | `CartPage` | **protected** | Server cart. |
-| `/checkout` | `StubPage` | **protected** | Placeholder (task FE-006). |
+| `/addresses` | `AddressesPage` | **protected** | Delivery addresses: add, edit, delete, default (max 10). |
+| `/checkout` → `/checkout/address`, `/shipping`, `/payment` | `CheckoutLayout` + `AddressStep` / `ShippingStep` / `PaymentStep` | **protected** | FE-006 steps; the chosen address is `?address=<id>` (ADR 0005). |
+| `/checkout/confirm/:orderId` | `ConfirmPage` | **protected** | 6-digit code, resend timer. |
+| `/orders` | `OrdersPage` | **protected** | My orders (history), newest first, data from `GET /orders`. "Orders" in the profile menu and in the mobile menu. A row links to `/orders/:id`. |
+| `/orders/:id` | `OrderPage` | **protected** | Order confirmation / details, data from `GET /orders/:id`. |
 | `/about`, `/contact`, `/blog` | `StubPage` | public | Placeholders. |
 | `/wishlist` | `StubPage` | public | Placeholder; the wishlist data exists, the page does not yet. |
 | `*` | `StubPage` ("Page not found") | public | 404. |
@@ -583,19 +587,28 @@ sequenceDiagram
   alt no token
     AP-->>App: isLoading=false, user=null
   else token exists
+    alt JWT exp is in the past
+      AP->>LS: removeToken() (no request)
+      AP-->>App: isLoading=false, user=null
+    else token still valid
     AP-->>App: isLoading=true
     AP->>API: GET /auth/me
     alt 200
       API-->>AP: { user }
       AP-->>App: user set, isLoading=false
-    else error
+    else 401
       AP->>LS: removeToken()
       AP-->>App: user=null, isLoading=false
+    else network error / 5xx
+      AP-->>App: user=null, isLoading=false (token is kept)
+    end
     end
   end
 ```
 
-`isLoading` is initialised **synchronously** with `() => !!getToken()` so the very first render already knows a check is pending.
+`isLoading` is initialised **synchronously** with `() => !!token && !isTokenExpired(token)` so the very first render already knows whether a check is pending.
+
+Why the expiry is read locally: the access token lives 30 minutes, so after a longer break the stored token is dead. Calling `GET /auth/me` with it only produces a `401` line in the browser console (the browser prints it for every failed request; it cannot be hidden in code). `isTokenExpired()` in `apiClient.js` decodes the `exp` claim of the JWT and the request is simply not sent. A token that cannot be decoded is **not** treated as expired — the server decides. The check itself goes through `checkSession()`, which shares one in-flight request: React StrictMode (dev) runs effects twice and used to send `GET /auth/me` twice. Only a `401` removes the token; a network error or `5xx` (the free server waking up) keeps it, so the user is not signed out by a temporary failure.
 
 ### 10.2 Login / register
 
@@ -626,10 +639,10 @@ Flow: `user` (from context) → form defaults → submit → `PATCH /auth/me` wi
 
 | Export | Purpose |
 | --- | --- |
-| `PROFILE_FIELDS` | `['name','email','phone','city','address']` — fields sent as-is |
+| `PROFILE_FIELDS` | `['name','email']` — fields sent as-is (phone and address moved to `/addresses`) |
 | `FORM_FIELDS` | every real input name (used to route server errors) |
 | `toFormValues(user)` | API user → form values (`null` → `''`) |
-| `buildPatch({ dirtyFields, values, initial })` | Builds the PATCH body from fields that are both dirty **and** really different from the server value (typing and deleting a space sends nothing). Empty string is sent deliberately to clear phone/city/address. Returns `null` when there is nothing to send. |
+| `buildPatch({ dirtyFields, values, initial })` | Builds the PATCH body from fields that are both dirty **and** really different from the server value (typing and deleting a space sends nothing). Returns `null` when there is nothing to send. |
 | `hasChanges(dirtyFields)` | Drives the disabled state of the Save button. Typing only the current password is **not** a change. |
 | `applyServerErrors(errors, setError)` | Puts server field errors under inputs; returns messages without an input for the banner |
 
@@ -644,7 +657,7 @@ Error mapping on the profile page: `INVALID_CURRENT_PASSWORD` (400 — the sessi
 | `forgotPasswordSchema` | valid e-mail |
 | `verifyCodeSchema` | exactly 6 digits |
 | `resetPasswordSchema` | password ≥ 8 with a letter and a digit |
-| `profileSchema` | mirrors the server: name ≥ 2; valid e-mail; phone `^\+?[\d\s()-]{9,20}$` or empty; city ≥ 2 or empty; address ≥ 5 or empty; new password optional with the same strength rules; confirm must match; current password required. The confirmation field exists **only on the front end**. |
+| `profileSchema` | mirrors the server: name ≥ 2; valid e-mail; new password optional with the same strength rules; confirm must match; current password required. The confirmation field exists **only on the front end**. |
 
 ---
 
@@ -792,8 +805,8 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 | Component | Responsibility |
 | --- | --- |
 | `Layout` | Header + `<main style="flex-grow:1">` + Footer; scrolls to top on every path change |
-| `Header` | Logo, `HeaderSearch`, nav (`Home`, `About`, `Contact Us`, `Blog`), wishlist icon with badge, cart icon with badge (`cart.totalQty`, 0 for guests/while loading), profile slot (spinner while auth loads, `UserMenu` when signed in, sign-in icon otherwise) and a burger button that opens a mobile menu (nav + cart + auth actions) |
-| `UserMenu` | Avatar circle with the first letter of the name; dropdown with name, e-mail, "Account" and "Logout". Closes on outside click and `Escape`. Logout navigates to `/` |
+| `Header` | Logo, `HeaderSearch`, nav (`Home`, `About`, `Contact Us`, `Blog`), wishlist icon with badge, cart icon with badge (`cart.totalQty`, 0 for guests/while loading), profile slot (spinner while auth loads, `UserMenu` when signed in, sign-in icon otherwise) and a burger button that opens a mobile menu (nav + cart + auth actions: Account, Orders, Address, Logout) |
+| `UserMenu` | Avatar circle with the first letter of the name; dropdown with name, e-mail, "Account", "Orders" (`/orders`), "Address" and "Logout". Closes on outside click and `Escape`. Logout navigates to `/` |
 | `Footer` | Logo, about text, social icons, two link lists (placeholders — links point to `#`) |
 | `Breadcrumbs` | `<nav><ol>` with chevrons; last item is `aria-current="page"`; desktop only |
 | `LoadingHint` | After `delay` (4 s) explains that the free-hosted server is waking up. Mount it only while loading |
@@ -877,6 +890,8 @@ Base URL: `VITE_API_URL` (default `https://shop-api-kbe6.onrender.com/api`). The
 | `POST /cart/items` | yes | `useAddCartItem` | Add (`{ productId, qty }`) |
 | `PATCH /cart/items/:id` | yes | `useUpdateCartItem` | Set exact quantity (1–99) |
 | `DELETE /cart/items/:id` | yes | `useRemoveCartItem` | Remove a line |
+| `GET /orders` | yes | `useOrders` → `OrdersPage` | Order history → `{ items: Order[] }`, newest first. Query key `['orders', 'list']`; invalidated after a successful `POST /orders/:id/confirm` |
+| `GET /orders/:id` | yes | `useOrder` → `OrderPage` | One order → `{ order }`; somebody else's id is `404 ORDER_NOT_FOUND` |
 
 ### Error codes the front end understands
 
@@ -952,7 +967,7 @@ Direction of dependencies is always *downwards*; `shared/` and `lib/` depend on 
 
 * The route `/checkout` already exists and is protected.
 * Read the cart with `useCart()` and block the page when any `getStockIssue(item)` is non-null (same rule as `CartSummary`).
-* `AccountPage`'s comment mentions "checkout prefill": the `user` object (`name`, `phone`, `city`, `address`) is available from `useAuth()`.
+* Done: see `src/features/checkout` and `src/features/addresses` (ADR 0005).
 
 ### Add a new filter type
 
@@ -973,7 +988,7 @@ Add Georgian → English pairs to `SPEC_LABELS` and (optionally) groups to `SPEC
 
 **Product gaps (by design for now)**
 
-* Checkout is a placeholder (FE-006).
+* Checkout step 2 is informational: the API has one delivery option; express / scheduled rows are disabled. There is no tax, billing address or PayPal in the API, so those mockup elements are not drawn.
 * About, Contact, Blog and Wishlist pages are placeholders; footer links point to `#`.
 * The wishlist is stored only in the browser (no API support).
 * Product reviews: only the rating and count are shown (no reviews endpoint).

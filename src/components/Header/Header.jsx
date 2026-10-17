@@ -182,6 +182,20 @@ export default function Header() {
                 </Link>
               </li>
               {!isLoading && isAuthenticated && (
+                <li className={pathname.startsWith('/orders') ? 'active' : undefined}>
+                  <Link to="/orders" onClick={closeMenu}>
+                    Orders
+                  </Link>
+                </li>
+              )}
+              {!isLoading && isAuthenticated && (
+                <li className={pathname.startsWith('/addresses') ? 'active' : undefined}>
+                  <Link to="/addresses" onClick={closeMenu}>
+                    Address
+                  </Link>
+                </li>
+              )}
+              {!isLoading && isAuthenticated && (
                 <li>
                   <button type="button" onClick={handleLogout}>
                     Logout

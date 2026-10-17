@@ -51,7 +51,7 @@ It talks to a ready-made REST API and covers the full browsing and account flow:
 - Three-step password reset (email → 6-digit code → new password)
 - Profile editor that sends **only changed fields**
 - Protected routes with automatic return to the page you came from after signing in
-- Centralised handling of expired sessions
+- Centralised handling of expired sessions; an already expired token is detected locally (no failing `GET /auth/me` on start-up)
 
 **Cart**
 - Server-side cart bound to the user
@@ -150,7 +150,14 @@ The same URL is built in as a fallback, so the project also works **without** a 
 | `/forgot-password` | Password reset (3 steps) | public |
 | `/account` | Profile editor | 🔒 requires sign-in |
 | `/cart` | Shopping cart | 🔒 requires sign-in |
-| `/checkout` | Checkout (placeholder) | 🔒 requires sign-in |
+| `/addresses` | My delivery addresses (add / edit / delete / default) — "Address" in the profile menu | 🔒 requires sign-in |
+| `/checkout` | Redirects to `/checkout/address` | 🔒 requires sign-in |
+| `/checkout/address` | Step 1 — choose or add a delivery address | 🔒 requires sign-in |
+| `/checkout/shipping` | Step 2 — shipment method (`?address=<id>`) | 🔒 requires sign-in |
+| `/checkout/payment` | Step 3 — summary + card (`?address=<id>`) | 🔒 requires sign-in |
+| `/checkout/confirm/:orderId` | 6-digit payment code | 🔒 requires sign-in |
+| `/orders` | My orders — the history of everything bought, newest first ("Orders" in the profile menu) | 🔒 requires sign-in |
+| `/orders/:id` | Order confirmation / order details ("Thank you!") | 🔒 requires sign-in |
 | `/wishlist`, `/about`, `/contact`, `/blog` | Placeholder pages | public |
 | any other path | "Page not found" | public |
 
@@ -240,7 +247,7 @@ Try it: `/?category=laptops`, or any category slug returned by `GET /categories`
 - The code makes decisions from `error.code`, **never from `error.message`**.
 - **Cold starts:** the API runs on free hosting. The first request after a pause can take up to a minute; the UI shows an explanatory message after a few seconds.
 
-Endpoints used: `/categories`, `/categories/{slug}`, `/products`, `/products/{slug}`, `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me` (GET, PATCH), `/auth/forgot-password`, `/auth/verify-reset-code`, `/auth/reset-password`, `/cart`, `/cart/items`, `/cart/items/:id`. A full table is in **[ARCHITECTURE.md → API reference](./ARCHITECTURE.md#19-api-reference-as-used-by-the-front-end)**.
+Endpoints used: `/categories`, `/categories/{slug}`, `/products`, `/products/{slug}`, `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me` (GET, PATCH), `/auth/forgot-password`, `/auth/verify-reset-code`, `/auth/reset-password`, `/cart`, `/cart/items`, `/cart/items/:id`, `/addresses`, `/addresses/:id`, `/checkout`, `/orders`, `/orders/:id/confirm`, `/orders/:id/resend-code`, `/orders/:id`. A full table is in **[ARCHITECTURE.md → API reference](./ARCHITECTURE.md#19-api-reference-as-used-by-the-front-end)**.
 
 ---
 
@@ -278,7 +285,9 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | Register / login / logout / password reset | ✅ done |
 | Profile editor | ✅ done |
 | Server cart | ✅ done |
-| Checkout | 🚧 placeholder (task FE-006) |
+| Addresses (several, default, edit) | ✅ done |
+| Checkout (3 steps, code, order page) | ✅ done (FE-006) |
+| Orders history (`/orders`) | ✅ done |
 | Wishlist page | 🚧 placeholder (data is stored locally; no page and no API yet) |
 | About / Contact / Blog | 🚧 placeholders |
 | Product reviews | 🚧 only rating and count (no API endpoint yet) |

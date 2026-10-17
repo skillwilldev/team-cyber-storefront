@@ -1,0 +1,88 @@
+.shipping-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.shipping-option {
+  border: 1px solid var(--c-border-light);
+  border-radius: 8px;
+}
+
+.shipping-option label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 16px 32px;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.shipping-option input {
+  appearance: none;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.shipping-option input:checked {
+  background: radial-gradient(circle, #000 0 5px, #fff 6px);
+}
+
+.shipping-option__text {
+  flex: 1;
+  min-width: 0;
+  color: #1d1d3b;
+}
+
+.shipping-option__date {
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.shipping-option--active {
+  border-color: #000;
+}
+
+/* greyed-out rows (not supported by the API) */
+.shipping-option--disabled label {
+  color: #a4a4a4;
+  cursor: not-allowed;
+}
+
+.shipping-option--disabled input {
+  border-color: #a4a4a4;
+}
+
+.shipping-option--disabled .shipping-option__text {
+  color: #a4a4a4;
+}
+
+.checkout-step__hint a {
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .shipping-option label {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 16px;
+  }
+
+  .shipping-option__text {
+    flex-basis: calc(100% - 100px);
+  }
+
+  .shipping-option__date {
+    margin-left: 36px;
+  }
+}

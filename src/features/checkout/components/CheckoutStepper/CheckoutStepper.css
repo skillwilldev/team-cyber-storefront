@@ -1,0 +1,77 @@
+.checkout-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 72px;
+  padding-top: 72px;
+
+  .checkout-steps__item:nth-child(3) .checkout-steps__icon {
+    align-items: flex-end;
+  }
+}
+
+.checkout-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #a4a4a4;
+}
+
+.checkout-steps__item--current {
+  color: #000;
+}
+
+.checkout-steps__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #cfcfcf;
+  color: #fff;
+}
+
+.checkout-steps__item--current .checkout-steps__icon {
+  background: #000;
+}
+
+.checkout-steps__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkout-steps__caption {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0.03em;
+  color: inherit;
+}
+
+.checkout-steps__label {
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 24px;
+  letter-spacing: 0.03em;
+  color: inherit;
+}
+
+@media (max-width: 767px) {
+
+  /* narrow screens: only the current step keeps its text, the others shrink to their icon */
+  .checkout-steps__item:not(.checkout-steps__item--current) .checkout-steps__text {
+    display: none;
+  }
+
+  .checkout-steps__label {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .checkout-steps__caption {
+    font-size: 14px;
+  }
+}

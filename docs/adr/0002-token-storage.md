@@ -45,7 +45,7 @@ To reduce the damage of the known XSS risk, the following rules are applied:
 
 - Simple and works with the existing API without changes.
 - Easy to debug and to test.
-- Session restore on refresh is one request (`GET /auth/me`) in `AuthProvider`.
+- Session restore on refresh is one request (`GET /auth/me`) in `AuthProvider`. An already expired token (the `exp` claim is read locally, `isTokenExpired()` in `apiClient.js`) is dropped without that request, so a returning user does not get a `401` in the console.
 
 **Negative / risk accepted**
 

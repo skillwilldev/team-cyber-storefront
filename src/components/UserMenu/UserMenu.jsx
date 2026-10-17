@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import './UserMenu.css';
 
-/** Avatar circle with the first letter of the name (like Gmail) + dropdown with Logout. */
+/** Avatar circle with the first letter of the name (like Gmail) + dropdown: name, email, Account, Orders, Address, Logout. */
 export default function UserMenu() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +57,12 @@ export default function UserMenu() {
           </div>
           <Link to="/account" role="menuitem" className="user-menu__item" onClick={() => setOpen(false)}>
             Account
+          </Link>
+          <Link to="/orders" role="menuitem" className="user-menu__item" onClick={() => setOpen(false)}>
+            Orders
+          </Link>
+          <Link to="/addresses" role="menuitem" className="user-menu__item" onClick={() => setOpen(false)}>
+            Address
           </Link>
           <button type="button" role="menuitem" className="user-menu__item" onClick={handleLogout}>
             Logout

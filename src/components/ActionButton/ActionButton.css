@@ -1,0 +1,57 @@
+.action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  height: 56px;
+  padding: 0 32px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.action-btn--solid {
+  background: #000;
+  color: #fff;
+}
+
+.action-btn--outline {
+  background: #fff;
+  color: #000;
+}
+
+.action-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.action-btn:disabled {
+  border-color: #c4c4c4;
+  background: #c4c4c4;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.action-btn--outline:disabled {
+  background: #fff;
+  color: #c4c4c4;
+}
+
+/* the label keeps its space while loading → the width of the button does not jump */
+.action-btn__label--hidden {
+  visibility: hidden;
+}
+
+.action-btn__spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}

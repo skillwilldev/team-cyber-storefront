@@ -67,24 +67,13 @@ export const resetPasswordSchema = z.object({
 });
 
 // ---- Profile edit (PATCH /auth/me) — FE-004 ----
-// Rules mirror the server. Optional fields: '' is allowed and means "clear" (phone/city/address)
-// or "don't change" (newPassword). The confirmation field exists ONLY on the front end.
-const optionalMin = (min, message) =>
-  z
-    .string()
-    .trim()
-    .refine((v) => v === '' || v.length >= min, message);
-
+// Rules mirror the server. The profile is name + email + password only: phone and address moved to
+// /addresses (FE-006), so they are NOT part of this form any more.
+// `newPassword` '' means "don't change". The confirmation field exists ONLY on the front end.
 export const profileSchema = z
   .object({
     name: z.string().trim().min(2, 'Name must be at least 2 characters'),
     email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
-    phone: z
-      .string()
-      .trim()
-      .refine((v) => v === '' || /^\+?[\d\s()-]{9,20}$/.test(v), 'Use a format like +995 555 12 34 56'),
-    city: optionalMin(2, 'City must be at least 2 characters'),
-    address: optionalMin(5, 'Address must be at least 5 characters'),
     newPassword: z
       .string()
       .refine((v) => v === '' || v.length >= 8, 'Password must be at least 8 characters')
@@ -97,3 +86,19 @@ export const profileSchema = z
     message: 'Passwords do not match',
     path: ['confirmNewPassword'],
   });
+
+// ---- Delivery address (POST / PATCH /addresses) — FE-006 ----
+// Rules mirror the server (AddressInput): label ≤ 30 (optional), fullName ≥ 2, phone 9–20 chars,
+// city ≥ 2, address ≥ 5. The same phone format is used at checkout (shipping.phone).
+export const addressSchema = z.object({
+  label: z.string().trim().max(30, 'Label must be at most 30 characters'),
+  fullName: z.string().trim().min(2, 'Full name must be at least 2 characters'),
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'Phone is required')
+    .regex(/^\+?[\d\s()-]{9,20}$/, 'Use a format like +995 555 12 34 56'),
+  city: z.string().trim().min(2, 'City must be at least 2 characters'),
+  address: z.string().trim().min(5, 'Address must be at least 5 characters'),
+  isDefault: z.boolean(),
+});
