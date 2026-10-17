@@ -2,7 +2,7 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
-> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password).
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL).
 
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
@@ -21,24 +21,26 @@ This document explains how the Cyber Shop front end is built: where every piece 
 9. [Product page](#9-product-page)
 10. [Authentication module](#10-authentication-module)
 11. [Cart module](#11-cart-module)
-12. [Wishlist module](#12-wishlist-module)
-13. [Shared UI kit](#13-shared-ui-kit)
-14. [Layout components](#14-layout-components)
-15. [Styling system](#15-styling-system)
-16. [Error handling strategy](#16-error-handling-strategy)
-17. [Accessibility notes](#17-accessibility-notes)
-18. [Performance notes](#18-performance-notes)
-19. [API reference (as used by the front end)](#19-api-reference-as-used-by-the-front-end)
-20. [Dependency graph between modules](#20-dependency-graph-between-modules)
-21. [How to extend the project](#21-how-to-extend-the-project)
-22. [Known limitations and technical debt](#22-known-limitations-and-technical-debt)
-23. [Glossary](#23-glossary)
+12. [Addresses module](#12-addresses-module)
+13. [Checkout and orders module](#13-checkout-and-orders-module)
+14. [Wishlist module](#14-wishlist-module)
+15. [Shared UI kit](#15-shared-ui-kit)
+16. [Layout components](#16-layout-components)
+17. [Styling system](#17-styling-system)
+18. [Error handling strategy](#18-error-handling-strategy)
+19. [Accessibility notes](#19-accessibility-notes)
+20. [Performance notes](#20-performance-notes)
+21. [API reference (as used by the front end)](#21-api-reference-as-used-by-the-front-end)
+22. [Dependency graph between modules](#22-dependency-graph-between-modules)
+23. [How to extend the project](#23-how-to-extend-the-project)
+24. [Known limitations and technical debt](#24-known-limitations-and-technical-debt)
+25. [Glossary](#25-glossary)
 
 ---
 
 ## 1. Big picture
 
-Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. Saved delivery addresses and a 3-step checkout (address → shipping → card → e-mail code → order page) are implemented; the wishlist page and the About / Contact / Blog pages are placeholders.
+Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. A signed-in user can keep several **delivery addresses**, pay through a 3-step checkout (address → shipping → card → e-mail code → order page) and see the **history of orders**. The wishlist page and the About / Contact / Blog pages are placeholders.
 
 ```mermaid
 flowchart LR
@@ -63,9 +65,11 @@ The key architectural idea is a **strict split of state by origin**:
 
 | Kind of state | Where it lives | Why |
 | --- | --- | --- |
-| Server data (products, categories, cart) | TanStack Query cache | Caching, deduplication, loading / error states, background refetch come for free |
+| Server data (products, categories, cart, addresses, checkout, orders) | TanStack Query cache | Caching, deduplication, loading / error states, background refetch come for free |
 | Who is signed in | `AuthContext` (+ token in `localStorage`) | It is client state that many components need |
 | Catalog filters, sort, page, search | The URL query string | Shareable links, working Back button, state survives refresh |
+| Checkout progress (chosen address, pending order) | The URL (`?address=<id>`, `/checkout/confirm/:orderId`) | F5 and the Back button keep the step (ADR 0005) |
+| Card number, holder, expiry, CVC | Only the state of the payment form | Never stored anywhere else (ADR 0005) |
 | Wishlist | `ShopContext` (+ `localStorage`) | The API has no wishlist endpoints yet |
 | Purely visual state (open dropdown, selected photo) | Local `useState` inside the component | Nobody else needs it |
 
@@ -77,12 +81,12 @@ The key architectural idea is a **strict split of state by origin**:
 | --- | --- | --- |
 | UI | React 19 | Function components and hooks only. `ref` is passed as a normal prop (React 19), see `Input` / `PasswordInput`. |
 | Build | Vite 8 | Dev server and production bundler. |
-| Optimisation | React Compiler (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`) | Automatic memoisation; that is why the code has very few `useMemo` / `useCallback` calls. |
+| Optimisation | React Compiler (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`) | Automatic memoisation; that is why the code has very few `useMemo` / `useCallback` calls. Four components opt out with the `'use no memo'` directive because they combine React Hook Form with refs: `AccountPage`, `AddressForm`, `PaymentStep`, `ConfirmPage`. |
 | Routing | React Router 7 (`react-router-dom`) | Declarative `<Routes>` with a nested layout route. |
 | Server state | TanStack Query 5 (+ Devtools in dev) | Single shared `QueryClient`. |
 | Forms | React Hook Form 7 + `@hookform/resolvers` | Uncontrolled inputs, `register()` spread. |
 | Validation | Zod 3 | All schemas in one file: `src/shared/lib/validators.js`. |
-| Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. |
+| Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. Currently reports 2 `react-hooks/refs` errors, see [section 24](#24-known-limitations-and-technical-debt). |
 | Language | JavaScript (ES modules, JSX) | Types come from `@types/react` for editor hints only. |
 | Fonts | Inter (Google Fonts, loaded in `index.html`) | |
 
@@ -112,49 +116,154 @@ All paths must be rewritten to `index.html`. `public/_redirects` (`/*  /index.ht
 
 ## 3. Folder structure
 
+The tree below is the **real** state of the repository (104 JavaScript / JSX files and 54 CSS files in `src/`; `node_modules/` and `dist/` are not shown). A folder written as `Name/ (.jsx + .css)` contains `Name.jsx` and `Name.css`.
+
 ```
 cyber-shop/
-├─ index.html                 HTML shell: fonts, <div id="root">, loads /src/main.jsx
-├─ vite.config.js             Vite + React Compiler + path aliases
-├─ eslint.config.js           ESLint flat config
-├─ package.json               scripts and dependencies
-├─ .env / .env.example        VITE_API_URL
-├─ public/
+├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, loads /src/main.jsx
+├─ vite.config.js             Vite 8 + React plugin + React Compiler (Babel preset) + path aliases @, @api, @shared, @features
+├─ eslint.config.js           ESLint flat config: js recommended + react-hooks + react-refresh
+├─ package.json               scripts (dev, build, lint, preview) and dependencies
+├─ package-lock.json          exact dependency versions
+├─ .env / .env.example        VITE_API_URL (.env is git-ignored, .env.example is the template)
+├─ .gitignore, LICENSE        git ignore rules; MIT licence
+├─ README.md                  how to install, run, build, deploy; routes; project status
+├─ ARCHITECTURE.md            this document
+│
+├─ docs/
+│  ├─ index.md                documentation index, ADR list, "where is each decision implemented"
+│  └─ adr/                    ARCHITECTURE DECISION RECORDS (one decision = one file, never deleted)
+│     ├─ 0001-frontend-stack.md
+│     ├─ 0002-token-storage.md
+│     ├─ 0003-cart-quantity-stepper.md
+│     ├─ 0004-profile-current-password.md
+│     └─ 0005-checkout-state-in-url.md
+│
+├─ journal/                   weekly development journal
+│  ├─ week-1.md               05.10 – 11.10.2026 (FE-001 … FE-005)
+│  └─ week-2.md               12.10.2026 – … (addresses, checkout, orders history, start-up 401 fix) — draft
+│
+├─ public/                    copied to the build as they are
 │  ├─ favicon.svg, icons.svg  static assets
-│  └─ _redirects              SPA fallback for Netlify-style hosting
+│  └─ _redirects              SPA fallback for Netlify-style hosting (/*  /index.html  200)
+│
 └─ src/
-   ├─ main.jsx                entry point: provider stack + render
-   ├─ App.jsx                 route table
+   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render
+   ├─ App.jsx                 the whole route table (public, protected, checkout, 404)
    │
-   ├─ api/                    SERVER-STATE LAYER for catalog and cart
-   │  ├─ queryClient.js         the one shared QueryClient + defaults
-   │  ├─ queryKeys.js           central registry of cache keys
-   │  ├─ catalogApi.js          plain fetch functions (no React)
-   │  ├─ catalogQueries.js      queryOptions + hooks (useProducts, useProduct, useCategory…)
-   │  ├─ cartApi.js             plain fetch functions for the cart
-   │  └─ cartQueries.js         cart query + mutation hooks
+   ├─ api/                    SERVER-STATE LAYER: plain request functions (xxxApi.js) + TanStack Query hooks (xxxQueries.js)
+   │  ├─ queryClient.js         the one shared QueryClient + defaults (staleTime 60 s, no retry on 4xx)
+   │  ├─ queryKeys.js           central registry of cache keys (categories, products, cart, addresses, checkout, orders)
+   │  │                         + PRIVATE_QUERY_KEYS — the keys that are wiped on login / logout
+   │  ├─ catalogApi.js          GET /categories, /categories/:slug, /products, /products/:slug (public, auth: false)
+   │  ├─ catalogQueries.js      queryOptions + hooks: useCategories, useCategory, useProducts, useProduct
+   │  ├─ cartApi.js             GET /cart, POST /cart/items, PATCH / DELETE /cart/items/:id
+   │  ├─ cartQueries.js         cart query + useAddCartItem / useUpdateCartItem / useRemoveCartItem (serial scope "cart")
+   │  ├─ addressApi.js          GET / POST /addresses, PATCH / DELETE /addresses/:id
+   │  ├─ addressQueries.js      addressesQuery + useCreateAddress / useUpdateAddress / useDeleteAddress
+   │  │                         (serial scope "addresses"; the whole list is reloaded after every change)
+   │  ├─ checkoutApi.js         GET /checkout, POST /orders, POST /orders/:id/confirm, POST /orders/:id/resend-code,
+   │  │                         GET /orders, GET /orders/:id
+   │  └─ checkoutQueries.js     checkoutQuery, ordersQuery, orderQuery + useCreateOrder, useConfirmOrder, useResendOrderCode
    │
    ├─ shared/                 CROSS-CUTTING building blocks, no business logic
-   │  ├─ api/apiClient.js       apiRequest(), ApiError, token helpers
-   │  ├─ lib/validators.js      all Zod schemas
-   │  └─ ui/                    Button, Input, PasswordInput, FormField, Alert, Toast, Icons
+   │  ├─ api/
+   │  │  └─ apiClient.js        apiRequest(), ApiError, getToken / setToken / removeToken, isTokenExpired
+   │  ├─ lib/
+   │  │  └─ validators.js       all Zod schemas: login, register, forgotPassword, verifyCode, resetPassword, profile, address
+   │  └─ ui/                   UI KIT (import from the barrel @shared/ui)
+   │     ├─ index.js            barrel: components, useToast, icons
+   │     ├─ Button/ (.jsx + .css)         primary / secondary button with a loading spinner
+   │     ├─ Input/ (.jsx + .css)          text input (ref as a prop, aria-invalid)
+   │     ├─ PasswordInput/ (.jsx + .css)  Input + show / hide toggle
+   │     ├─ FormField/ (.jsx + .css)      label + control + error message
+   │     ├─ Alert/ (.jsx + .css)          form-level banner (success / error / warning)
+   │     ├─ Toast/                        ToastProvider.jsx, ToastContext.js, useToast.js, Toast.css
+   │     └─ Icons/Icons.jsx               form / auth icons (IconMail, IconLock, IconLoader, …)
    │
-   ├─ features/               SELF-CONTAINED FEATURE MODULES
-   │  ├─ auth/                  context, hooks, pages, ProtectedRoute, AuthLayout, lib
-   │  ├─ cart/                  hooks, components, CartPage, lib
-   │  └─ shop/                  wishlist (context + hook)
+   ├─ features/               SELF-CONTAINED FEATURE MODULES (each has an index.js barrel)
+   │  ├─ auth/                  sign in / register / reset password / profile
+   │  │  ├─ index.js
+   │  │  ├─ context/            AuthContext.js, AuthProvider.jsx (startup session check, login, logout, wipes private cache)
+   │  │  ├─ hooks/useAuth.js    useContext wrapper that throws outside the provider
+   │  │  ├─ lib/profileForm.js  pure helpers of the profile form (buildPatch, hasChanges, applyServerErrors, …)
+   │  │  ├─ components/
+   │  │  │  ├─ AuthLayout/ (.jsx + .css)      narrow centred card with <Outlet />
+   │  │  │  └─ ProtectedRoute/ (.jsx + .css)  route guard (spinner → page | redirect to /login)
+   │  │  └─ pages/
+   │  │     ├─ LoginPage/ (.jsx + .css)
+   │  │     ├─ RegisterPage/ (.jsx + .css)
+   │  │     ├─ ForgotPasswordPage/ (.jsx + .css)   3 steps in one component
+   │  │     └─ AccountPage/ (.jsx + .css)          profile editor
+   │  │
+   │  ├─ cart/                  server cart
+   │  │  ├─ index.js            exports CartPage, useCart, useAddToCart
+   │  │  ├─ hooks/              useCart.js (the ['cart'] entry), useAddToCart.js (guest → /login, toast, stock guard)
+   │  │  ├─ lib/                cartRules.js (MIN_QTY, MAX_QTY, getMaxQty, getStockIssue), cartErrors.js (code → text)
+   │  │  ├─ components/
+   │  │  │  ├─ CartLine/ (.jsx + .css)          one row of the cart
+   │  │  │  ├─ QuantityStepper/ (.jsx + .css)   − qty +
+   │  │  │  └─ CartSummary/ (.jsx + .css)       order summary + "Go to Checkout"
+   │  │  └─ pages/CartPage/ (.jsx + .css)
+   │  │
+   │  ├─ addresses/             saved delivery addresses (max 10)
+   │  │  ├─ index.js            exports AddressesPage, AddressManager, useAddresses, MAX_ADDRESSES
+   │  │  ├─ hooks/useAddresses.js         the ['addresses'] entry
+   │  │  ├─ lib/addressForm.js            pure helpers: toFormValues, buildCreateBody, buildPatch, hasChanges, applyServerErrors
+   │  │  ├─ components/
+   │  │  │  ├─ AddressManager/ (.jsx + .css)  the whole "my addresses" UI (list, add, edit, delete, default) — used twice
+   │  │  │  ├─ AddressCard/ (.jsx + .css)     one address (optional radio button, edit, delete with confirmation)
+   │  │  │  └─ AddressForm/ (.jsx + .css)     add / edit form (React Hook Form + addressSchema)
+   │  │  └─ pages/AddressesPage.jsx + .css    /addresses
+   │  │
+   │  ├─ checkout/              3-step checkout → code → order page → orders history
+   │  │  ├─ index.js            exports CheckoutLayout, AddressStep, ShippingStep, PaymentStep, ConfirmPage, OrderPage, OrdersPage
+   │  │  ├─ hooks/
+   │  │  │  ├─ useCheckout.js          GET /checkout (cart + totals)
+   │  │  │  ├─ useSelectedAddress.js   ?address=<id> from the URL + data from ['addresses']
+   │  │  │  ├─ useOrder.js             GET /orders/:id
+   │  │  │  └─ useOrders.js            GET /orders
+   │  │  ├─ lib/
+   │  │  │  ├─ checkoutRoutes.js       CHECKOUT_STEPS, checkoutPath, confirmPath, orderPath
+   │  │  │  ├─ checkoutErrors.js       getGenericMessage, getStockProblems, splitOrderErrors
+   │  │  │  ├─ checkoutFormat.js       formatShippingFee, formatShipmentDate, formatDateTime, shortOrderNumber, amountToFreeShipping
+   │  │  │  └─ card.js                 card number / expiry formatting, Luhn, expiry check, detectBrand, cardSchema (Zod)
+   │  │  ├─ components/
+   │  │  │  ├─ CheckoutStepper/ (.jsx + .css)  "Step 1 Address — Step 2 Shipping — Step 3 Payment" bar
+   │  │  │  ├─ OrderSummary/ (.jsx + .css)     summary card of step 3 (server numbers only)
+   │  │  │  └─ CardPreview/ (.jsx + .css)      live preview of the card with the brand logo
+   │  │  └─ pages/
+   │  │     ├─ CheckoutLayout/       CheckoutLayout.jsx + CheckoutPages.css — frame + guard (empty cart → /cart)
+   │  │     ├─ AddressStep/          step 1 (.jsx)
+   │  │     ├─ ShippingStep/         step 2 (.jsx + .css)
+   │  │     ├─ PaymentStep/          step 3, card form → POST /orders (.jsx + .css)
+   │  │     ├─ ConfirmPage/          6-digit code, resend timer (.jsx + .css)
+   │  │     ├─ OrderPage/            "Thank you!" / order details (.jsx + .css)
+   │  │     └─ OrdersPage/           orders history (.jsx + .css)
+   │  │
+   │  └─ shop/                  wishlist (localStorage, per user)
+   │     ├─ index.js            exports ShopProvider, useShop
+   │     ├─ context/            ShopContext.js, ShopProvider.jsx
+   │     └─ hooks/useShop.js    wishlistCount, isInWishlist, toggleWishlist (guest → /login)
    │
    ├─ pages/                  CATALOG-SIDE PAGES
-   │  ├─ CatalogPage/           product grid + filters + sort + pagination
-   │  ├─ FiltersPage/           mobile filters screen
-   │  ├─ ProductPage/           single product
-   │  └─ StubPage/              placeholder / 404 page
+   │  ├─ CatalogPage/ (.jsx + .css)   product grid + filters + sort + pagination
+   │  ├─ FiltersPage/ (.jsx + .css)   mobile filters screen with the "Apply" button
+   │  ├─ ProductPage/ (.jsx + .css)   single product (gallery, quick specs, spec tables, related)
+   │  └─ StubPage/ (.jsx + .css)      placeholder pages and the 404 page
    │
-   ├─ components/             SHOP-SPECIFIC REUSABLE COMPONENTS
-   │  ├─ Layout, Header, Footer, Logo, UserMenu
-   │  ├─ ProductCard, ProductCardSkeleton, ProductImage, Stars
-   │  ├─ FilterPanel, Checkbox, PriceRange, SortSelect, Pagination
-   │  └─ Breadcrumbs, LoadingHint, QueryError, icons/
+   ├─ components/             SHOP-SPECIFIC REUSABLE COMPONENTS (each: Name/Name.jsx + Name.css, unless noted)
+   │  ├─ Layout/                Header + <Outlet /> + Footer, scroll to top (.jsx only)
+   │  ├─ Header/                logo, search, nav, wishlist + cart badges, profile slot, mobile menu
+   │  ├─ UserMenu/              avatar dropdown: Account, Orders, Address, Logout
+   │  ├─ Footer/                footer (placeholder links)
+   │  ├─ Logo/                  SVG text logo (Logo.jsx only)
+   │  ├─ ProductCard/, ProductCardSkeleton/, ProductImage/, Stars/
+   │  ├─ FilterPanel/, Checkbox/, PriceRange/, SortSelect/, Pagination/
+   │  ├─ Breadcrumbs/, LoadingHint/, QueryError/
+   │  ├─ ActionButton/          big black / outlined button of the mockups (Back / Next / Pay); a <Link> or a <button>
+   │  └─ icons/                 icons.jsx (cart, heart, search, burger, chevron, star, …),
+   │                            checkoutIcons.jsx (pin, shipment, payment, pencil, close, plus, check, card chip, contactless)
    │
    ├─ lib/                    PURE FUNCTIONS (no React, easy to test)
    │  ├─ catalog.js             URL ⇄ state ⇄ API query mapping
@@ -163,20 +272,21 @@ cyber-shop/
    │  └─ filterLabels.js        filter titles and colour swatches
    │
    ├─ hooks/                  GENERIC HOOKS
-   │  ├─ useCatalogParams.js    catalog state ⇄ URL
+   │  ├─ useCatalogParams.js    catalog state ⇄ URL (the only place that reads / writes it)
    │  └─ useMediaQuery.js       reactive window.matchMedia
    │
    └─ styles/                 GLOBAL CSS
       ├─ vars.css               shop colour variables (--c-*)
-      ├─ auth-tokens.css        auth/form design tokens (--color-*, spacing, radius…)
+      ├─ auth-tokens.css        auth / form design tokens (--color-*, spacing, radius, shadow)
+      ├─ cyber-form.css         .cyber-form / .cyber-check: inputs drawn like the checkout / address mockups
       ├─ reset.css              CSS reset
-      └─ global.css             imports the above + base styles + utilities
+      └─ global.css             imports vars, reset and auth-tokens + base styles + utilities
 ```
 
 ### Conventions
 
 * **One component = one folder** containing `Component.jsx` and `Component.css` (BEM-style class names such as `product-card__btn--disabled`).
-* **Barrel files** (`index.js`) expose the public API of a feature (`@features/auth`, `@features/cart`, `@features/shop`, `@shared/ui`). Inside a feature, files import each other by relative path.
+* **Barrel files** (`index.js`) expose the public API of a feature (`@features/auth`, `@features/cart`, `@features/addresses`, `@features/checkout`, `@features/shop`, `@shared/ui`). Inside a feature, files import each other by relative path. A few hooks are imported by their full path on purpose (`@features/auth/hooks/useAuth`, `@features/checkout/lib/checkoutErrors`) because they are not part of the barrel — see [section 24](#24-known-limitations-and-technical-debt).
 * **Layering rule (top to bottom may import, never upwards):**
 
 ```
@@ -185,8 +295,9 @@ pages / features  →  components  →  shared (ui, api, lib)  →  lib / hooks 
        api (query hooks)  →  shared/api/apiClient
 ```
 
-* **Pure logic is extracted** from components into `lib/` files (`catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `format.js`, `specs.js`) so it has no React dependency and can be unit-tested directly.
-* **Plain fetch functions are separated from React hooks** (`catalogApi.js` vs `catalogQueries.js`, `cartApi.js` vs `cartQueries.js`).
+* **Pure logic is extracted** from components into `lib/` files (`catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutRoutes.js`, `checkoutErrors.js`, `checkoutFormat.js`, `format.js`, `specs.js`) so it has no React dependency and can be unit-tested directly.
+* **Plain fetch functions are separated from React hooks** (`catalogApi.js` vs `catalogQueries.js`, and the same for cart, addresses and checkout).
+* **Every private cache key is registered** in `PRIVATE_QUERY_KEYS` (`api/queryKeys.js`), so login and logout wipe it automatically.
 
 ---
 
@@ -237,8 +348,11 @@ All routes are children of one layout route, so the **Header and Footer are alwa
 | `/account` | `AccountPage` | **protected** | Profile editor. |
 | `/cart` | `CartPage` | **protected** | Server cart. |
 | `/addresses` | `AddressesPage` | **protected** | Delivery addresses: add, edit, delete, default (max 10). |
-| `/checkout` → `/checkout/address`, `/shipping`, `/payment` | `CheckoutLayout` + `AddressStep` / `ShippingStep` / `PaymentStep` | **protected** | FE-006 steps; the chosen address is `?address=<id>` (ADR 0005). |
-| `/checkout/confirm/:orderId` | `ConfirmPage` | **protected** | 6-digit code, resend timer. |
+| `/checkout` | redirect to `/checkout/address` | **protected** | |
+| `/checkout/address` | `CheckoutLayout` + `AddressStep` | **protected** | Step 1: choose or add a delivery address (a new user must add one to continue). |
+| `/checkout/shipping` | `CheckoutLayout` + `ShippingStep` | **protected** | Step 2: shipment method; the chosen address is `?address=<id>` (ADR 0005). |
+| `/checkout/payment` | `CheckoutLayout` + `PaymentStep` | **protected** | Step 3: summary + card → `POST /orders`. |
+| `/checkout/confirm/:orderId` | `ConfirmPage` | **protected** | 6-digit code, resend timer. Outside `CheckoutLayout` on purpose: after paying the cart is empty and the layout guard would send the user to `/cart`. |
 | `/orders` | `OrdersPage` | **protected** | My orders (history), newest first, data from `GET /orders`. "Orders" in the profile menu and in the mobile menu. A row links to `/orders/:id`. |
 | `/orders/:id` | `OrderPage` | **protected** | Order confirmation / details, data from `GET /orders/:id`. |
 | `/about`, `/contact`, `/blog` | `StubPage` | public | Placeholders. |
@@ -257,7 +371,16 @@ All routes are children of one layout route, so the **Header and Footer are alwa
   </Route>
   account  → <ProtectedRoute><AccountPage/></ProtectedRoute>   (wide card, so it sits outside AuthLayout)
   cart     → <ProtectedRoute><CartPage/></ProtectedRoute>
-  checkout → <ProtectedRoute><StubPage/></ProtectedRoute>
+  addresses → <ProtectedRoute><AddressesPage/></ProtectedRoute>
+  <Route path="checkout" element={<ProtectedRoute><Outlet/></ProtectedRoute>}>
+     <Route element={<CheckoutLayout />}>    stepper + GET /checkout guard (empty cart → /cart)
+        index → <Navigate to="address" replace />
+        address | shipping | payment
+     </Route>
+     confirm/:orderId → ConfirmPage          outside the layout (the cart is empty after paying)
+  </Route>
+  orders       → <ProtectedRoute><OrdersPage/></ProtectedRoute>
+  orders/:id   → <ProtectedRoute><OrderPage/></ProtectedRoute>
   about | contact | blog | wishlist → StubPage
   *        → StubPage (404)
 </Route>
@@ -323,6 +446,10 @@ Rules that keep URLs clean:
 | `['products', 'list', query]` | one page of products; `query` is the whole API query object |
 | `['products', 'detail', slug]` | one product |
 | `['cart']` | the signed-in user's whole cart |
+| `['addresses']` | saved delivery addresses (default first) |
+| `['checkout']` | cart + totals + shipping fee for the checkout steps |
+| `['orders', 'list']` | order history |
+| `['orders', 'detail', id]` | one order |
 
 * **`placeholderData: keepPreviousData`** on `useProducts` keeps the previous page on screen (dimmed, class `catalog__grid--stale`) while the next one loads — no spinner flash when paginating or filtering.
 
@@ -333,15 +460,15 @@ Rules that keep URLs clean:
 | `user` | object \| null | The current user from `GET /auth/me`, `/auth/login` or `/auth/register` |
 | `isLoading` | boolean | `true` only during the startup session check |
 | `isAuthenticated` | boolean | `!!user` |
-| `login(token, user)` | function | Stores the token, sets the user, clears the previous cart cache |
-| `logout()` | async function | Calls `POST /auth/logout`, always removes the token, clears user and cart cache |
+| `login(token, user)` | function | Stores the token, sets the user, wipes the previous user's private cache (`PRIVATE_QUERY_KEYS`: cart, addresses, checkout, orders) |
+| `logout()` | async function | Calls `POST /auth/logout`, always removes the token, clears the user and the private cache |
 | `setUser(user)` | function | Used by the profile page to publish saved changes |
 
 Three states are possible: **loading** (token present, being verified), **authenticated**, **unauthenticated**.
 
 ### 6.4 Wishlist state (`ShopContext`)
 
-Stored in `localStorage` under `shop:<userId>` as `{ wishlist: [productId, …] }`. See [section 12](#12-wishlist-module).
+Stored in `localStorage` under `shop:<userId>` as `{ wishlist: [productId, …] }`. See [section 14](#14-wishlist-module).
 
 ---
 
@@ -655,8 +782,9 @@ Error mapping on the profile page: `INVALID_CURRENT_PASSWORD` (400 — the sessi
 | `loginSchema` | email required + valid; password required (no strength rules — it may come from an older policy) |
 | `registerSchema` | name ≥ 2; valid e-mail; password ≥ 8 with a letter and a digit; confirmation must match |
 | `forgotPasswordSchema` | valid e-mail |
-| `verifyCodeSchema` | exactly 6 digits |
+| `verifyCodeSchema` | exactly 6 digits (also used for the payment code on `ConfirmPage`) |
 | `resetPasswordSchema` | password ≥ 8 with a letter and a digit |
+| `addressSchema` | label ≤ 30; full name ≥ 2; phone required, `^\+?[\d\s()-]{9,20}$`; city ≥ 2; address ≥ 5; `isDefault` boolean (see [section 12](#12-addresses-module)) |
 | `profileSchema` | mirrors the server: name ≥ 2; valid e-mail; new password optional with the same strength rules; confirm must match; current password required. The confirmation field exists **only on the front end**. |
 
 ---
@@ -667,7 +795,7 @@ Location: `src/features/cart/` plus `src/api/cartApi.js` and `src/api/cartQuerie
 
 ### 11.1 Design in one paragraph
 
-The cart lives **on the server** and belongs to the user. Every cart endpoint returns the **whole updated cart**, so the response is written straight into one cache entry, `['cart']`. The header badge, the cart page and (later) checkout all read that single entry through `useCart()`. No extra `GET /cart` is needed after a mutation.
+The cart lives **on the server** and belongs to the user. Every cart endpoint returns the **whole updated cart**, so the response is written straight into one cache entry, `['cart']`. The header badge and the cart page read that single entry through `useCart()`; checkout reads the cart with its totals through its own entry, `['checkout']`. No extra `GET /cart` is needed after a mutation.
 
 ```mermaid
 flowchart LR
@@ -765,11 +893,153 @@ addToCart(product, qty = 1)
 
 ### 11.8 Privacy of the cached cart
 
-The cart is private data. `AuthProvider.login()` removes the `['cart']` entry **before** storing the new token, and `logout()` removes it in `finally` — so the next person using the same browser never sees someone else's cart. The cart itself stays on the server.
+The cart is private data, and so are the addresses, the checkout data and the orders. `PRIVATE_QUERY_KEYS` in `api/queryKeys.js` lists all four (`['cart']`, `['addresses']`, `['checkout']`, `['orders']`). `AuthProvider.login()` removes them **before** storing the new token, and `logout()` removes them in `finally` — so the next person using the same browser never sees someone else's data. The data itself stays on the server. **A new private cache key must be added to `PRIVATE_QUERY_KEYS`.**
 
 ---
 
-## 12. Wishlist module
+## 12. Addresses module
+
+Location: `src/features/addresses/` plus `src/api/addressApi.js` and `src/api/addressQueries.js`.
+
+A user can save **up to 10 delivery addresses** (`MAX_ADDRESSES`). The same UI is used on the `/addresses` page and on checkout step 1, so the two always behave the same.
+
+```
+Address = { id, label | null, fullName, phone, city, address, isDefault, createdAt }
+```
+
+### 12.1 Data and cache
+
+* One cache entry, `['addresses']`, read through `useAddresses()` (guests: the request is not sent). `data.items` has the **default address first**.
+* Mutations (`useCreateAddress`, `useUpdateAddress`, `useDeleteAddress`) share the serial scope `addresses` and call `invalidateQueries(['addresses'])` in `onSettled`. The list is **reloaded from the server after every change** instead of being patched by hand, because one change touches several rows (a new default removes the flag from the old one, deleting the default promotes another address, the order changes).
+* The cache entry is private: it is in `PRIVATE_QUERY_KEYS` and is wiped on login / logout.
+
+### 12.2 Components
+
+| Component | Responsibility |
+| --- | --- |
+| `AddressesPage` | `/addresses` (protected): title, short explanation, `<AddressManager />` |
+| `AddressManager` | List + "add" form + edit + delete + "Set as default". Props: `selectable`, `selectedId`, `onSelect`, `onCreated` (checkout step 1 turns the cards into radio buttons). Reads with `refetchOnMount: 'always'`. With no addresses the "add" form is open and cannot be closed. When the limit of 10 is reached the "add" button is disabled and a hint asks to delete one first |
+| `AddressCard` | One address: name, optional label tag, "Default" tag, address, phone. Optional radio button, edit (pencil), delete (×) with confirmation inside the card |
+| `AddressForm` | Add / edit form (React Hook Form + `addressSchema`). The first address is always the default one, and the default cannot be switched off (make *another* address the default) — so there is no checkbox in those cases. A new address starts with the user's name |
+
+### 12.3 `lib/addressForm.js` (pure functions)
+
+| Export | Purpose |
+| --- | --- |
+| `MAX_ADDRESSES = 10` | API limit |
+| `ADDRESS_FIELDS` | `label, fullName, phone, city, address` — fields sent as they are |
+| `toFormValues(address, { user, isFirst })` | API address → form values (`label: null` → `''`; a new address gets the user's name; the first address is the default) |
+| `buildCreateBody(values)` | POST body; an empty label is left out |
+| `buildPatch({ dirtyFields, values, initial })` | PATCH body with **only changed fields**; `label: ''` is sent on purpose (it clears the label); `isDefault` is sent only as `true`. Returns `null` when there is nothing to send |
+| `hasChanges(dirtyFields)` | Drives the disabled state of "Save" |
+| `applyServerErrors(errors, setError)` | Server field errors go under the inputs, the rest is returned for the banner |
+
+### 12.4 Validation (`addressSchema`) and error mapping
+
+`addressSchema`: label ≤ 30 characters; full name ≥ 2; phone required and matching `^\+?[\d\s()-]{9,20}$` (example `+995 555 12 34 56`); city ≥ 2; address ≥ 5; `isDefault` boolean.
+
+| Server response | UI result |
+| --- | --- |
+| `422 VALIDATION_ERROR` | message under the field |
+| `409 ADDRESS_LIMIT_REACHED` | banner in the form |
+| `404 ADDRESS_NOT_FOUND` | the address was removed elsewhere (another tab): the list reloads, the confirmation closes |
+| `TOKEN_EXPIRED` | handled centrally by `apiClient` (no toast) |
+| anything else | toast with `getGenericMessage(error)` |
+
+---
+
+## 13. Checkout and orders module
+
+Location: `src/features/checkout/` plus `src/api/checkoutApi.js` and `src/api/checkoutQueries.js` (task FE-006). The payment is **simulated**: no money moves.
+
+### 13.1 The flow
+
+```mermaid
+flowchart LR
+  CART[/cart/] -->|Go to Checkout| A[/checkout/address<br/>step 1/]
+  A -->|"?address=id"| S[/checkout/shipping<br/>step 2/]
+  S --> P[/checkout/payment<br/>step 3/]
+  P -->|"POST /orders → orderId"| C[/checkout/confirm/:orderId<br/>6-digit code/]
+  C -->|"POST /orders/:id/confirm"| O[/orders/:id<br/>Thank you!/]
+  O --- L[/orders<br/>history/]
+```
+
+| Screen | Component | What happens |
+| --- | --- | --- |
+| Frame | `CheckoutLayout` | Reads `GET /checkout` with `refetchOnMount: 'always'`; shows the `CheckoutStepper`; an **empty cart redirects to `/cart`** |
+| Step 1 | `AddressStep` | `<AddressManager selectable>`; preselection priority: the card the user just clicked → `?address=` from the URL → the default address. With no address "Next" is disabled |
+| Step 2 | `ShippingStep` | The API has **one** delivery option, so "Regular shipment" is the only real choice (fee from the server, arrival date = today + 5 days, display only); "Express" and "Schedule" are drawn greyed out like in the mockup. A hint shows how much is missing for free delivery |
+| Step 3 | `PaymentStep` | Order summary + card form (`cardSchema`) with a live `CardPreview`. Pay → `POST /orders { shipping, card }` |
+| Code | `ConfirmPage` | 6-digit code "sent by e-mail" (valid 10 minutes), resend timer of 30 s. Confirm → `POST /orders/:id/confirm` |
+| Result | `OrderPage` | "Thank you!" with the order data from `GET /orders/:id`; an unpaid order offers to go back and enter the code |
+| History | `OrdersPage` | `GET /orders`, newest first: number, date, status, up to 4 thumbnails, item count, total; a row links to `/orders/:id` |
+
+### 13.2 Where the state lives (ADR 0005)
+
+| Data | Where |
+| --- | --- |
+| Chosen address | URL `?address=<id>`; the data itself comes from `['addresses']` (`useSelectedAddress`). An unknown id gives `address: null` and the step returns to step 1 |
+| `orderId` | URL `/checkout/confirm/:orderId`; the order is read with `GET /orders/:id` → F5 keeps the screen |
+| Card | **Only** the state of the payment form; `reset()` right after `POST /orders` succeeds. Never in storage, URL, a global store or `console` |
+| Cart + totals + shipping fee | `['checkout']` (`GET /checkout`); every number is the server's, nothing is calculated in the browser |
+
+### 13.3 Cache behaviour
+
+| Key | Data | Notes |
+| --- | --- | --- |
+| `['checkout']` | cart with totals | Removed after a successful payment |
+| `['orders', 'list']` | order history | Invalidated after a successful confirm, so the new order is visible at once |
+| `['orders', 'detail', id]` | one order | After confirm it is written with `setQueryData` so `/orders/:id` opens instantly |
+| `['cart']` | cart | After confirm it is set to an empty cart (badge → 0) — the server has already emptied it |
+
+`useConfirmOrder` does all four things in its `onSuccess`.
+
+### 13.4 Safety guards
+
+* **Double payment:** `inFlight` (a `useRef`) blocks a second submit in the same tick, before React disables the button; then `isSubmitting` / `isLoading` keeps it disabled. The same guard exists on the code screen.
+* **Card data:** emptied right after the order is created; the number is never logged.
+* **`devCode`:** the learning API also returns the code in the `POST /orders` response. The UI deliberately does **not** fill it in — read it in DevTools → Network and type it by hand.
+* `'use no memo'` is set on `PaymentStep` and `ConfirmPage` (see [section 2](#2-tech-stack-and-tooling)).
+
+### 13.5 Error handling
+
+`POST /orders` (`PaymentStep`):
+
+| Server response | UI result |
+| --- | --- |
+| `201` | `reset(EMPTY_CARD)` → `/checkout/confirm/:orderId?address=<id>` |
+| `422 VALIDATION_ERROR` with `card.*` | under the matching card field (`errors["card.number"]` → field `number`) |
+| `422` with `shipping.*` | banner "The delivery address is not valid" + link to edit it on step 1 (card data stays typed) |
+| `402 CARD_DECLINED` | banner in the card section; the address is not lost |
+| `409 CART_EMPTY` | `/cart` |
+| `409 INSUFFICIENT_STOCK` | list of products (`items[]`, read defensively) + link to the cart |
+| `401 UNAUTHORIZED` | `/login` with `from` = current location |
+| other | banner with `getGenericMessage(error)` |
+
+`POST /orders/:id/confirm` and `/resend-code` (`ConfirmPage`):
+
+| Server response | UI result |
+| --- | --- |
+| `200` | toast "Payment successful" → `/orders/:id` (`replace`) |
+| `400 INVALID_PAYMENT_CODE` | under the code field |
+| `429 TOO_MANY_ATTEMPTS` | banner; the code is blocked until a new one is requested |
+| `409 ORDER_ALREADY_PAID` | `/orders/:id` |
+| `409 INSUFFICIENT_STOCK` | list of products + link to the cart |
+| `404 ORDER_NOT_FOUND` | the order is re-read; on first load the page shows "Order not found" |
+| `429 RESEND_TOO_SOON` | the timer continues from `retryAfterSeconds` |
+
+### 13.6 Pure helpers
+
+| File | Exports |
+| --- | --- |
+| `lib/checkoutRoutes.js` | `CHECKOUT_STEPS`, `checkoutPath(step, addressId)`, `confirmPath(orderId, addressId)`, `orderPath(orderId)` |
+| `lib/checkoutErrors.js` | `NETWORK_ERROR_MESSAGE`, `isNetworkError`, `getGenericMessage`, `getStockProblems`, `splitOrderErrors` |
+| `lib/checkoutFormat.js` | `formatShippingFee` (`0` → "Free"), `REGULAR_SHIPMENT_DAYS`, `formatShipmentDate`, `formatDateTime`, `shortOrderNumber` (last 8 characters, upper case), `amountToFreeShipping` |
+| `lib/card.js` | `formatCardNumber` (4-4-4-4, up to 19 digits), `formatExpiry` (MM/YY), `passesLuhn`, `isExpiryValid`, `detectBrand` (Mastercard, Visa, Mada, PayPak, Jaywan, UnionPay, Amex, Diners, JCB, Discover, Maestro, UATP), `cardSchema` (Zod) |
+
+---
+
+## 14. Wishlist module
 
 Location: `src/features/shop/`.
 
@@ -782,7 +1052,7 @@ The API has no wishlist endpoints, so the wishlist is **client-side only**.
 
 ---
 
-## 13. Shared UI kit
+## 15. Shared UI kit
 
 Location: `src/shared/ui/` (import from the barrel `@shared/ui`).
 
@@ -800,7 +1070,7 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 
 ---
 
-## 14. Layout components
+## 16. Layout components
 
 | Component | Responsibility |
 | --- | --- |
@@ -815,28 +1085,32 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 | `Checkbox` | Custom checkbox / radio (real input visually hidden), optional colour swatch and count |
 | `SortSelect` | Labelled native `<select>` using `SORT_OPTIONS` |
 | `Logo` | SVG text logo |
+| `ActionButton` | The big black / outlined button of the mockups (Back / Next / Pay, "Go to Checkout"). With `to` it renders a `<Link>`, otherwise a `<button>`; while `isLoading` it is disabled and a spinner replaces the label without changing the width |
 
 `isActive(to)` in `Header` highlights the current nav item; `Home` is active whenever the path is not one of the other nav paths.
 
 ---
 
-## 15. Styling system
+## 17. Styling system
 
 * Plain **CSS files next to components**, BEM-like naming (`block__element--modifier`). No CSS-in-JS and no utility framework.
 * `styles/global.css` imports `vars.css`, `reset.css`, `auth-tokens.css` and defines base typography (Inter, 16 px), the `.container` (max-width 1140 px), focus ring (`:focus-visible`), `.sr-only`, and the skeleton shimmer (disabled under `prefers-reduced-motion`).
-* **Two token sets:** `vars.css` (`--c-black`, `--c-gray`, `--c-border`, `--c-surface`, `--c-star`, …) for the shop; `auth-tokens.css` (`--color-primary`, `--color-error`, `--color-success`, `--color-warning`, `--color-bg`, `--color-surface`, `--color-text*`, spacing / radius / shadow tokens) for forms and auth screens.
+* **Two token sets:** `vars.css` (`--c-black`, `--c-gray`, `--c-gray-text`, `--c-border`, `--c-border-light`, `--c-surface`, `--c-input`, `--c-star`) for the shop; `auth-tokens.css` (`--color-primary`, `--color-error`, `--color-success`, `--color-warning`, `--color-bg`, `--color-surface`, `--color-text*`, spacing / radius / shadow tokens) for forms and auth screens.
+* **`cyber-form.css`** is not imported globally: the address and checkout forms import it themselves. A form wrapped in `.cyber-form` gets the shared `<Input>` / `<FormField>` restyled like the checkout mockups (white field, 56 px high, thin grey border, black on focus); `.cyber-check` is the matching checkbox.
 * **One breakpoint:** mobile `max-width: 1023px`, desktop `min-width: 1024px` (CSS variables cannot be used in media queries, so the value is written out). The same breakpoint exists in JavaScript as `MOBILE_QUERY`.
 * Helper classes `.only-desktop` and `.only-mobile` hide content per breakpoint.
 
 ---
 
-## 16. Error handling strategy
+## 18. Error handling strategy
 
 | Layer | Strategy |
 | --- | --- |
 | Network wrapper | Throws a typed `ApiError`; handles expired sessions centrally |
 | Queries (catalog, cart read) | Components read `isPending` / `isError` / `data`; errors render `QueryError` with `refetch`; 404 renders a friendly `StubPage` |
 | Mutations (cart) | Errors are shown **next to the cause** (under the cart line) or as a toast (add to cart) |
+| Mutations (addresses) | Field errors under the inputs, limit error in a banner, other errors as a toast; the list is always reloaded afterwards |
+| Checkout (create order, confirm, resend) | By `code`: field errors under the card / code input, banners for a declined card or an invalid address, a list of products for `INSUFFICIENT_STOCK`, redirects for `CART_EMPTY` and `ORDER_ALREADY_PAID` (details in [section 13.5](#135-error-handling)) |
 | Forms | Server errors are mapped to fields (`setError`), form-level problems go to an `Alert` banner |
 | Retries | Never for 4xx; max 2 for network / 5xx |
 | Storage | `localStorage` access in the wishlist is guarded by `try/catch` |
@@ -844,7 +1118,7 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 
 ---
 
-## 17. Accessibility notes
+## 19. Accessibility notes
 
 * Semantic landmarks (`header`, `nav` with `aria-label`, `main`, `aside`, `footer`, `section` with headings).
 * Every icon-only button has an `aria-label` (cart, wishlist, remove, stepper buttons, pagination).
@@ -856,7 +1130,7 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 
 ---
 
-## 18. Performance notes
+## 20. Performance notes
 
 * **Caching:** 1 min default freshness; 10 min for categories; unused entries are garbage-collected after the default 5 min.
 * **Request cancellation** through `AbortSignal`.
@@ -864,11 +1138,11 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 * **No spinner flash** between catalog pages (`keepPreviousData`).
 * **Lazy images:** product cards and cart lines use `loading="lazy"`.
 * **React Compiler** removes most manual memoisation work.
-* Production build (measured): ~197 modules, JS ≈ 511 kB (≈ 156 kB gzip), CSS ≈ 42 kB (≈ 8 kB gzip). Vite warns that the single JS chunk exceeds 500 kB — see the improvement list in section 22.
+* Production build (measured on 17.10.2026): 244 modules, JS ≈ 567 kB (≈ 171 kB gzip), CSS ≈ 60 kB (≈ 11 kB gzip), build time ≈ 13 s. Vite warns that the single JS chunk exceeds 500 kB — see the improvement list in [section 24](#24-known-limitations-and-technical-debt). The size grew from ≈ 511 kB when checkout, addresses and orders were added.
 
 ---
 
-## 19. API reference (as used by the front end)
+## 21. API reference (as used by the front end)
 
 Base URL: `VITE_API_URL` (default `https://shop-api-kbe6.onrender.com/api`). The API is on free hosting: the first request after inactivity may take up to a minute.
 
@@ -890,16 +1164,24 @@ Base URL: `VITE_API_URL` (default `https://shop-api-kbe6.onrender.com/api`). The
 | `POST /cart/items` | yes | `useAddCartItem` | Add (`{ productId, qty }`) |
 | `PATCH /cart/items/:id` | yes | `useUpdateCartItem` | Set exact quantity (1–99) |
 | `DELETE /cart/items/:id` | yes | `useRemoveCartItem` | Remove a line |
+| `GET /addresses` | yes | `useAddresses` | Saved addresses → `{ items: Address[] }`, default first |
+| `POST /addresses` | yes | `useCreateAddress` | Add an address → `201 { address }`; the first one becomes the default |
+| `PATCH /addresses/:id` | yes | `useUpdateAddress` | Edit (only changed fields); `isDefault: true` makes it the default; `label: ''` clears the label |
+| `DELETE /addresses/:id` | yes | `useDeleteAddress` | Remove (`204`); if it was the default, the oldest remaining address becomes the default |
+| `GET /checkout` | yes | `useCheckout` | Cart + totals → `{ items, totalQty, subtotal, shippingFee, total, currency, freeShippingFrom, shipping, addresses }`; an empty cart is `items: []` |
+| `POST /orders` | yes | `useCreateOrder` → `PaymentStep` | Create an order from the server cart: body `{ shipping, card }` → `201 { orderId, status: 'pending_payment', total, currency, expiresInMinutes, devCode? }` |
+| `POST /orders/:id/confirm` | yes | `useConfirmOrder` → `ConfirmPage` | Body `{ code }` → `{ order }`; the order becomes `paid` and the server empties the cart |
+| `POST /orders/:id/resend-code` | yes | `useResendOrderCode` → `ConfirmPage` | New code; once per 30 s (`429 RESEND_TOO_SOON` with `retryAfterSeconds`) |
 | `GET /orders` | yes | `useOrders` → `OrdersPage` | Order history → `{ items: Order[] }`, newest first. Query key `['orders', 'list']`; invalidated after a successful `POST /orders/:id/confirm` |
 | `GET /orders/:id` | yes | `useOrder` → `OrderPage` | One order → `{ order }`; somebody else's id is `404 ORDER_NOT_FOUND` |
 
 ### Error codes the front end understands
 
-`TOKEN_EXPIRED`, `INVALID_TOKEN`, `INVALID_CREDENTIALS`, `EMAIL_TAKEN`, `INVALID_CURRENT_PASSWORD`, `VALIDATION_ERROR`, `INVALID_RESET_CODE`, `TOO_MANY_ATTEMPTS`, `RESET_TOKEN_USED`, `RESEND_TOO_SOON`, `OUT_OF_STOCK`, `INSUFFICIENT_STOCK`, `PRODUCT_NOT_FOUND`, `CART_ITEM_NOT_FOUND`.
+`TOKEN_EXPIRED`, `INVALID_TOKEN`, `INVALID_CREDENTIALS`, `EMAIL_TAKEN`, `INVALID_CURRENT_PASSWORD`, `VALIDATION_ERROR`, `INVALID_RESET_CODE`, `TOO_MANY_ATTEMPTS`, `RESET_TOKEN_USED`, `RESEND_TOO_SOON`, `OUT_OF_STOCK`, `INSUFFICIENT_STOCK`, `PRODUCT_NOT_FOUND`, `CART_ITEM_NOT_FOUND`, `ADDRESS_NOT_FOUND`, `ADDRESS_LIMIT_REACHED`, `CARD_DECLINED`, `CART_EMPTY`, `INVALID_PAYMENT_CODE`, `ORDER_ALREADY_PAID`, `ORDER_NOT_FOUND`, `UNAUTHORIZED`.
 
 ---
 
-## 20. Dependency graph between modules
+## 22. Dependency graph between modules
 
 ```mermaid
 flowchart TD
@@ -913,6 +1195,8 @@ flowchart TD
   App --> Pages[pages/*]
   App --> AuthPages[features/auth pages]
   App --> CartPage
+  App --> AddressesPage
+  App --> CheckoutPages[features/checkout pages]
 
   Layout --> Header
   Layout --> Footer
@@ -934,8 +1218,13 @@ flowchart TD
   useAddToCart --> useAuth
   useAddToCart --> Toast
 
+  AddressesPage --> AddressManager --> addressQueries --> addressApi --> apiClient
+  CheckoutPages --> useCheckout --> checkoutQueries --> checkoutApi --> apiClient
+  CheckoutPages --> useSelectedAddress --> AddressManager
+  CheckoutPages --> useCart
   AuthP --> apiClient
   AuthP --> QC
+  AuthP --> PQK[queryKeys.PRIVATE_QUERY_KEYS]
   ShopP --> useAuth
   AuthPages --> validators[shared/lib/validators]
   AuthPages --> ui[shared/ui]
@@ -946,7 +1235,7 @@ Direction of dependencies is always *downwards*; `shared/` and `lib/` depend on 
 
 ---
 
-## 21. How to extend the project
+## 23. How to extend the project
 
 ### Add a new page
 
@@ -954,20 +1243,22 @@ Direction of dependencies is always *downwards*; `shared/` and `lib/` depend on 
 2. Add `<Route path="my-page" element={<MyPage />} />` inside the `<Layout />` route in `App.jsx`. Wrap it in `<ProtectedRoute>` if it requires sign-in.
 3. Add a link in `Header`'s `NAV` array if it should appear in the menu.
 
-### Add a new API-backed list (e.g. orders)
+### Add a new API-backed list (live examples: addresses, orders)
 
-1. `src/api/ordersApi.js` — plain functions using `apiRequest`.
-2. Add keys to `queryKeys.js` (`orders: { all: ['orders'], detail: (id) => ['orders', id] }`).
-3. `src/api/ordersQueries.js` — `queryOptions(...)` factories and hooks (`useOrders`).
+1. `src/api/xxxApi.js` — plain functions using `apiRequest` (see `addressApi.js`, `checkoutApi.js`).
+2. Add keys to `queryKeys.js` (`orders: { all: ['orders'], list: ['orders', 'list'], detail: (id) => ['orders', 'detail', id] }`).
+3. `src/api/xxxQueries.js` — `queryOptions(...)` factories and hooks (`useOrders`), and a feature hook such as `useOrders()` that adds `enabled: isAuthenticated`.
 4. Use the hook in a page and render `isPending` / `isError` / `data`.
 5. For writes, copy the pattern of `useCartMutation` (or use plain `useMutation` plus `invalidateQueries` if the response is not the whole resource).
-6. If the data is private, clear its cache in `AuthProvider.login` / `logout`.
+6. If the data is private, add its key to `PRIVATE_QUERY_KEYS` in `queryKeys.js` — `AuthProvider` wipes that list on login and logout, so there is nothing else to change.
 
-### Implement checkout (FE-006)
+### Add a step to the checkout
 
-* The route `/checkout` already exists and is protected.
-* Read the cart with `useCart()` and block the page when any `getStockIssue(item)` is non-null (same rule as `CartSummary`).
-* Done: see `src/features/checkout` and `src/features/addresses` (ADR 0005).
+Checkout (FE-006) is implemented (see [section 13](#13-checkout-and-orders-module) and ADR 0005). To add a step:
+
+1. Add `{ key, label }` to `CHECKOUT_STEPS` in `features/checkout/lib/checkoutRoutes.js` and an icon to the `ICONS` map of `CheckoutStepper`.
+2. Create `pages/MyStep/MyStep.jsx` and add `<Route path="my-step" element={<MyStep />} />` inside the `CheckoutLayout` route in `App.jsx` and export it from `features/checkout/index.js`.
+3. Keep the state that must survive F5 in the URL (`checkoutPath` already carries `?address=`), and never keep card data outside the payment form.
 
 ### Add a new filter type
 
@@ -977,6 +1268,10 @@ Filters are data-driven. Add the new `type` to the server response, extend `LIST
 
 Add Georgian → English pairs to `SPEC_LABELS` and (optionally) groups to `SPEC_GROUPS` and `QUICK_KEYS` in `lib/specs.js`.
 
+### Add a form with server errors
+
+Copy the pattern of `AddressForm` (React Hook Form + Zod resolver): a pure `lib/xxxForm.js` with `toFormValues`, `buildPatch`, `hasChanges` and `applyServerErrors`, field errors under the inputs, other errors in an `<Alert>`. Wrap the form in `.cyber-form` and import `@/styles/cyber-form.css` if it should look like the checkout forms.
+
 ### Add a toast / form-validation message
 
 * Toast: `const toast = useToast(); toast.success('…')`.
@@ -984,11 +1279,14 @@ Add Georgian → English pairs to `SPEC_LABELS` and (optionally) groups to `SPEC
 
 ---
 
-## 22. Known limitations and technical debt
+## 24. Known limitations and technical debt
+
+Checked on 17.10.2026: `npm run build` passes, `npm run lint` reports 2 errors (first item of the code-level list).
 
 **Product gaps (by design for now)**
 
-* Checkout step 2 is informational: the API has one delivery option; express / scheduled rows are disabled. There is no tax, billing address or PayPal in the API, so those mockup elements are not drawn.
+* Checkout step 2 is informational: the API has one delivery option; the "Express" and "Schedule" rows are disabled. There is no tax, billing address or PayPal in the API, so the PayPal tabs of the payment step are disabled and the "Estimated tax" row is not drawn.
+* The payment is simulated by the learning API (no money moves; the confirmation code is also returned in `devCode`).
 * About, Contact, Blog and Wishlist pages are placeholders; footer links point to `#`.
 * The wishlist is stored only in the browser (no API support).
 * Product reviews: only the rating and count are shown (no reviews endpoint).
@@ -996,19 +1294,23 @@ Add Georgian → English pairs to `SPEC_LABELS` and (optionally) groups to `SPEC
 
 **Code-level observations**
 
+* **`npm run lint` fails with 2 errors** (`react-hooks/refs`, a rule of `eslint-plugin-react-hooks` 7): `PaymentStep.jsx` (line 151) and `ConfirmPage.jsx` (line 202). Both are `onSubmit={handleSubmit(onSubmit)}` where `onSubmit` reads the `inFlight` ref (the double-submit guard) — the linter cannot prove that the ref is read only inside the handler. The app works and the build passes, and both components already have `'use no memo'`. Options: keep the guard but silence the rule on that line with a short comment explaining why, or replace the ref guard with the mutation's `isPending` state (this loses the "same tick" protection, so it needs a manual double-click test).
 * **Search from non-catalog pages:** `HeaderSearch` always navigates to `/` and builds the query from the *current* URL; searching from a product or cart page therefore drops the category and falls back to the default (`smartphones`).
 * **Spec labels** (`lib/specs.js`) are written for smartphones; other categories show unknown keys in the generic "Other" group.
-* **Two icon sets and two "shared component" locations:** `components/icons/icons.jsx` vs `shared/ui/Icons/Icons.jsx`, and `components/` vs `shared/ui/`. Consolidating them would simplify the structure.
+* **Three icon files and two "shared component" locations:** `shared/ui/Icons/Icons.jsx` (forms, auth), `components/icons/icons.jsx` (shop) and `components/icons/checkoutIcons.jsx` (checkout, addresses), and `components/` vs `shared/ui/`. Consolidating them would simplify the structure.
 * **Mixed import styles:** relative paths, `@/…`, `@api/…`, `@shared/…`, `@features/…` are all used.
-* **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider`, a commented `oldPrice` line in `ProductCard`, and `profileLabel` in `Header` is always `'Sign in'`.
+* **Features import each other:** `features/addresses` imports `getGenericMessage` from `@features/checkout/lib/checkoutErrors`, while `features/checkout` imports the `@features/addresses` barrel — a circular dependency between two features (it works because only functions are imported, but it is fragile). `getGenericMessage` / `isNetworkError` belong in `shared/lib`.
+* **Deep imports bypass the barrels:** `useAuth` is not exported by the `@features/auth` barrel, so 15 files import `@features/auth/hooks/useAuth` directly. Exporting it from `features/auth/index.js` would remove the deep path.
+* **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider` (line 16), a commented `oldPrice` line in `ProductCard` (line 48), `profileLabel` in `Header` is always `'Sign in'`. `AuthProvider.logout` still has a `console.error('err logout', …)`.
+* **Language of comments:** the comments in `checkout/lib/card.js` (`detectBrand`) are in Russian, all other comments and the UI are in English. The API's own labels (filter labels, spec names) are in Georgian.
 * **Token in `localStorage`:** simple and common, but readable by any script running on the page (XSS risk). HttpOnly cookies would be the more secure alternative if the API supported them.
-* **Bundle size:** one JS chunk of about 511 kB; routes could be code-split with `React.lazy` + `Suspense` (account, cart and forgot-password pages are good first candidates).
-* **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `format.js`, `specs.js`) are ideal first targets.
+* **Bundle size:** one JS chunk of about 567 kB; routes could be code-split with `React.lazy` + `Suspense` (account, cart, addresses, checkout and forgot-password pages are good first candidates).
+* **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutErrors.js`, `checkoutFormat.js`, `checkoutRoutes.js`, `format.js`, `specs.js`, `isTokenExpired`) are ideal first targets; `passesLuhn`, `isExpiryValid` and `detectBrand` have clear input / output tables.
 * **Free-tier API:** cold starts of up to a minute are expected; the UI explains it but cannot avoid it.
 
 ---
 
-## 23. Glossary
+## 25. Glossary
 
 | Term | Meaning |
 | --- | --- |
@@ -1024,4 +1326,9 @@ Add Georgian → English pairs to `SPEC_LABELS` and (optionally) groups to `SPEC
 | **Protected route** | A route that redirects guests to `/login` |
 | **Barrel file** | An `index.js` that re-exports a module's public API |
 | **ADR** | Architecture Decision Record (e.g. ADR 0003: cart quantity stepper) |
+| **Private query keys** | The cache keys (`PRIVATE_QUERY_KEYS`) that belong to one account and are wiped on login / logout: cart, addresses, checkout, orders |
+| **Default address** | The address that is preselected at checkout; the API always returns it first and the first address a user adds is the default |
+| **`pending_payment` / `paid`** | The two order statuses the front end knows: the order exists but the code is not confirmed yet / the code is confirmed |
+| **`devCode`** | A learning-mode field of the API that contains the confirmation code; the UI never fills it in automatically |
+| **`'use no memo'`** | A directive that tells the React Compiler not to optimise one component |
 | **FE-00x** | Task identifiers from the course/project backlog referenced in code comments (FE-001/002 auth, FE-004 profile, FE-005 cart, FE-006 checkout) |

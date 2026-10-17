@@ -49,6 +49,7 @@ The address **id** in the URL is not sensitive; `POST /orders` still receives a 
 
 - `src/features/checkout/lib/checkoutRoutes.js` — all checkout URLs.
 - `src/features/checkout/hooks/useSelectedAddress.js` — address from `?address=` + `['addresses']`.
-- `src/features/checkout/pages/PaymentStep.jsx` — card form, `reset()` after success, double-click guard.
-- `src/features/checkout/pages/ConfirmPage.jsx` — `orderId` from the URL, code, resend timer.
-- `src/api/checkoutQueries.js` — `useConfirmOrder` empties the `['cart']` cache after payment.
+- `src/features/checkout/pages/PaymentStep/PaymentStep.jsx` — card form, `reset()` after success, double-click guard.
+- `src/features/checkout/pages/ConfirmPage/ConfirmPage.jsx` — `orderId` from the URL, code, resend timer.
+- `src/api/checkoutQueries.js` — `useConfirmOrder` empties the `['cart']` cache after payment, drops `['checkout']`, writes the order into `['orders','detail',id]` and invalidates `['orders','list']`.
+- `src/api/queryKeys.js` — `PRIVATE_QUERY_KEYS`: the checkout and orders caches are wiped on login / logout like the cart.

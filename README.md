@@ -2,7 +2,7 @@
 
 A responsive online electronics store front end built with **React 19**, **React Router 7**, **TanStack Query 5**, **React Hook Form + Zod** and **Vite 8** (with the React Compiler).
 
-It talks to a ready-made REST API and covers the full browsing and account flow: a data-driven catalog with filters, sorting, search and pagination; product pages; registration, login and password reset; a profile editor; and a **server-side shopping cart**.
+It talks to a ready-made REST API and covers the full shopping flow: a data-driven catalog with filters, sorting, search and pagination; product pages; registration, login and password reset; a profile editor; a **server-side shopping cart**; **delivery addresses**; a **3-step checkout** with a simulated card payment and an e-mail code; and the **orders history**.
 
 > 📐 Want to understand how everything fits together? Read **[ARCHITECTURE.md](./ARCHITECTURE.md)** — folder structure, data flow, module and function reference, API reference and design decisions.
 
@@ -53,6 +53,18 @@ It talks to a ready-made REST API and covers the full browsing and account flow:
 - Protected routes with automatic return to the page you came from after signing in
 - Centralised handling of expired sessions; an already expired token is detected locally (no failing `GET /auth/me` on start-up)
 
+**Addresses**
+- Up to 10 saved delivery addresses per user: add, edit, delete, choose the default one
+- The same address manager is used on the `/addresses` page and on checkout step 1
+
+**Checkout and orders**
+- Three steps: address → shipment method → card payment, then a 6-digit confirmation code and an order page
+- The chosen address and the pending order live **in the URL**, so F5 and the Back button keep the screen; the card exists **only in the payment form** and is emptied right after the order is created
+- Card form with live formatting, Luhn check, expiry check and a card preview with the brand logo
+- Protection against double payment, a resend-code timer, clear messages for a declined card, a missing address or a product that ran out of stock
+- Orders history (`/orders`) and a "Thank you!" order page that works after a refresh
+- The payment is **simulated** by the learning API: no money moves
+
 **Cart**
 - Server-side cart bound to the user
 - Quantity stepper (1–99, limited by stock), remove, totals calculated by the server
@@ -73,7 +85,7 @@ It talks to a ready-made REST API and covers the full browsing and account flow:
 | UI | React 19 |
 | Routing | React Router 7 |
 | Server state | TanStack Query 5 (+ Devtools in development) |
-| Forms | React Hook Form 7, `@hookform/resolvers` |
+| Forms | React Hook Form 7, `@hookform/resolvers` (profile, addresses, card, codes) |
 | Validation | Zod 3 |
 | Build tool | Vite 8 |
 | Optimisation | React Compiler (`babel-plugin-react-compiler`) |
@@ -171,20 +183,22 @@ Visiting a protected page as a guest redirects to `/login`; after signing in you
 src/
 ├─ main.jsx          entry point, provider stack
 ├─ App.jsx           route table
-├─ api/              server-state layer: queryClient, queryKeys, catalog + cart requests and hooks
+├─ api/              server-state layer: queryClient, queryKeys, catalog / cart / address / checkout requests and hooks
 ├─ shared/           apiClient (token, errors), Zod validators, UI kit (Button, Input, Alert, Toast…)
 ├─ features/
 │  ├─ auth/          sign in / register / reset password / account, ProtectedRoute, AuthContext
 │  ├─ cart/          cart hooks, CartPage, CartLine, CartSummary, QuantityStepper, cart rules
+│  ├─ addresses/     AddressManager, AddressCard, AddressForm, AddressesPage, address form helpers
+│  ├─ checkout/      CheckoutLayout, Address / Shipping / Payment steps, ConfirmPage, OrderPage, OrdersPage, card helpers
 │  └─ shop/          wishlist (localStorage)
 ├─ pages/            CatalogPage, FiltersPage, ProductPage, StubPage
 ├─ components/       Header, Footer, Layout, ProductCard, FilterPanel, PriceRange, Pagination, …
 ├─ lib/              pure helpers: URL ⇄ API mapping, price formatting, specs, filter labels
 ├─ hooks/            useCatalogParams, useMediaQuery
-└─ styles/           CSS variables, reset, global styles
+└─ styles/           CSS variables, reset, global styles, cyber-form.css (checkout / address inputs)
 ```
 
-Conventions: every component or page has **its own folder with its own CSS file**; feature folders expose a public API through an `index.js` barrel; path aliases `@`, `@api`, `@shared`, `@features` point to `src/`, `src/api/`, `src/shared/` and `src/features/`.
+Conventions: every component or page has **its own folder with its own CSS file**; feature folders expose a public API through an `index.js` barrel; path aliases `@`, `@api`, `@shared`, `@features` point to `src/`, `src/api/`, `src/shared/` and `src/features/`; every private cache key (cart, addresses, checkout, orders) is registered in `PRIVATE_QUERY_KEYS` and wiped on login / logout.
 
 ➡️ Full annotated tree and per-file descriptions: **[ARCHITECTURE.md → Folder structure](./ARCHITECTURE.md#3-folder-structure)**.
 
@@ -196,9 +210,11 @@ State is split by where it comes from, so each kind has exactly one home:
 
 | State | Lives in |
 | --- | --- |
-| Catalog and cart data from the server | **TanStack Query cache** |
+| Catalog, cart, addresses, checkout and orders data from the server | **TanStack Query cache** |
 | "Who is signed in" | **`AuthContext`** (token in `localStorage`) |
 | Catalog filters, sort, page, search | **The URL** |
+| Checkout progress (chosen address, pending order) | **The URL** (`?address=<id>`, `/checkout/confirm/:orderId`) |
+| Card number, holder, expiry, CVC | **Only the payment form** (never stored) |
 | Wishlist | `ShopContext` + `localStorage` (the API has no wishlist yet) |
 
 ### Reading the code in a good order
@@ -210,7 +226,8 @@ State is split by where it comes from, so each kind has exactly one home:
 5. `pages/CatalogPage` — `useProducts(...)` returns `{ data, isPending, isError, error, refetch, isPlaceholderData }`; the page just renders those states. `keepPreviousData` keeps the old page (dimmed) on screen while the next one loads.
 6. `lib/catalog.js` and `hooks/useCatalogParams.js` — how the URL becomes an API query.
 7. `features/cart` — how one cache entry `['cart']` powers the header badge and the cart page.
-8. Open the devtools and click around to see all of this live.
+8. `features/addresses` and `features/checkout` — the same pattern with several cache entries, and how the URL keeps the checkout step (ADR 0005).
+9. Open the devtools and click around to see all of this live.
 
 ### The cart in two sentences
 
@@ -247,7 +264,7 @@ Try it: `/?category=laptops`, or any category slug returned by `GET /categories`
 - The code makes decisions from `error.code`, **never from `error.message`**.
 - **Cold starts:** the API runs on free hosting. The first request after a pause can take up to a minute; the UI shows an explanatory message after a few seconds.
 
-Endpoints used: `/categories`, `/categories/{slug}`, `/products`, `/products/{slug}`, `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me` (GET, PATCH), `/auth/forgot-password`, `/auth/verify-reset-code`, `/auth/reset-password`, `/cart`, `/cart/items`, `/cart/items/:id`, `/addresses`, `/addresses/:id`, `/checkout`, `/orders`, `/orders/:id/confirm`, `/orders/:id/resend-code`, `/orders/:id`. A full table is in **[ARCHITECTURE.md → API reference](./ARCHITECTURE.md#19-api-reference-as-used-by-the-front-end)**.
+Endpoints used: `/categories`, `/categories/{slug}`, `/products`, `/products/{slug}`, `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me` (GET, PATCH), `/auth/forgot-password`, `/auth/verify-reset-code`, `/auth/reset-password`, `/cart`, `/cart/items`, `/cart/items/:id`, `/addresses`, `/addresses/:id`, `/checkout`, `/orders`, `/orders/:id/confirm`, `/orders/:id/resend-code`, `/orders/:id`. A full table is in **[ARCHITECTURE.md → API reference](./ARCHITECTURE.md#21-api-reference-as-used-by-the-front-end)**.
 
 ---
 
@@ -271,8 +288,8 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | --- | --- |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Folder structure, data flow, module and API reference |
 | [`docs/index.md`](./docs/index.md) | Index of the documentation |
-| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md) |
-| [`journal/week-1.md`](./journal/week-1.md) | Weekly development journal |
+| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md), [0005 checkout state in the URL](./docs/adr/0005-checkout-state-in-url.md) |
+| [`journal/`](./journal) | Weekly development journal: [week 1](./journal/week-1.md), [week 2](./journal/week-2.md) (draft) |
 
 ---
 
@@ -286,14 +303,16 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | Profile editor | ✅ done |
 | Server cart | ✅ done |
 | Addresses (several, default, edit) | ✅ done |
-| Checkout (3 steps, code, order page) | ✅ done (FE-006) |
+| Checkout (3 steps, code, order page) | ✅ done (FE-006); the payment is simulated by the API |
 | Orders history (`/orders`) | ✅ done |
 | Wishlist page | 🚧 placeholder (data is stored locally; no page and no API yet) |
+| Code splitting | 🚧 one JS chunk of ≈ 567 kB (≈ 171 kB gzip) |
 | About / Contact / Blog | 🚧 placeholders |
 | Product reviews | 🚧 only rating and count (no API endpoint yet) |
 | Automated tests | ❌ not yet |
+| `npm run lint` | ⚠️ 2 errors (`react-hooks/refs` in `PaymentStep` and `ConfirmPage`); the build passes — see ARCHITECTURE.md → Known limitations |
 
-A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md → Known limitations](./ARCHITECTURE.md#22-known-limitations-and-technical-debt)**.
+A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md → Known limitations](./ARCHITECTURE.md#24-known-limitations-and-technical-debt)**.
 
 ---
 
@@ -308,19 +327,22 @@ A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md �
 | Products have no pictures | The API image is `null` or failed to load; a placeholder is shown automatically and a real URL will appear without code changes. |
 | Changes to `.env` are ignored | Restart `npm run dev` — Vite reads environment variables at startup. |
 | Cart or wishlist looks empty after signing in as another user | By design: the cart is bound to the user, and the wishlist is stored per user id. |
+| Where do I get the 6-digit payment code? | The learning API returns it as `devCode` in the response of `POST /orders` — open DevTools → Network and type it by hand (the app deliberately does not fill it in). |
+| `/checkout/shipping` or `/checkout/payment` sends me back to the address step | The address id is kept in the URL (`?address=<id>`). Without it (or with a deleted address) the step returns to step 1. |
+| `/checkout` sends me to the cart | The cart is empty — there is nothing to buy. |
 
 ---
 
 ## Contributing and code style
 
-- Run `npm run lint` before committing; the project uses ESLint's flat config with React Hooks rules.
+- Run `npm run lint` before committing; the project uses ESLint's flat config with React Hooks rules. Two `react-hooks/refs` errors in `PaymentStep` and `ConfirmPage` are known (see ARCHITECTURE.md → Known limitations); do not add new ones.
 - Keep **one component per folder** with its own `.css` file and BEM-style class names.
 - Put pure logic (no React) into `src/lib/` or a feature's `lib/` folder so it stays easy to test.
 - Keep request functions separate from hooks (`xxxApi.js` vs `xxxQueries.js`) and add new cache keys to `src/api/queryKeys.js`.
 - Decide on errors by `code` / `status`, not by message text.
 - Do not commit secrets; `.env` is git-ignored.
 
-See **[ARCHITECTURE.md → How to extend the project](./ARCHITECTURE.md#21-how-to-extend-the-project)** for step-by-step recipes (new page, new API-backed list, checkout, new filter type).
+See **[ARCHITECTURE.md → How to extend the project](./ARCHITECTURE.md#23-how-to-extend-the-project)** for step-by-step recipes (new page, new API-backed list, new checkout step, form with server errors, new filter type).
 
 ---
 

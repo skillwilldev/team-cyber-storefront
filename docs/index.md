@@ -7,7 +7,7 @@ This folder contains the written documentation of the Cyber Shop front end.
 | Document | What it answers |
 | --- | --- |
 | [`../README.md`](../README.md) | How to install, run, build and deploy the project |
-| [`../ARCHITECTURE.md`](../ARCHITECTURE.md) | How the code is organised: folders, data flow, modules, API reference |
+| [`../ARCHITECTURE.md`](../ARCHITECTURE.md) | How the code is organised: folders (full annotated tree), data flow, modules (auth, cart, addresses, checkout), API reference, known limitations |
 | [`adr/`](./adr) | **Why** the important technical decisions were made |
 | [`../journal/`](../journal) | Weekly development journal |
 
@@ -50,7 +50,7 @@ What gets better, what gets worse, what must be remembered later.
 ## Journal
 
 - [Week 1](../journal/week-1.md)
-- [Week 2](../journal/week-2.md) (draft)
+- [Week 2](../journal/week-2.md) (draft: addresses, checkout, orders history, start-up 401 fix)
 
 ## Related code
 
@@ -62,4 +62,4 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/features/cart/components/QuantityStepper/QuantityStepper.jsx` | [0003](./adr/0003-cart-quantity-stepper.md) |
 | `src/shared/api/apiClient.js`, `src/features/auth/context/AuthProvider.jsx` | [0002](./adr/0002-token-storage.md) |
 | `src/features/auth/pages/AccountPage/AccountPage.jsx` | [0004](./adr/0004-profile-current-password.md) |
-| `src/features/checkout/pages/PaymentStep.jsx`, `ConfirmPage.jsx`, `src/features/checkout/lib/checkoutRoutes.js` | [0005](./adr/0005-checkout-state-in-url.md) |
+| `src/features/checkout/pages/PaymentStep/PaymentStep.jsx`, `src/features/checkout/pages/ConfirmPage/ConfirmPage.jsx`, `src/features/checkout/lib/checkoutRoutes.js`, `src/features/checkout/hooks/useSelectedAddress.js` | [0005](./adr/0005-checkout-state-in-url.md) |
