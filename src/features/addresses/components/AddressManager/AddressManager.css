@@ -1,0 +1,101 @@
+.addr-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.addr-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.addr-manager__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.addr-manager__panel {
+  padding: 32px;
+  border: 1px solid var(--c-border-light);
+  border-radius: 8px;
+}
+
+.addr-manager__panel-title {
+  margin-bottom: 8px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.addr-manager__hint {
+  margin-bottom: 8px;
+  color: var(--c-gray-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.addr-manager__panel .address-form {
+  margin-top: 16px;
+}
+
+/* the dashed "Add New Address" divider from the mockup */
+.addr-manager__add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.addr-manager__add button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.addr-manager__add button::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed #8d8d8d;
+}
+
+.addr-manager__add-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+}
+
+.addr-manager__add button:disabled {
+  color: #a4a4a4;
+}
+
+.addr-manager__add button:disabled .addr-manager__add-icon {
+  background: #a4a4a4;
+}
+
+.addr-manager__add p {
+  color: var(--c-gray-text);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .addr-manager__panel {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,75 @@
+.theme-toggle {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: 56px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--c-border-light);
+  border-radius: 999px;
+  background: var(--c-input);
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--c-border);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--c-black);
+  outline-offset: 2px;
+}
+
+/* the sliding knob: left = light, right = dark */
+.theme-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c-black);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.25s ease;
+}
+
+.theme-toggle[aria-checked='true'] .theme-toggle__thumb {
+  transform: translateX(26px);
+}
+
+/* the icon above the knob is the active one (contrast color), the other one is muted */
+.theme-toggle .theme-toggle__icon {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  color: var(--c-gray);
+  pointer-events: none;
+  transition: color 0.25s ease;
+}
+
+.theme-toggle .theme-toggle__icon--sun {
+  left: 7px;
+}
+
+.theme-toggle .theme-toggle__icon--moon {
+  right: 7px;
+}
+
+.theme-toggle[aria-checked='false'] .theme-toggle__icon--sun,
+.theme-toggle[aria-checked='true'] .theme-toggle__icon--moon {
+  color: var(--t-on-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle,
+  .theme-toggle__thumb,
+  .theme-toggle .theme-toggle__icon {
+    transition: none;
+  }
+}

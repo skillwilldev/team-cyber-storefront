@@ -152,7 +152,7 @@
   padding: 8px 0 16px;
 }
 
-.header__menu li * {
+.header__menu li > * {
   color: #000;
   opacity: 0.3;
   font-size: 16px;
@@ -307,4 +307,41 @@
   100% {
     transform: rotate(360deg);
   }
-}
+}
+
+
+/* theme switch (the base look lives in ThemeToggle.css; here it only wins over the generic header button rules) */
+.header__btns .theme-toggle {
+  display: block;
+  width: 56px;
+  height: 30px;
+}
+
+.header__btns .theme-toggle .theme-toggle__icon {
+  width: 14px;
+  height: 14px;
+}
+
+.header__menu .header__menu-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.header__menu .theme-toggle,
+.header__menu .theme-toggle * {
+  opacity: 1;
+}
+
+.header__menu .theme-toggle {
+  display: block;
+  width: 56px;
+  height: 30px;
+  padding: 0;
+}
+
+.header__menu .theme-toggle .theme-toggle__icon {
+  width: 14px;
+  height: 14px;
+}

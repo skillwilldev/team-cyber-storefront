@@ -5,6 +5,7 @@ import { useCart } from '@features/cart/hooks/useCart';
 import { useShop } from '@features/shop';
 import { BurgerIcon, CartIcon, HeartIcon, SearchIcon, UserIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import UserMenu from '../UserMenu/UserMenu';
 import './Header.css';
 
@@ -143,6 +144,8 @@ export default function Header() {
                 </Link>
               )}
             </div>
+
+            <ThemeToggle />
           </div>
           <button
             type="button"
@@ -182,12 +185,30 @@ export default function Header() {
                 </Link>
               </li>
               {!isLoading && isAuthenticated && (
+                <li className={pathname.startsWith('/orders') ? 'active' : undefined}>
+                  <Link to="/orders" onClick={closeMenu}>
+                    Orders
+                  </Link>
+                </li>
+              )}
+              {!isLoading && isAuthenticated && (
+                <li className={pathname.startsWith('/addresses') ? 'active' : undefined}>
+                  <Link to="/addresses" onClick={closeMenu}>
+                    Address
+                  </Link>
+                </li>
+              )}
+              {!isLoading && isAuthenticated && (
                 <li>
                   <button type="button" onClick={handleLogout}>
                     Logout
                   </button>
                 </li>
               )}
+              <li className="header__menu-theme">
+                <span>Dark theme</span>
+                <ThemeToggle />
+              </li>
             </ul>
           </div>
         </nav>

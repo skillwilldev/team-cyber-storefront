@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@api/queryKeys';
-import { apiRequest, getToken, setToken, removeToken } from '@shared/api/apiClient';
+import { PRIVATE_QUERY_KEYS } from '@api/queryKeys';
+import { apiRequest, getToken, setToken, removeToken, isTokenExpired } from '@shared/api/apiClient';
 import { AuthContext } from './AuthContext';
 
 /**
@@ -15,10 +15,29 @@ import { AuthContext } from './AuthContext';
 
 // export const AuthContext = createContext(null);
 
+// One startup check at a time: React StrictMode (dev) runs effects twice, which sent GET /auth/me twice.
+let sessionCheck = null;
+const checkSession = () => {
+  sessionCheck ??= apiRequest('/auth/me').finally(() => {
+    sessionCheck = null;
+  });
+  return sessionCheck;
+};
+
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
+
+  // cart, addresses, checkout and orders are private to one account — the next person of this browser must not see them
+  const forgetPrivateData = useCallback(() => {
+    PRIVATE_QUERY_KEYS.forEach((queryKey) => queryClient.removeQueries({ queryKey }));
+  }, [queryClient]);
+
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(() => !!getToken());
+  // an already expired token needs no check at all — the effect below just drops it
+  const [isLoading, setIsLoading] = useState(() => {
+    const token = getToken();
+    return !!token && !isTokenExpired(token);
+  });
 
   // Check session on app startup
   useEffect(() => {
@@ -26,14 +45,20 @@ export function AuthProvider({ children }) {
     if (!token) {
       return;
     }
+    if (isTokenExpired(token)) {
+      // expired while the user was away: no request, no 401 in the console
+      removeToken();
+      return;
+    }
 
-    apiRequest('/auth/me')
+    checkSession()
       .then((data) => {
         setUser(data.user);
       })
-      .catch(() => {
-        // Token invalid/expired — clean up
-        removeToken();
+      .catch((error) => {
+        // Only a 401 means "the token is bad". A network error / 5xx (e.g. the free server is waking up)
+        // must not sign the user out: the token stays and the next page load checks it again.
+        if (error?.status === 401) removeToken();
         setUser(null);
       })
       .finally(() => {
@@ -42,14 +67,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Login: save token + set user
-  // The cart is the user's private data: never let one account see the cache of another one.
+  // The cart, addresses and orders are the user's private data: never let one account see the cache of another one.
   const login = useCallback(
     (accessToken, userData) => {
-      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
+      forgetPrivateData();
       setToken(accessToken);
       setUser(userData);
     },
-    [queryClient],
+    [forgetPrivateData],
   );
 
   // Logout: remove token + clear user
@@ -57,7 +82,7 @@ export function AuthProvider({ children }) {
     if (!getToken()) {
       removeToken();
       setUser(null);
-      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
+      forgetPrivateData();
       return;
     }
     try {
@@ -72,10 +97,10 @@ export function AuthProvider({ children }) {
     } finally {
       removeToken();
       setUser(null);
-      // the cart stays on the server; the browser must forget it (the next person may use this browser)
-      queryClient.removeQueries({ queryKey: queryKeys.cart.all });
+      // the data stays on the server; the browser must forget it (the next person may use this browser)
+      forgetPrivateData();
     }
-  }, [queryClient]);
+  }, [forgetPrivateData]);
 
   const value = {
     user,
