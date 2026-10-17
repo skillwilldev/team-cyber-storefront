@@ -7,8 +7,11 @@ import { AuthProvider } from '@features/auth';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
 import { ToastProvider } from '@shared/ui';
+import { initTheme } from '@/lib/theme';
 import App from './App';
 import './styles/global.css';
+
+initTheme();
 
 /**
  * Provider order:

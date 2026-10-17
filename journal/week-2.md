@@ -26,6 +26,7 @@
 | "Orders" item in the profile menu | Done | Added to the avatar dropdown and to the mobile menu. |
 | Fresh history after paying | Done | After `POST /orders/:id/confirm` the `['orders', 'list']` cache entry is invalidated, so the new order is visible at once. |
 | Start-up `401` on `GET /auth/me` | Done | See the table below. |
+| Dark theme | Done | A light / dark switch in the right part of the header (and in the mobile menu). The choice is saved in `localStorage` (`theme`), follows the OS setting until the user chooses and is shared between tabs. The dark palette is one file, `styles/theme.css`; component styles were not changed. See [ADR 0006](../docs/adr/0006-color-theme.md). |
 | Documentation | Done | README (features, routes, structure, status, troubleshooting), ARCHITECTURE.md (full annotated folder tree, new sections 12 Addresses and 13 Checkout and orders, routing, state keys, session lifecycle, API reference, limitations), ADR 0002 (note), ADR 0005, docs index. |
 
 ## 3. Problems and how I solved them
@@ -42,6 +43,7 @@
 | (risk) The new order was missing from `/orders` right after paying | The history was served from the 1-minute cache | `useConfirmOrder` invalidates `['orders', 'list']` and writes the order into `['orders', 'detail', id]` |
 | (risk) The next person of the same browser could see the previous user's addresses and orders | Only the cart cache was removed on logout | `PRIVATE_QUERY_KEYS` lists all four private cache entries and login / logout wipe them |
 | A temporary server error could sign the user out | Any error of the start-up check removed the token | The token is removed only on `401`; a network error or `5xx` (the free server waking up) keeps it |
+| A short white flash on reload in dark mode | The theme is applied by `initTheme()` in `main.jsx`, after the page starts loading | Accepted as a trade-off: an inline script in `index.html` would remove it, but it would put logic in a second place (ADR 0006) |
 
 ## 4. What I learned
 
@@ -50,6 +52,7 @@
 ## 5. Decisions made this week
 
 - [ADR 0005 — checkout state in the URL](../docs/adr/0005-checkout-state-in-url.md): `orderId` and the chosen address in the URL, the card only in the form.
+- [ADR 0006 — color theme](../docs/adr/0006-color-theme.md): `data-theme` on `<html>`, the choice in `localStorage`, dark colors in one `theme.css`.
 - Note added to [ADR 0002 — token storage](../docs/adr/0002-token-storage.md): an expired token is detected locally.
 
 ## 6. Questions for the lecturer / things I did not understand
@@ -63,6 +66,7 @@
 - [ ] Route-level code splitting (`React.lazy`); the single JS chunk is now ≈ 567 kB (≈ 171 kB gzip)
 - [ ] Header search outside the catalog should keep the current category
 - [ ] Tidy-up: move `getGenericMessage` out of `features/checkout` (addresses and checkout import each other), export `useAuth` from the auth barrel, remove the commented-out lines
+- [ ] Replace the hard-coded `#000` / `#fff` in component CSS with tokens, so `theme.css` overrides can be removed
 - [ ] Wishlist page
 
 ## 8. Self-assessment

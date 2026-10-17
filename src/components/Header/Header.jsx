@@ -5,6 +5,7 @@ import { useCart } from '@features/cart/hooks/useCart';
 import { useShop } from '@features/shop';
 import { BurgerIcon, CartIcon, HeartIcon, SearchIcon, UserIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import UserMenu from '../UserMenu/UserMenu';
 import './Header.css';
 
@@ -143,6 +144,8 @@ export default function Header() {
                 </Link>
               )}
             </div>
+
+            <ThemeToggle />
           </div>
           <button
             type="button"
@@ -202,6 +205,10 @@ export default function Header() {
                   </button>
                 </li>
               )}
+              <li className="header__menu-theme">
+                <span>Dark theme</span>
+                <ThemeToggle />
+              </li>
             </ul>
           </div>
         </nav>

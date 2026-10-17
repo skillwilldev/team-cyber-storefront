@@ -2,7 +2,7 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
-> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL).
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme).
 
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
@@ -49,7 +49,7 @@ flowchart LR
     RQ[(TanStack Query cache)]
     AUTH[AuthContext<br/>user + token]
     URL[(URL query string<br/>catalog state)]
-    LS[(localStorage<br/>accessToken, wishlist)]
+    LS[(localStorage<br/>accessToken, wishlist, theme)]
   end
   API[(REST API<br/>shop-api on Render)]
 
@@ -71,6 +71,7 @@ The key architectural idea is a **strict split of state by origin**:
 | Checkout progress (chosen address, pending order) | The URL (`?address=<id>`, `/checkout/confirm/:orderId`) | F5 and the Back button keep the step (ADR 0005) |
 | Card number, holder, expiry, CVC | Only the state of the payment form | Never stored anywhere else (ADR 0005) |
 | Wishlist | `ShopContext` (+ `localStorage`) | The API has no wishlist endpoints yet |
+| Color theme (light / dark) | `data-theme` on `<html>` (+ `localStorage`, key `theme`) | CSS reads the attribute; the choice survives a refresh and is shared between tabs (ADR 0006) |
 | Purely visual state (open dropdown, selected photo) | Local `useState` inside the component | Nobody else needs it |
 
 ---
@@ -89,6 +90,7 @@ The key architectural idea is a **strict split of state by origin**:
 | Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. Currently reports 2 `react-hooks/refs` errors, see [section 24](#24-known-limitations-and-technical-debt). |
 | Language | JavaScript (ES modules, JSX) | Types come from `@types/react` for editor hints only. |
 | Fonts | Inter (Google Fonts, loaded in `index.html`) | |
+| Theming | CSS variables + the `data-theme` attribute | Light by default; the dark palette is one file, `styles/theme.css` (see [section 17](#17-styling-system) and ADR 0006). |
 
 ### Build configuration (`vite.config.js`)
 
@@ -116,11 +118,11 @@ All paths must be rewritten to `index.html`. `public/_redirects` (`/*  /index.ht
 
 ## 3. Folder structure
 
-The tree below is the **real** state of the repository (104 JavaScript / JSX files and 54 CSS files in `src/`; `node_modules/` and `dist/` are not shown). A folder written as `Name/ (.jsx + .css)` contains `Name.jsx` and `Name.css`.
+The tree below is the **real** state of the repository (107 JavaScript / JSX files and 56 CSS files in `src/`; `node_modules/` and `dist/` are not shown). A folder written as `Name/ (.jsx + .css)` contains `Name.jsx` and `Name.css`.
 
 ```
 cyber-shop/
-├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, loads /src/main.jsx
+├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, theme-color meta, loads /src/main.jsx
 ├─ vite.config.js             Vite 8 + React plugin + React Compiler (Babel preset) + path aliases @, @api, @shared, @features
 ├─ eslint.config.js           ESLint flat config: js recommended + react-hooks + react-refresh
 ├─ package.json               scripts (dev, build, lint, preview) and dependencies
@@ -137,18 +139,19 @@ cyber-shop/
 │     ├─ 0002-token-storage.md
 │     ├─ 0003-cart-quantity-stepper.md
 │     ├─ 0004-profile-current-password.md
-│     └─ 0005-checkout-state-in-url.md
+│     ├─ 0005-checkout-state-in-url.md
+│     └─ 0006-color-theme.md
 │
 ├─ journal/                   weekly development journal
 │  ├─ week-1.md               05.10 – 11.10.2026 (FE-001 … FE-005)
-│  └─ week-2.md               12.10.2026 – … (addresses, checkout, orders history, start-up 401 fix) — draft
+│  └─ week-2.md               12.10.2026 – … (addresses, checkout, orders history, start-up 401 fix, dark theme) — draft
 │
 ├─ public/                    copied to the build as they are
 │  ├─ favicon.svg, icons.svg  static assets
 │  └─ _redirects              SPA fallback for Netlify-style hosting (/*  /index.html  200)
 │
 └─ src/
-   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render
+   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render; `initTheme()` before the first render
    ├─ App.jsx                 the whole route table (public, protected, checkout, 404)
    │
    ├─ api/                    SERVER-STATE LAYER: plain request functions (xxxApi.js) + TanStack Query hooks (xxxQueries.js)
@@ -256,6 +259,7 @@ cyber-shop/
    │  ├─ Layout/                Header + <Outlet /> + Footer, scroll to top (.jsx only)
    │  ├─ Header/                logo, search, nav, wishlist + cart badges, profile slot, mobile menu
    │  ├─ UserMenu/              avatar dropdown: Account, Orders, Address, Logout
+   │  ├─ ThemeToggle/           light / dark switch (role="switch"); used in the Header and in the mobile menu
    │  ├─ Footer/                footer (placeholder links)
    │  ├─ Logo/                  SVG text logo (Logo.jsx only)
    │  ├─ ProductCard/, ProductCardSkeleton/, ProductImage/, Stars/
@@ -269,18 +273,21 @@ cyber-shop/
    │  ├─ catalog.js             URL ⇄ state ⇄ API query mapping
    │  ├─ format.js              formatPrice, formatWarranty
    │  ├─ specs.js               product spec labels and grouping
-   │  └─ filterLabels.js        filter titles and colour swatches
+   │  ├─ filterLabels.js        filter titles and colour swatches
+   │  └─ theme.js               color theme: initTheme, setTheme, toggleTheme + store for useSyncExternalStore (touches the DOM and localStorage, so not pure)
    │
    ├─ hooks/                  GENERIC HOOKS
    │  ├─ useCatalogParams.js    catalog state ⇄ URL (the only place that reads / writes it)
-   │  └─ useMediaQuery.js       reactive window.matchMedia
+   │  ├─ useMediaQuery.js       reactive window.matchMedia
+   │  └─ useTheme.js            current theme + setters (useSyncExternalStore over lib/theme.js)
    │
    └─ styles/                 GLOBAL CSS
       ├─ vars.css               shop colour variables (--c-*)
       ├─ auth-tokens.css        auth / form design tokens (--color-*, spacing, radius, shadow)
       ├─ cyber-form.css         .cyber-form / .cyber-check: inputs drawn like the checkout / address mockups
       ├─ reset.css              CSS reset
-      └─ global.css             imports vars, reset and auth-tokens + base styles + utilities
+      ├─ theme.css              light / dark: dark tokens under :root[data-theme='dark'] + overrides of hard-coded colors
+      └─ global.css             imports vars, reset, auth-tokens and theme + base styles + utilities
 ```
 
 ### Conventions
@@ -330,6 +337,8 @@ Why this order?
 4. `BrowserRouter` is innermost of the providers; `useShop()` and `useAddToCart()` use router hooks (`useNavigate`, `useLocation`) so they must be called under the router.
 
 `App.jsx` then renders the route table (next section). The global stylesheet `styles/global.css` is imported once in `main.jsx`.
+
+Right after the imports, before the first render, `main.jsx` calls `initTheme()` (`lib/theme.js`): it reads the saved color theme from `localStorage` (or the OS preference) and sets `data-theme` on `<html>`. The theme is not a provider — see [6.5](#65-color-theme-libthemejs).
 
 ---
 
@@ -469,6 +478,20 @@ Three states are possible: **loading** (token present, being verified), **authen
 ### 6.4 Wishlist state (`ShopContext`)
 
 Stored in `localStorage` under `shop:<userId>` as `{ wishlist: [productId, …] }`. See [section 14](#14-wishlist-module).
+
+### 6.5 Color theme (`lib/theme.js`)
+
+The theme (`'light'` | `'dark'`) is the `data-theme` attribute on `<html>`; CSS reads only this attribute (`styles/theme.css`). The choice is saved in `localStorage` under `theme`; until the user chooses, the OS preference (`prefers-color-scheme`) is used and followed live.
+
+| Function | What it does |
+| --- | --- |
+| `initTheme()` | Applies the saved (or OS) theme; called once in `main.jsx` before the first render |
+| `getTheme()` | Reads `data-theme` from `<html>` |
+| `setTheme(theme)` | Saves to `localStorage` (inside `try / catch`: blocked storage only means "not saved"), applies, notifies subscribers and turns on a short color transition for this one switch |
+| `toggleTheme()` | Switches light ⇄ dark |
+| `subscribe(listener)` | For `useSyncExternalStore`; also listens to the `storage` event (another tab changed the theme) and to the OS theme change while nothing is saved |
+
+React reads the state through `useTheme()` (`hooks/useTheme.js`), which returns `{ theme, isDark, setTheme, toggleTheme }`. There is no Context: the attribute on `<html>` is the single source of truth. See [ADR 0006](./docs/adr/0006-color-theme.md).
 
 ---
 
@@ -1075,8 +1098,9 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 | Component | Responsibility |
 | --- | --- |
 | `Layout` | Header + `<main style="flex-grow:1">` + Footer; scrolls to top on every path change |
-| `Header` | Logo, `HeaderSearch`, nav (`Home`, `About`, `Contact Us`, `Blog`), wishlist icon with badge, cart icon with badge (`cart.totalQty`, 0 for guests/while loading), profile slot (spinner while auth loads, `UserMenu` when signed in, sign-in icon otherwise) and a burger button that opens a mobile menu (nav + cart + auth actions: Account, Orders, Address, Logout) |
+| `Header` | Logo, `HeaderSearch`, nav (`Home`, `About`, `Contact Us`, `Blog`), wishlist icon with badge, cart icon with badge (`cart.totalQty`, 0 for guests/while loading), profile slot (spinner while auth loads, `UserMenu` when signed in, sign-in icon otherwise), the theme switch (`ThemeToggle`) at the right end, and a burger button that opens a mobile menu (nav + cart + auth actions: Account, Orders, Address, Logout, theme switch) |
 | `UserMenu` | Avatar circle with the first letter of the name; dropdown with name, e-mail, "Account", "Orders" (`/orders`), "Address" and "Logout". Closes on outside click and `Escape`. Logout navigates to `/` |
+| `ThemeToggle` | Light / dark switch: a `button` with `role="switch"` and `aria-checked`, a sliding knob with sun / moon icons. Reads and changes the theme through `useTheme()`; the choice is saved to `localStorage` (see [6.5](#65-color-theme-libthemejs)) |
 | `Footer` | Logo, about text, social icons, two link lists (placeholders — links point to `#`) |
 | `Breadcrumbs` | `<nav><ol>` with chevrons; last item is `aria-current="page"`; desktop only |
 | `LoadingHint` | After `delay` (4 s) explains that the free-hosted server is waking up. Mount it only while loading |
@@ -1094,9 +1118,10 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 ## 17. Styling system
 
 * Plain **CSS files next to components**, BEM-like naming (`block__element--modifier`). No CSS-in-JS and no utility framework.
-* `styles/global.css` imports `vars.css`, `reset.css`, `auth-tokens.css` and defines base typography (Inter, 16 px), the `.container` (max-width 1140 px), focus ring (`:focus-visible`), `.sr-only`, and the skeleton shimmer (disabled under `prefers-reduced-motion`).
+* `styles/global.css` imports `vars.css`, `reset.css`, `auth-tokens.css`, `theme.css` and defines base typography (Inter, 16 px), the `.container` (max-width 1140 px), focus ring (`:focus-visible`), `.sr-only`, and the skeleton shimmer (disabled under `prefers-reduced-motion`).
 * **Two token sets:** `vars.css` (`--c-black`, `--c-gray`, `--c-gray-text`, `--c-border`, `--c-border-light`, `--c-surface`, `--c-input`, `--c-star`) for the shop; `auth-tokens.css` (`--color-primary`, `--color-error`, `--color-success`, `--color-warning`, `--color-bg`, `--color-surface`, `--color-text*`, spacing / radius / shadow tokens) for forms and auth screens.
 * **`cyber-form.css`** is not imported globally: the address and checkout forms import it themselves. A form wrapped in `.cyber-form` gets the shared `<Input>` / `<FormField>` restyled like the checkout mockups (white field, 56 px high, thin grey border, black on focus); `.cyber-check` is the matching checkbox.
+* **Color theme (light / dark).** The theme is the `data-theme` attribute on `<html>`; `main.jsx` calls `initTheme()` (`lib/theme.js`) before the first render, which applies the saved choice (`localStorage`, key `theme`) or the OS preference. `styles/theme.css` re-defines both token sets under `:root[data-theme='dark']` and overrides the hard-coded `#000` / `#fff` colors of components one by one; component stylesheets are not edited. `useTheme()` exposes the state to React and `ThemeToggle` is the switch. Details and trade-offs: [ADR 0006](./docs/adr/0006-color-theme.md). New components should use the tokens (`var(--c-*)`, `var(--color-*)`); a hard-coded color needs its own rule in `theme.css`.
 * **One breakpoint:** mobile `max-width: 1023px`, desktop `min-width: 1024px` (CSS variables cannot be used in media queries, so the value is written out). The same breakpoint exists in JavaScript as `MOBILE_QUERY`.
 * Helper classes `.only-desktop` and `.only-mobile` hide content per breakpoint.
 
@@ -1127,6 +1152,7 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 * Accordions use `aria-expanded` / `aria-controls`; toggles use `aria-pressed` / `aria-checked`; the current page uses `aria-current`.
 * Visible `:focus-visible` outline, a `.sr-only` utility, and reduced-motion support for skeletons.
 * Skeletons are `aria-hidden`; the loading container has `aria-busy`.
+* The theme switch is a `button` with `role="switch"` and `aria-checked`, a constant label ("Dark theme"), a visible focus ring and no animation under `prefers-reduced-motion`.
 
 ---
 
@@ -1190,6 +1216,7 @@ flowchart TD
   main --> AuthP[features/auth<br/>AuthProvider]
   main --> ShopP[features/shop<br/>ShopProvider]
   main --> Toast[shared/ui<br/>ToastProvider]
+  main --> libtheme[lib/theme<br/>initTheme]
 
   App --> Layout
   App --> Pages[pages/*]
@@ -1204,6 +1231,7 @@ flowchart TD
   Header --> useShop
   Header --> useAuth
   Header --> UserMenu
+  Header --> ThemeToggle --> useTheme --> libtheme
 
   Pages --> catalogQueries
   Pages --> useCatalogParams
@@ -1303,6 +1331,7 @@ Checked on 17.10.2026: `npm run build` passes, `npm run lint` reports 2 errors (
 * **Deep imports bypass the barrels:** `useAuth` is not exported by the `@features/auth` barrel, so 15 files import `@features/auth/hooks/useAuth` directly. Exporting it from `features/auth/index.js` would remove the deep path.
 * **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider` (line 16), a commented `oldPrice` line in `ProductCard` (line 48), `profileLabel` in `Header` is always `'Sign in'`. `AuthProvider.logout` still has a `console.error('err logout', …)`.
 * **Language of comments:** the comments in `checkout/lib/card.js` (`detectBrand`) are in Russian, all other comments and the UI are in English. The API's own labels (filter labels, spec names) are in Georgian.
+* **Dark theme is an override layer:** `styles/theme.css` overrides about 110 hard-coded `#000` / `#fff` colors of component stylesheets instead of those components using tokens, so a new component with a hard-coded color looks wrong in dark mode until it gets a rule there. Replacing the hard-coded colors with tokens would remove most overrides. In dark mode a very short white flash on reload is possible (the theme is applied by JS, not by an inline script in `index.html`; ADR 0006), and product photos are shown on a light tile because they are shot on white.
 * **Token in `localStorage`:** simple and common, but readable by any script running on the page (XSS risk). HttpOnly cookies would be the more secure alternative if the API supported them.
 * **Bundle size:** one JS chunk of about 567 kB; routes could be code-split with `React.lazy` + `Suspense` (account, cart, addresses, checkout and forgot-password pages are good first candidates).
 * **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutErrors.js`, `checkoutFormat.js`, `checkoutRoutes.js`, `format.js`, `specs.js`, `isTokenExpired`) are ideal first targets; `passesLuhn`, `isExpiryValid` and `detectBrand` have clear input / output tables.
@@ -1326,6 +1355,7 @@ Checked on 17.10.2026: `npm run build` passes, `npm run lint` reports 2 errors (
 | **Protected route** | A route that redirects guests to `/login` |
 | **Barrel file** | An `index.js` that re-exports a module's public API |
 | **ADR** | Architecture Decision Record (e.g. ADR 0003: cart quantity stepper) |
+| **Theme** | The light / dark color scheme: the `data-theme` attribute on `<html>`, saved in `localStorage` under `theme` (ADR 0006) |
 | **Private query keys** | The cache keys (`PRIVATE_QUERY_KEYS`) that belong to one account and are wiped on login / logout: cart, addresses, checkout, orders |
 | **Default address** | The address that is preselected at checkout; the API always returns it first and the first address a user adds is the default |
 | **`pending_payment` / `paid`** | The two order statuses the front end knows: the order exists but the code is not confirmed yet / the code is confirmed |

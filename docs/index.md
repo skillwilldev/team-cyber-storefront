@@ -22,10 +22,11 @@ An ADR is a short document about **one** decision: the situation, what was chose
 | [0003](./adr/0003-cart-quantity-stepper.md) | Cart quantity stepper: how to handle fast clicks | FE-005 | Accepted |
 | [0004](./adr/0004-profile-current-password.md) | Profile page: current password in the form, not in a modal | FE-004 | Accepted |
 | [0005](./adr/0005-checkout-state-in-url.md) | Checkout state: `orderId` and chosen address in the URL, card only in the form | FE-006 | Accepted |
+| [0006](./adr/0006-color-theme.md) | Color theme: `data-theme` on `<html>`, choice in `localStorage`, dark colors in one `theme.css` | — | Accepted |
 
 ### ADR template
 
-Copy this when a new decision has to be recorded (next number: `0006`):
+Copy this when a new decision has to be recorded (next number: `0007`):
 
 ```md
 # ADR 000X: Short title of the decision
@@ -50,7 +51,7 @@ What gets better, what gets worse, what must be remembered later.
 ## Journal
 
 - [Week 1](../journal/week-1.md)
-- [Week 2](../journal/week-2.md) (draft: addresses, checkout, orders history, start-up 401 fix)
+- [Week 2](../journal/week-2.md) (draft: addresses, checkout, orders history, start-up 401 fix, dark theme)
 
 ## Related code
 
@@ -63,3 +64,4 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/shared/api/apiClient.js`, `src/features/auth/context/AuthProvider.jsx` | [0002](./adr/0002-token-storage.md) |
 | `src/features/auth/pages/AccountPage/AccountPage.jsx` | [0004](./adr/0004-profile-current-password.md) |
 | `src/features/checkout/pages/PaymentStep/PaymentStep.jsx`, `src/features/checkout/pages/ConfirmPage/ConfirmPage.jsx`, `src/features/checkout/lib/checkoutRoutes.js`, `src/features/checkout/hooks/useSelectedAddress.js` | [0005](./adr/0005-checkout-state-in-url.md) |
+| `src/lib/theme.js`, `src/hooks/useTheme.js`, `src/components/ThemeToggle/`, `src/styles/theme.css` | [0006](./adr/0006-color-theme.md) |
