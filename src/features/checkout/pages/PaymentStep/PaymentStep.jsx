@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -41,7 +41,7 @@ export default function PaymentStep() {
   const { data: checkout } = useCheckout();
   const { address, isPending, isError, error, refetch } = useSelectedAddress();
   const createOrder = useCreateOrder();
-  const inFlight = useRef(false);
+  // const inFlight = useRef(false);
   const [cardBanner, setCardBanner] = useState('');
   const [banner, setBanner] = useState('');
   const [addressProblems, setAddressProblems] = useState([]);
@@ -64,12 +64,6 @@ export default function PaymentStep() {
   const number = useWatch({ control, name: 'number' });
   const holder = useWatch({ control, name: 'holder' });
 
-  if (isPending) return <span className="skeleton" style={{ height: 480, marginTop: 64 }} aria-busy="true" />;
-  if (isError) return <QueryError message={error.message} onRetry={() => refetch()} />;
-  if (!address) return <Navigate to="/checkout/address" replace />;
-
-
-
   const clearMessages = () => {
     setCardBanner('');
     setBanner('');
@@ -77,9 +71,10 @@ export default function PaymentStep() {
     setStockProblems(null);
   };
 
-  const onSubmit = async (values) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
+
+  const onSubmit = useCallback(async (values) => {
+    // if (inFlight.current) return;
+    // inFlight.current = true;
     clearMessages();
 
     try {
@@ -117,10 +112,17 @@ export default function PaymentStep() {
       } else if (err.code !== 'TOKEN_EXPIRED') {
         setBanner(getGenericMessage(err));
       }
-    } finally {
-      inFlight.current = false;
     }
-  };
+  }, [createOrder, address, navigate, reset, location, setError]);
+
+  if (isPending) return <span className="skeleton" style={{ height: 480, marginTop: 64 }} aria-busy="true" />;
+  if (isError) return <QueryError message={error.message} onRetry={() => refetch()} />;
+  if (!address) return <Navigate to="/checkout/address" replace />;
+
+
+
+
+
 
   // the visible formatting (4-4-4-4, MM/YY) happens before React Hook Form reads the value
   const numberField = register('number');

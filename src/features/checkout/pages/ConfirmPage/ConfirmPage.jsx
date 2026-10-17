@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -19,24 +19,6 @@ import './ConfirmPage.css';
 const RESEND_SECONDS = 30;
 const CODE_MINUTES = 10;
 
-/**
- * /checkout/confirm/:orderId (protected) — the 3-D-Secure-like step: the 6-digit code "sent by e-mail".
- *
- * `orderId` is in the URL, not only in memory, so F5 on this screen keeps the order (ADR 0005). The page asks
- * GET /orders/:id by itself: an order that is already paid goes straight to /orders/:id, a foreign or unknown id
- * shows "not found".
- *
- *   Confirm → POST /orders/:id/confirm { code }
- *     200                       → the cart is emptied in the cache (badge → 0) → /orders/:id
- *     400 INVALID_PAYMENT_CODE  → under the code field
- *     429 TOO_MANY_ATTEMPTS     → banner; the code is blocked — ask for a new one
- *     409 ORDER_ALREADY_PAID    → /orders/:id
- *     409 INSUFFICIENT_STOCK    → the last item was bought by someone else: list + link to the cart
- *   Resend → POST /orders/:id/resend-code — a 30-second timer; 429 RESEND_TOO_SOON continues it from retryAfterSeconds.
- *
- * In this learning API the code is also in the `devCode` field of the POST /orders response. It is deliberately NOT
- * filled in automatically — read it in DevTools → Network and type it by hand.
- */
 export default function ConfirmPage() {
   'use no memo';
   const { orderId } = useParams();
@@ -48,7 +30,7 @@ export default function ConfirmPage() {
   const orderQuery = useOrder(orderId);
   const confirm = useConfirmOrder();
   const resend = useResendOrderCode();
-  const inFlight = useRef(false);
+  
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
   const [isBlocked, setIsBlocked] = useState(false);
   const [banner, setBanner] = useState('');
@@ -73,6 +55,61 @@ export default function ConfirmPage() {
     const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(timer);
   }, [secondsLeft]);
+
+  const onSubmit = useCallback(async ({ code }) => {
+    if (!orderQuery.data?.order) return;
+    const currentOrder = orderQuery.data.order;
+
+    setBanner('');
+    setStockProblems(null);
+
+    try {
+      const { order: paid } = await confirm.mutateAsync({ id: currentOrder.id, code });
+      toast.success('Payment successful');
+      navigate(orderPath(paid.id), { replace: true });
+    } catch (err) {
+      if (err.code === 'INVALID_PAYMENT_CODE') {
+        setError('code', { type: 'server', message: 'The code is incorrect or has expired' }, { shouldFocus: true });
+      } else if (err.code === 'TOO_MANY_ATTEMPTS') {
+        setIsBlocked(true);
+        setBanner('Too many wrong attempts. Request a new code to continue.');
+      } else if (err.code === 'ORDER_ALREADY_PAID') {
+        navigate(orderPath(currentOrder.id), { replace: true });
+      } else if (err.code === 'INSUFFICIENT_STOCK') {
+        setStockProblems(getStockProblems(err));
+      } else if (err.code === 'ORDER_NOT_FOUND') {
+        orderQuery.refetch();
+      } else if (err.code === 'VALIDATION_ERROR' && err.errors?.code) {
+        setError('code', { type: 'server', message: err.errors.code }, { shouldFocus: true });
+      } else if (err.code !== 'TOKEN_EXPIRED') {
+        setBanner(getGenericMessage(err));
+      }
+    }
+  }, [confirm, orderQuery, navigate, setError, toast]);
+
+  const handleResend = useCallback(async () => {
+    if (!orderQuery.data?.order) return;
+    const currentOrder = orderQuery.data.order;
+
+    try {
+      await resend.mutateAsync({ id: currentOrder.id });
+      setSecondsLeft(RESEND_SECONDS);
+      setIsBlocked(false);
+      setBanner('');
+      setStockProblems(null);
+      reset({ code: '' });
+      toast.success('A new code has been sent');
+    } catch (err) {
+      if (err.code === 'RESEND_TOO_SOON') {
+        const wait = Math.ceil(Number(err.data?.retryAfterSeconds));
+        setSecondsLeft(Number.isFinite(wait) && wait > 0 ? wait : RESEND_SECONDS);
+      } else if (err.code === 'ORDER_ALREADY_PAID') {
+        navigate(orderPath(currentOrder.id), { replace: true });
+      } else if (err.code !== 'TOKEN_EXPIRED') {
+        toast.error(getGenericMessage(err));
+      }
+    }
+  }, [resend, orderQuery, navigate, reset, toast]);
 
   if (orderQuery.isPending) {
     return (
@@ -103,60 +140,6 @@ export default function ConfirmPage() {
 
   const backTo = addressId ? checkoutPath('payment', addressId) : '/checkout/address';
   const canResend = secondsLeft <= 0 && !resend.isPending;
-
-  const onSubmit = async ({ code }) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setBanner('');
-    setStockProblems(null);
-
-    try {
-      const { order: paid } = await confirm.mutateAsync({ id: order.id, code });
-      toast.success('Payment successful');
-      navigate(orderPath(paid.id), { replace: true });
-    } catch (err) {
-      if (err.code === 'INVALID_PAYMENT_CODE') {
-        setError('code', { type: 'server', message: 'The code is incorrect or has expired' }, { shouldFocus: true });
-      } else if (err.code === 'TOO_MANY_ATTEMPTS') {
-        setIsBlocked(true);
-        setBanner('Too many wrong attempts. Request a new code to continue.');
-      } else if (err.code === 'ORDER_ALREADY_PAID') {
-        navigate(orderPath(order.id), { replace: true });
-      } else if (err.code === 'INSUFFICIENT_STOCK') {
-        setStockProblems(getStockProblems(err));
-      } else if (err.code === 'ORDER_NOT_FOUND') {
-        orderQuery.refetch();
-      } else if (err.code === 'VALIDATION_ERROR' && err.errors?.code) {
-        setError('code', { type: 'server', message: err.errors.code }, { shouldFocus: true });
-      } else if (err.code !== 'TOKEN_EXPIRED') {
-        setBanner(getGenericMessage(err));
-      }
-    } finally {
-      inFlight.current = false;
-    }
-  };
-
-  const handleResend = async () => {
-    if (!canResend) return;
-    try {
-      await resend.mutateAsync({ id: order.id });
-      setSecondsLeft(RESEND_SECONDS);
-      setIsBlocked(false);
-      setBanner('');
-      setStockProblems(null);
-      reset({ code: '' });
-      toast.success('A new code has been sent');
-    } catch (err) {
-      if (err.code === 'RESEND_TOO_SOON') {
-        const wait = Math.ceil(Number(err.data?.retryAfterSeconds));
-        setSecondsLeft(Number.isFinite(wait) && wait > 0 ? wait : RESEND_SECONDS);
-      } else if (err.code === 'ORDER_ALREADY_PAID') {
-        navigate(orderPath(order.id), { replace: true });
-      } else if (err.code !== 'TOKEN_EXPIRED') {
-        toast.error(getGenericMessage(err));
-      }
-    }
-  };
 
   const codeField = register('code');
 
