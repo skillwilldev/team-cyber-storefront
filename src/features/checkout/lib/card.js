@@ -43,50 +43,14 @@ export function isExpiryValid(expiry, now = new Date()) {
 }
 
 /**
- * Определяет бренд/систему карты по префиксу (BIN)
+ * Detects the card brand/network by prefix (BIN)
  */
 export function detectBrand(number) {
   const digits = String(number).replace(/\D/g, '');
   if (!digits) return null;
-
-  // 1. Mada (Saudi Arabia) - проверяется первее, т.к. может быть кобейдж с Visa/MC
-  if (/^(968209|873646)/.test(digits)) return 'mada';
-  if (/^(422818|486094)/.test(digits)) return 'mada'; // Mada Visa
-  if (/^(529741|543357)/.test(digits)) return 'mada'; // Mada Mastercard
-
-  // 2. PayPak
-  if (/^2205(46|53)/.test(digits)) return 'paypak';
-
-  // 3. Jaywan
-  if (/^669010/.test(digits)) return 'jaywan';
-
-  // 4. UnionPay
-  if (/^(620108|621423|62)/.test(digits)) return 'unionpay';
-
-  // 5. American Express (AMEX)
-  if (/^3[47]/.test(digits)) return 'amex';
-
-  // 6. Diners Club
-  if (/^(36|38|30[0-5]|362596)/.test(digits)) return 'diners';
-
-  // 7. JCB
-  if (/^35(2[89]|[3-8]\d)/.test(digits)) return 'jcb';
-
-  // 8. Discover
-  if (/^(6011|65|64[4-9])/.test(digits)) return 'discover';
-
-  // 9. UATP
-  if (/^1354/.test(digits)) return 'uatp';
-
-  // 10. Maestro
-  if (/^(50|5[6-8]|6304|6703|6759|6761|6762|6763)/.test(digits)) return 'maestro';
-
-  // 11. Mastercard
-  if (/^(5[1-5]|2(2[2-9][1-9]|2[3-9]\d|[3-6]\d\d|7[01]\d|720))/.test(digits)) return 'mastercard';
-
-  // 12. Visa
   if (/^4/.test(digits)) return 'visa';
-
+  if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
+  if (/^3[47]/.test(digits)) return 'amex';
   return null;
 }
 
