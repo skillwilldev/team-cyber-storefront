@@ -46,6 +46,22 @@ export function removeToken() {
 }
 
 /**
+ * Is the JWT already expired? Reads the `exp` claim locally (no request).
+ * Used at startup: an expired token is dropped without calling GET /auth/me,
+ * which would only produce a 401 line in the browser console.
+ * An unreadable token is NOT treated as expired — the server decides.
+ */
+export function isTokenExpired(token, skewSeconds = 5) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const { exp } = JSON.parse(atob(base64));
+    return typeof exp === 'number' && exp * 1000 <= Date.now() + skewSeconds * 1000;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Central fetch wrapper.
  * - Automatically attaches Bearer token if present
  * - Parses JSON response

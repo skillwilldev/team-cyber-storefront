@@ -1,6 +1,7 @@
 @import './vars.css';
 @import './reset.css';
 @import './auth-tokens.css';
+@import './theme.css';
 
 /* form controls do not inherit the font by default */
 input,

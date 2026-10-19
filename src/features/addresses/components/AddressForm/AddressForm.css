@@ -1,0 +1,45 @@
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.address-form__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.address-form__grid > * {
+  min-width: 0;
+}
+
+.address-form__default {
+  align-self: end;
+  min-height: 56px;
+}
+
+.address-form__actions {
+  display: flex;
+  flex-direction: column-reverse; /* primary action first in the DOM → reachable first by keyboard */
+  gap: 12px;
+}
+
+.address-form__actions .action-btn {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .address-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .address-form__actions {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+
+  .address-form__actions .action-btn {
+    width: auto;
+  }
+}

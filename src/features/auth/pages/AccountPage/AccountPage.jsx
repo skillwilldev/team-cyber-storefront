@@ -19,7 +19,8 @@ import { applyServerErrors, buildPatch, hasChanges, toFormValues } from '../../l
 import './AccountPage.css';
 
 /**
- * Account page — FE-004: edit name, email, phone, city, address and password.
+ * Account page — FE-004: edit name, email and password.
+ * (The delivery addresses are managed on /addresses — FE-006.)
  *
  * Flow:   user (from AuthContext, loaded by GET /auth/me) → form defaults
  *         submit → PATCH /auth/me { currentPassword, ...ONLY changed fields }
@@ -32,6 +33,7 @@ import './AccountPage.css';
  * The page is rendered only inside <ProtectedRoute>, so `user` is never null here.
  */
 export default function AccountPage() {
+  'use no memo';
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const [banner, setBanner] = useState(null); // { type: 'success' | 'error', message }
@@ -64,7 +66,7 @@ export default function AccountPage() {
     try {
       const data = await apiRequest('/auth/me', { method: 'PATCH', body: JSON.stringify(body) });
 
-      setUser(data.user); // one source of truth → Header, UserMenu, checkout prefill all see it
+      setUser(data.user); // one source of truth → Header and UserMenu see it
       reset(toFormValues(data.user)); // new defaults: form is clean again, password fields are emptied
       setBanner({ type: 'success', message: 'Changes saved.' });
     } catch (err) {
@@ -127,44 +129,6 @@ export default function AccountPage() {
                 {...register('email')}
               />
             </FormField>
-          </section>
-
-          <section className="account__section" aria-labelledby="acc-delivery">
-            <h2 id="acc-delivery" className="account__section-title">Delivery address</h2>
-            <p className="account__hint">The saved address is filled in automatically when you place an order.</p>
-
-            <FormField label="Phone" error={errors.phone?.message} htmlFor="acc-phone">
-              <Input
-                id="acc-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+995 555 12 34 56"
-                error={errors.phone?.message}
-                {...register('phone')}
-              />
-            </FormField>
-
-            <div className="account__row">
-              <FormField label="City" error={errors.city?.message} htmlFor="acc-city">
-                <Input
-                  id="acc-city"
-                  autoComplete="address-level2"
-                  placeholder="Tbilisi"
-                  error={errors.city?.message}
-                  {...register('city')}
-                />
-              </FormField>
-
-              <FormField label="Address" error={errors.address?.message} htmlFor="acc-address">
-                <Input
-                  id="acc-address"
-                  autoComplete="street-address"
-                  placeholder="Rustaveli Ave 12, apt 5"
-                  error={errors.address?.message}
-                  {...register('address')}
-                />
-              </FormField>
-            </div>
           </section>
 
           <section className="account__section" aria-labelledby="acc-security">

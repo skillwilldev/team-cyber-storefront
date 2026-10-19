@@ -1,0 +1,56 @@
+/* ============================================
+   CYBER FORM — inputs and checkboxes drawn like the checkout / address mockups
+   (white field, 56px high, thin grey border, black on focus).
+   Wrap a form in .cyber-form; it restyles the shared <Input> / <FormField> from the inside.
+   ============================================ */
+
+.cyber-form .form-field__label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--c-gray-text);
+}
+
+.cyber-form .input {
+  height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+}
+
+.cyber-form .input::placeholder {
+  color: var(--c-gray);
+}
+
+.cyber-form .input:hover:not(:disabled):not(.input--error) {
+  border-color: #000;
+}
+
+.cyber-form .input:focus:not(.input--error) {
+  border-color: #000;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.cyber-form .input.input--error {
+  border-color: var(--color-error);
+}
+
+.cyber-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cyber-check input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #000;
+  cursor: pointer;
+}
