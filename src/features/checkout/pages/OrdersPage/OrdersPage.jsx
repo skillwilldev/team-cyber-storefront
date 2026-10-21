@@ -2,15 +2,19 @@ import { Link } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
-import { formatPrice } from '@/lib/format';
+import { useTranslation, formatPriceI18n } from '@/lib/i18n';
 import { useOrders } from '../../hooks/useOrders';
 import { formatDateTime, shortOrderNumber } from '../../lib/checkoutFormat';
 import { orderPath } from '../../lib/checkoutRoutes';
 import './OrdersPage.css';
 
-const STATUS_LABELS = {
+const STATUS_LABELS_EN = {
   paid: 'Paid',
   pending_payment: 'Awaiting payment',
+};
+const STATUS_LABELS_KA = {
+  paid: 'გადახდილი',
+  pending_payment: 'გადახდის მოლოდინში',
 };
 
 const MAX_THUMBS = 4;
@@ -21,6 +25,8 @@ const MAX_THUMBS = 4;
  */
 export default function OrdersPage() {
   const { data, isPending, isError, error, refetch } = useOrders();
+  const { t, lang } = useTranslation();
+  const STATUS_LABELS = lang === 'ka' ? STATUS_LABELS_KA : STATUS_LABELS_EN;
 
   let content;
 
@@ -40,13 +46,13 @@ export default function OrdersPage() {
   } else if (data.items.length === 0) {
     content = (
       <div className="orders-page__empty">
-        <p>You have no orders yet.</p>
-        <ActionButton to="/">Go shopping</ActionButton>
+        <p>{lang === 'ka' ? 'თქვენ ჯერ არ გაქვთ შეკვეთები.' : 'You have no orders yet.'}</p>
+        <ActionButton to="/">{lang === 'ka' ? 'შოპინგის დაწყება' : 'Go shopping'}</ActionButton>
       </div>
     );
   } else {
     content = (
-      <ul className="orders-page__list" aria-label="My orders">
+      <ul className="orders-page__list" aria-label={t('userMenu.orders')}>
         {data.items.map((order) => {
           const totalQty = order.items.reduce((sum, item) => sum + item.qty, 0);
           const hiddenCount = order.items.length - MAX_THUMBS;
@@ -56,8 +62,10 @@ export default function OrdersPage() {
               <Link to={orderPath(order.id)} className="order-row">
                 <div className="order-row__head">
                   <div>
-                    <b className="order-row__number">Order № {shortOrderNumber(order.id)}</b>
-                    <span className="order-row__date">{formatDateTime(order.createdAt)}</span>
+                    <b className="order-row__number">
+                      {lang === 'ka' ? 'შეკვეთა' : 'Order'} № {shortOrderNumber(order.id)}
+                    </b>
+                    <span className="order-row__date">{formatDateTime(order.createdAt, lang)}</span>
                   </div>
                   <span className={`order-row__status order-row__status--${order.status}`}>
                     {STATUS_LABELS[order.status] ?? order.status}
@@ -81,9 +89,9 @@ export default function OrdersPage() {
                   </div>
                   <div className="order-row__sum">
                     <span>
-                      {totalQty} {totalQty === 1 ? 'item' : 'items'}
+                      {totalQty} {lang === 'ka' ? t('common.pcs') : (totalQty === 1 ? 'item' : 'items')}
                     </span>
-                    <b>{formatPrice(order.total, order.currency)}</b>
+                    <b>{formatPriceI18n(order.total, order.currency, lang)}</b>
                   </div>
                 </div>
               </Link>
@@ -96,9 +104,9 @@ export default function OrdersPage() {
 
   return (
     <>
-      <title>My orders — Cyber</title>
+      <title>{t('userMenu.orders')} — Cyber</title>
       <div className="container orders-page">
-        <h1 className="orders-page__title">My orders</h1>
+        <h1 className="orders-page__title">{t('userMenu.orders')}</h1>
         {content}
       </div>
     </>

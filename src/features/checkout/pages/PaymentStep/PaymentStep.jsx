@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { useCreateOrder } from '@api/checkoutQueries';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import QueryError from '@/components/QueryError/QueryError';
 import { Alert, FormField, Input } from '@shared/ui';
+import { useTranslation } from '@/lib/i18n';
 import CardPreview from '../../components/CardPreview/CardPreview';
 import OrderSummary from '../../components/OrderSummary/OrderSummary';
 import { useCheckout } from '../../hooks/useCheckout';
@@ -35,13 +36,13 @@ const EMPTY_CARD = { number: '', holder: '', expiry: '', cvc: '' };
  * button is disabled while the request runs.
  */
 export default function PaymentStep() {
-  'use no memo';
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { data: checkout } = useCheckout();
   const { address, isPending, isError, error, refetch } = useSelectedAddress();
   const createOrder = useCreateOrder();
-  // const inFlight = useRef(false);
+  const inFlight = useRef(false);
   const [cardBanner, setCardBanner] = useState('');
   const [banner, setBanner] = useState('');
   const [addressProblems, setAddressProblems] = useState([]);
@@ -73,8 +74,8 @@ export default function PaymentStep() {
 
 
   const onSubmit = useCallback(async (values) => {
-    // if (inFlight.current) return;
-    // inFlight.current = true;
+    if (inFlight.current) return;
+    inFlight.current = true;
     clearMessages();
 
     try {
@@ -112,6 +113,8 @@ export default function PaymentStep() {
       } else if (err.code !== 'TOKEN_EXPIRED') {
         setBanner(getGenericMessage(err));
       }
+    } finally {
+      inFlight.current = false;
     }
   }, [createOrder, address, navigate, reset, location, setError]);
 
@@ -135,18 +138,18 @@ export default function PaymentStep() {
 
       <section className="payment" aria-labelledby="payment-title">
         <h1 id="payment-title" className="checkout-step__title">
-          Payment
+          {t('checkout.payment')}
         </h1>
 
-        <div className="payment__tabs" role="tablist" aria-label="Payment method">
+        <div className="payment__tabs" role="tablist" aria-label={t('checkout.payment')}>
           <button type="button" role="tab" aria-selected="true" className="payment__tab payment__tab--active">
-            Credit Card
+            {t('checkout.creditCard')}
           </button>
-          <button type="button" role="tab" aria-selected="false" className="payment__tab" disabled title="Not available yet">
-            PayPal
+          <button type="button" role="tab" aria-selected="false" className="payment__tab" disabled title={t('checkout.notAvailable')}>
+            {t('checkout.paypal')}
           </button>
-          <button type="button" role="tab" aria-selected="false" className="payment__tab" disabled title="Not available yet">
-            PayPal Credit
+          <button type="button" role="tab" aria-selected="false" className="payment__tab" disabled title={t('checkout.notAvailable')}>
+            {t('checkout.paypalCredit')}
           </button>
         </div>
 
@@ -158,9 +161,9 @@ export default function PaymentStep() {
               type="error"
               message={
                 <>
-                  The delivery address is not valid: {addressProblems.join(' ')}{' '}
+                  {t('checkout.addressInvalid')} {addressProblems.join(' ')}{' '}
                   <Link className="payment__link" to={checkoutPath('address', address.id)}>
-                    Edit the address
+                    {t('checkout.editAddress')}
                   </Link>
                 </>
               }
@@ -171,19 +174,19 @@ export default function PaymentStep() {
               type="error"
               message={
                 <>
-                  Some products are no longer available in the quantity you chose.
+                  {t('checkout.stockProblem')}
                   {stockProblems.length > 0 && (
                     <ul className="payment__stock">
                       {stockProblems.map((item) => (
                         <li key={item.key}>
                           {item.title}
-                          {item.available !== null && ` — only ${item.available} left`}
+                          {item.available !== null && ` — ${t('checkout.onlyNLeft', { count: item.available })}`}
                         </li>
                       ))}
                     </ul>
                   )}{' '}
                   <Link className="payment__link" to="/cart">
-                    Go to the cart
+                    {t('checkout.goToCart')}
                   </Link>
                 </>
               }
@@ -192,22 +195,22 @@ export default function PaymentStep() {
 
           <CardPreview number={number} holder={holder} />
 
-          <FormField label="Cardholder Name" error={errors.holder?.message} htmlFor="card-holder">
+          <FormField label={t('checkout.cardholderName')} error={errors.holder?.message} htmlFor="card-holder">
             <Input
               id="card-holder"
               autoComplete="cc-name"
-              placeholder="Cardholder Name"
+              placeholder={t('checkout.cardholderName')}
               error={errors.holder?.message}
               {...register('holder')}
             />
           </FormField>
 
-          <FormField label="Card Number" error={errors.number?.message} htmlFor="card-number">
+          <FormField label={t('checkout.cardNumber')} error={errors.number?.message} htmlFor="card-number">
             <Input
               id="card-number"
               inputMode="numeric"
               autoComplete="cc-number"
-              placeholder="Card Number"
+              placeholder={t('checkout.cardNumber')}
               error={errors.number?.message}
               {...numberField}
               onChange={(e) => {
@@ -218,7 +221,7 @@ export default function PaymentStep() {
           </FormField>
 
           <div className="payment__row">
-            <FormField label="Exp.Date" error={errors.expiry?.message} htmlFor="card-expiry">
+            <FormField label={t('checkout.expDate')} error={errors.expiry?.message} htmlFor="card-expiry">
               <Input
                 id="card-expiry"
                 inputMode="numeric"
@@ -235,13 +238,13 @@ export default function PaymentStep() {
               />
             </FormField>
 
-            <FormField label="CVV" error={errors.cvc?.message} htmlFor="card-cvc">
+            <FormField label={t('checkout.cvv')} error={errors.cvc?.message} htmlFor="card-cvc">
               <Input
                 id="card-cvc"
                 type="password"
                 inputMode="numeric"
                 autoComplete="cc-csc"
-                placeholder="CVV"
+                placeholder={t('checkout.cvv')}
                 maxLength={4}
                 error={errors.cvc?.message}
                 {...cvcField}
@@ -255,10 +258,10 @@ export default function PaymentStep() {
 
           <div className="payment__actions">
             <ActionButton to={checkoutPath('shipping', address.id)} variant="outline" disabled={isSubmitting}>
-              Back
+              {t('common.back')}
             </ActionButton>
             <ActionButton type="submit" isLoading={isSubmitting}>
-              Pay
+              {t('checkout.pay')}
             </ActionButton>
           </div>
         </form>

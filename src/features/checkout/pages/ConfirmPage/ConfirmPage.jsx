@@ -6,7 +6,7 @@ import { useConfirmOrder, useResendOrderCode } from '@api/checkoutQueries';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
-import { formatPrice } from '@/lib/format';
+import { useTranslation, formatPriceI18n } from '@/lib/i18n';
 import { verifyCodeSchema } from '@shared/lib/validators';
 import { Alert, FormField, Input, useToast } from '@shared/ui';
 import { useAuth } from '@features/auth/hooks/useAuth';
@@ -27,6 +27,7 @@ export default function ConfirmPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { user } = useAuth();
+  const { t, lang } = useTranslation();
   const orderQuery = useOrder(orderId);
   const confirm = useConfirmOrder();
   const resend = useResendOrderCode();
@@ -65,14 +66,14 @@ export default function ConfirmPage() {
 
     try {
       const { order: paid } = await confirm.mutateAsync({ id: currentOrder.id, code });
-      toast.success('Payment successful');
+      toast.success(t('checkout.paymentSuccessful'));
       navigate(orderPath(paid.id), { replace: true });
     } catch (err) {
       if (err.code === 'INVALID_PAYMENT_CODE') {
-        setError('code', { type: 'server', message: 'The code is incorrect or has expired' }, { shouldFocus: true });
+        setError('code', { type: 'server', message: t('checkout.codeIncorrect') }, { shouldFocus: true });
       } else if (err.code === 'TOO_MANY_ATTEMPTS') {
         setIsBlocked(true);
-        setBanner('Too many wrong attempts. Request a new code to continue.');
+        setBanner(t('checkout.tooManyWrongAttempts'));
       } else if (err.code === 'ORDER_ALREADY_PAID') {
         navigate(orderPath(currentOrder.id), { replace: true });
       } else if (err.code === 'INSUFFICIENT_STOCK') {
@@ -85,7 +86,7 @@ export default function ConfirmPage() {
         setBanner(getGenericMessage(err));
       }
     }
-  }, [confirm, orderQuery, navigate, setError, toast]);
+  }, [confirm, orderQuery, navigate, setError, toast, t]);
 
   const handleResend = useCallback(async () => {
     if (!orderQuery.data?.order) return;
@@ -98,7 +99,7 @@ export default function ConfirmPage() {
       setBanner('');
       setStockProblems(null);
       reset({ code: '' });
-      toast.success('A new code has been sent');
+      toast.success(t('checkout.newCodeSent'));
     } catch (err) {
       if (err.code === 'RESEND_TOO_SOON') {
         const wait = Math.ceil(Number(err.data?.retryAfterSeconds));
@@ -109,7 +110,7 @@ export default function ConfirmPage() {
         toast.error(getGenericMessage(err));
       }
     }
-  }, [resend, orderQuery, navigate, reset, toast]);
+  }, [resend, orderQuery, navigate, reset, toast, t]);
 
   if (orderQuery.isPending) {
     return (
@@ -124,9 +125,9 @@ export default function ConfirmPage() {
       return (
         <div className="container confirm">
           <div className="confirm__card confirm__card--center">
-            <h1 className="confirm__title">Order not found</h1>
-            <p className="confirm__lead">This order does not exist or belongs to another account.</p>
-            <ActionButton to="/cart">Back to cart</ActionButton>
+            <h1 className="confirm__title">{t('checkout.orderNotFound')}</h1>
+            <p className="confirm__lead">{t('checkout.orderNotFoundText')}</p>
+            <ActionButton to="/cart">{t('checkout.backToCart')}</ActionButton>
           </div>
         </div>
       );
@@ -145,16 +146,15 @@ export default function ConfirmPage() {
 
   return (
     <>
-      <title>Confirm payment — Cyber</title>
+      <title>{t('checkout.confirmPaymentTitle')}</title>
       <div className="container confirm">
         <div className="confirm__card">
-          <h1 className="confirm__title">Confirm your payment</h1>
+          <h1 className="confirm__title">{t('checkout.confirmTitle')}</h1>
           <p className="confirm__lead">
-            We have sent a 6-digit code{user?.email ? <> to <b>{user.email}</b></> : ''}. It is valid for {CODE_MINUTES}{' '}
-            minutes.
+            {t('checkout.codeSent')}{user?.email ? <> {t('checkout.codeSentTo')} <b>{user.email}</b></> : ''}. {t('checkout.codeValid', { minutes: CODE_MINUTES })}
           </p>
           <p className="confirm__total">
-            To pay: <b>{formatPrice(order.total, order.currency)}</b>
+            {t('checkout.toPay')} <b>{formatPriceI18n(order.total, order.currency, lang)}</b>
           </p>
 
           {banner && <Alert type="error" message={banner} />}
@@ -163,19 +163,19 @@ export default function ConfirmPage() {
               type="error"
               message={
                 <>
-                  The last items were bought by someone else, nothing was charged.
+                  {t('checkout.stockBought')}
                   {stockProblems.length > 0 && (
                     <ul className="confirm__stock">
                       {stockProblems.map((item) => (
                         <li key={item.key}>
                           {item.title}
-                          {item.available !== null && ` — only ${item.available} left`}
+                          {item.available !== null && ` — ${t('checkout.onlyNLeft', { count: item.available })}`}
                         </li>
                       ))}
                     </ul>
                   )}{' '}
                   <Link className="confirm__link" to="/cart">
-                    Go to the cart
+                    {t('checkout.goToCart')}
                   </Link>
                 </>
               }
@@ -183,12 +183,12 @@ export default function ConfirmPage() {
           )}
 
           <form className="cyber-form confirm__form" onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormField label="Confirmation code" error={errors.code?.message} htmlFor="payment-code" required>
+            <FormField label={t('checkout.confirmCode')} error={errors.code?.message} htmlFor="payment-code" required>
               <Input
                 id="payment-code"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="6-digit code"
+                placeholder={t('checkout.sixDigitCode')}
                 maxLength={6}
                 disabled={isBlocked}
                 error={errors.code?.message}
@@ -201,18 +201,18 @@ export default function ConfirmPage() {
             </FormField>
 
             <p className="confirm__resend">
-              Did not get the code?{' '}
+              {t('checkout.didNotGetCode')}{' '}
               <button type="button" className="confirm__link" onClick={handleResend} disabled={!canResend}>
-                {secondsLeft > 0 ? `Resend in 0:${String(secondsLeft).padStart(2, '0')}` : 'Resend code'}
+                {secondsLeft > 0 ? t('checkout.resendIn', { seconds: String(secondsLeft).padStart(2, '0') }) : t('checkout.resendCode')}
               </button>
             </p>
 
             <div className="confirm__actions">
               <ActionButton to={backTo} variant="outline" disabled={isSubmitting}>
-                Back
+                {t('common.back')}
               </ActionButton>
               <ActionButton type="submit" isLoading={isSubmitting} disabled={isBlocked}>
-                Confirm payment
+                {t('checkout.confirmPayment')}
               </ActionButton>
             </div>
           </form>

@@ -151,30 +151,6 @@
     outline-color: var(--t-on-fg);
   }
 
-  /* ---------- header ---------- */
-  .header,
-  .header__menu {
-    background: var(--t-bg);
-  }
-  .header__left .logo,
-  .header__nav ul li,
-  .header__burger {
-    color: var(--c-black);
-  }
-  .header__left .header__search input {
-    background: var(--c-input);
-  }
-  .header__left .header__search input::placeholder,
-  .header__left .header__search label {
-    color: var(--t-text-soft);
-  }
-  /* mobile menu: links / buttons / label (not the theme switch) */
-  .header__menu li a,
-  .header__menu li button:not(.theme-toggle),
-  .header__menu .header__menu-theme span {
-    color: var(--c-black);
-  }
-
   .user-menu__dropdown {
     background: #1a1a1f;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);

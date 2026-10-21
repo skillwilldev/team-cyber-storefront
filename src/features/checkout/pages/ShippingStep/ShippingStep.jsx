@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import QueryError from '@/components/QueryError/QueryError';
-import { formatPrice } from '@/lib/format';
+import { useTranslation, formatPriceI18n } from '@/lib/i18n';
 import { useCheckout } from '../../hooks/useCheckout';
 import { useSelectedAddress } from '../../hooks/useSelectedAddress';
 import {
@@ -25,6 +25,7 @@ export default function ShippingStep() {
   const name = useId();
   const { data: checkout } = useCheckout();
   const { address, isPending, isError, error, refetch } = useSelectedAddress();
+  const { t, lang } = useTranslation();
   // a lazy initial value: the date is fixed once per visit and the render stays pure
   const [today] = useState(() => new Date());
 
@@ -41,49 +42,58 @@ export default function ShippingStep() {
   return (
     <section className="checkout-step" aria-labelledby="step-shipping-title">
       <h1 id="step-shipping-title" className="checkout-step__title">
-        Shipment Method
+        {lang === 'ka' ? 'მიწოდების მეთოდი' : 'Shipment Method'}
       </h1>
 
       <ul className="shipping-options" role="radiogroup" aria-labelledby="step-shipping-title">
         <li className="shipping-option shipping-option--active">
           <label>
             <input type="radio" name={name} checked readOnly />
-            <strong>{formatShippingFee(shippingFee, currency)}</strong>
-            <span className="shipping-option__text">Regular shipment</span>
+            <strong>{formatShippingFee(shippingFee, currency, lang)}</strong>
+            <span className="shipping-option__text">{lang === 'ka' ? 'ჩვეულებრივი მიწოდება' : 'Regular shipment'}</span>
             <time className="shipping-option__date" dateTime={arrival.toISOString().slice(0, 10)}>
-              {formatShipmentDate(arrival)}
+              {formatShipmentDate(arrival, lang)}
             </time>
           </label>
         </li>
         <li className="shipping-option shipping-option--disabled">
           <label>
             <input type="radio" name={name} disabled />
-            <strong>Express</strong>
-            <span className="shipping-option__text">Get your delivery as soon as possible</span>
-            <span className="shipping-option__date">Not available yet</span>
+            <strong>{lang === 'ka' ? 'ექსპრესი' : 'Express'}</strong>
+            <span className="shipping-option__text">{lang === 'ka' ? 'მიიღეთ მიწოდება რაც შეიძლება სწრაფად' : 'Get your delivery as soon as possible'}</span>
+            <span className="shipping-option__date">{t('checkout.notAvailable')}</span>
           </label>
         </li>
         <li className="shipping-option shipping-option--disabled">
           <label>
             <input type="radio" name={name} disabled />
-            <strong>Schedule</strong>
-            <span className="shipping-option__text">Pick a date when you want to get your delivery</span>
-            <span className="shipping-option__date">Not available yet</span>
+            <strong>{lang === 'ka' ? 'დაგეგმილი' : 'Schedule'}</strong>
+            <span className="shipping-option__text">{lang === 'ka' ? 'აირჩიეთ თარიღი, როდის გსურთ მიწოდება' : 'Pick a date when you want to get your delivery'}</span>
+            <span className="shipping-option__date">{t('checkout.notAvailable')}</span>
           </label>
         </li>
       </ul>
 
       <p className="checkout-step__hint">
-        Delivering to {address.address}, {address.city}.{' '}
-        <Link to={checkoutPath('address', address.id)}>Change address</Link>
-        {missing > 0 && <> Add {formatPrice(missing, currency)} more and the delivery is free.</>}
+        {lang === 'ka'
+          ? `მიწოდება: ${address.address}, ${address.city}. `
+          : `Delivering to ${address.address}, ${address.city}. `}
+        <Link to={checkoutPath('address', address.id)}>{lang === 'ka' ? 'მისამართის შეცვლა' : 'Change address'}</Link>
+        {missing > 0 && (
+          <>
+            {' '}
+            {lang === 'ka'
+              ? `დაამატეთ კიდევ ${formatPriceI18n(missing, currency, lang)} და მიწოდება უფასოა.`
+              : `Add ${formatPriceI18n(missing, currency, lang)} more and the delivery is free.`}
+          </>
+        )}
       </p>
 
       <div className="checkout-actions">
         <ActionButton to={checkoutPath('address', address.id)} variant="outline">
-          Back
+          {t('common.back')}
         </ActionButton>
-        <ActionButton to={checkoutPath('payment', address.id)}>Next</ActionButton>
+        <ActionButton to={checkoutPath('payment', address.id)}>{t('common.next')}</ActionButton>
       </div>
     </section>
   );

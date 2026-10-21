@@ -1,0 +1,66 @@
+.lang-switch {
+  --pad: 3px;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--n, 2), 1fr);
+  align-items: stretch;
+  height: 40px;
+  padding: var(--pad);
+  border: 1px solid var(--c-border-light);
+  border-radius: 12px;
+  background: var(--c-surface);
+  flex-shrink: 0;
+}
+
+/* the sliding "thumb" under the active label */
+.lang-switch__thumb {
+  position: absolute;
+  top: var(--pad);
+  bottom: var(--pad);
+  left: var(--pad);
+  width: calc((100% - var(--pad) * 2) / var(--n, 2));
+  border-radius: 9px;
+  background: var(--c-black);
+  transform: translateX(calc(var(--i, 0) * 100%));
+  transition: transform 0.28s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+.lang-switch__btn {
+  position: relative;
+  z-index: 1;
+  min-width: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--c-gray-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.lang-switch__btn:hover {
+  color: var(--c-black);
+}
+
+.lang-switch__btn[aria-pressed='true'],
+.lang-switch__btn[aria-pressed='true']:hover {
+  color: var(--t-on-fg);
+  cursor: default;
+}
+
+.lang-switch__btn:focus-visible {
+  outline: 2px solid var(--c-black);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lang-switch__thumb,
+  .lang-switch__btn {
+    transition: none;
+  }
+}

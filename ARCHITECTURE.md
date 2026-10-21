@@ -2,7 +2,7 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
-> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme).
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme, i18n strategy).
 
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
@@ -49,7 +49,7 @@ flowchart LR
     RQ[(TanStack Query cache)]
     AUTH[AuthContext<br/>user + token]
     URL[(URL query string<br/>catalog state)]
-    LS[(localStorage<br/>accessToken, wishlist, theme)]
+    LS[(localStorage<br/>accessToken, wishlist, theme, lang)]
   end
   API[(REST API<br/>shop-api on Render)]
 
@@ -71,7 +71,8 @@ The key architectural idea is a **strict split of state by origin**:
 | Checkout progress (chosen address, pending order) | The URL (`?address=<id>`, `/checkout/confirm/:orderId`) | F5 and the Back button keep the step (ADR 0005) |
 | Card number, holder, expiry, CVC | Only the state of the payment form | Never stored anywhere else (ADR 0005) |
 | Wishlist | `ShopContext` (+ `localStorage`) | The API has no wishlist endpoints yet |
-| Color theme (light / dark) | `data-theme` on `<html>` (+ `localStorage`, key `theme`) | CSS reads the attribute; the choice survives a refresh and is shared between tabs (ADR 0006) |
+| Color theme (light / dark / system) | `data-theme` on `<html>` (+ `localStorage`, key `theme`) | CSS reads the attribute; `system` follows the OS preference live; the choice survives a refresh and is shared between tabs (ADR 0006) |
+| Language (ka / en) | `I18nContext` (+ `localStorage`, key `lang`; + `<html lang>`) | Every UI string uses `t('key')` from JSON dictionaries; `Intl.NumberFormat` for prices (ADR 0007) |
 | Purely visual state (open dropdown, selected photo) | Local `useState` inside the component | Nobody else needs it |
 
 ---
@@ -90,7 +91,8 @@ The key architectural idea is a **strict split of state by origin**:
 | Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. Currently reports 2 `react-hooks/refs` errors, see [section 24](#24-known-limitations-and-technical-debt). |
 | Language | JavaScript (ES modules, JSX) | Types come from `@types/react` for editor hints only. |
 | Fonts | Inter (Google Fonts, loaded in `index.html`) | |
-| Theming | CSS variables + the `data-theme` attribute | Light by default; the dark palette is one file, `styles/theme.css` (see [section 17](#17-styling-system) and ADR 0006). |
+| Theming | CSS variables + the `data-theme` attribute | Light by default; the dark palette is one file, `styles/theme.css`; 3 choices: light / dark / system (see [section 17](#17-styling-system), ADR 0006, and the inline FOUC-prevention script in `index.html`). |
+| i18n | JSON dictionaries + React Context + `Intl` | Georgian (default) and English; `I18nProvider` with `useTranslation()` hook; `Intl.NumberFormat` for locale-aware prices (see ADR 0007). |
 
 ### Build configuration (`vite.config.js`)
 
@@ -122,7 +124,7 @@ The tree below is the **real** state of the repository (107 JavaScript / JSX fil
 
 ```
 cyber-shop/
-├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, theme-color meta, loads /src/main.jsx
+├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, theme-color meta, loads /src/main.jsx; inline <script> in <head> for FOUC prevention (theme + lang before first paint)
 ├─ vite.config.js             Vite 8 + React plugin + React Compiler (Babel preset) + path aliases @, @api, @shared, @features
 ├─ eslint.config.js           ESLint flat config: js recommended + react-hooks + react-refresh
 ├─ package.json               scripts (dev, build, lint, preview) and dependencies
@@ -140,18 +142,20 @@ cyber-shop/
 │     ├─ 0003-cart-quantity-stepper.md
 │     ├─ 0004-profile-current-password.md
 │     ├─ 0005-checkout-state-in-url.md
-│     └─ 0006-color-theme.md
+│     ├─ 0006-color-theme.md
+│     └─ 0007-i18n-strategy.md
 │
 ├─ journal/                   weekly development journal
 │  ├─ week-1.md               05.10 – 11.10.2026 (FE-001 … FE-005)
-│  └─ week-2.md               12.10.2026 – … (addresses, checkout, orders history, start-up 401 fix, dark theme) — draft
+│  ├─ week-2.md               12.10 – 18.10.2026 (FE-006, FE-007: addresses, checkout, orders, dark theme)
+│  └─ week-3.md               19.10 – 25.10.2026 (FE-008 i18n, FE-009 3-state theme, lecturer fixes)
 │
 ├─ public/                    copied to the build as they are
 │  ├─ favicon.svg, icons.svg  static assets
 │  └─ _redirects              SPA fallback for Netlify-style hosting (/*  /index.html  200)
 │
 └─ src/
-   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render; `initTheme()` before the first render
+   ├─ main.jsx                entry point: provider stack (Query → Toast → I18n → Auth → Shop → Router) + render; `initTheme()` before the first render
    ├─ App.jsx                 the whole route table (public, protected, checkout, 404)
    │
    ├─ api/                    SERVER-STATE LAYER: plain request functions (xxxApi.js) + TanStack Query hooks (xxxQueries.js)
@@ -259,7 +263,8 @@ cyber-shop/
    │  ├─ Layout/                Header + <Outlet /> + Footer, scroll to top (.jsx only)
    │  ├─ Header/                logo, search, nav, wishlist + cart badges, profile slot, mobile menu
    │  ├─ UserMenu/              avatar dropdown: Account, Orders, Address, Logout
-   │  ├─ ThemeToggle/           light / dark switch (role="switch"); used in the Header and in the mobile menu
+   │  ├─ ThemeToggle/           light / dark / system toggle (role="radiogroup", 3 buttons); used in the Header and in the mobile menu
+   │  ├─ LanguageSwitcher/      KA / EN language toggle (role="radiogroup"); used in the Header
    │  ├─ Footer/                footer (placeholder links)
    │  ├─ Logo/                  SVG text logo (Logo.jsx only)
    │  ├─ ProductCard/, ProductCardSkeleton/, ProductImage/, Stars/
@@ -271,10 +276,15 @@ cyber-shop/
    │
    ├─ lib/                    PURE FUNCTIONS (no React, easy to test)
    │  ├─ catalog.js             URL ⇄ state ⇄ API query mapping
-   │  ├─ format.js              formatPrice, formatWarranty
+   │  ├─ format.js              formatPrice, formatWarranty (legacy, kept for reference; components use formatPriceI18n from i18n.jsx)
+   │  ├─ i18n.jsx               I18nProvider, useTranslation, formatPriceI18n, formatDateI18n, getCategoryName, getFilterTitle
    │  ├─ specs.js               product spec labels and grouping
-   │  ├─ filterLabels.js        filter titles and colour swatches
-   │  └─ theme.js               color theme: initTheme, setTheme, toggleTheme + store for useSyncExternalStore (touches the DOM and localStorage, so not pure)
+   │  ├─ filterLabels.js        filter titles and colour swatches (accepts t() for i18n)
+   │  └─ theme.js               color theme: initTheme, setTheme, getTheme, getPreference + store for useSyncExternalStore; 3 states: light | dark | system (touches the DOM and localStorage, so not pure)
+   │
+   ├─ locales/                 TRANSLATION DICTIONARIES (JSON, ~250 keys each)
+   │  ├─ ka.json                Georgian (default language)
+   │  └─ en.json                English
    │
    ├─ hooks/                  GENERIC HOOKS
    │  ├─ useCatalogParams.js    catalog state ⇄ URL (the only place that reads / writes it)
@@ -316,13 +326,15 @@ pages / features  →  components  →  shared (ui, api, lib)  →  lib / hooks 
 <StrictMode>
   <QueryClientProvider client={queryClient}>   // 1. server-state cache
     <ToastProvider>                            // 2. toast notifications
-      <AuthProvider>                           // 3. who is signed in (uses QueryClient)
-        <ShopProvider>                         // 4. wishlist (needs the user id from AuthProvider)
-          <BrowserRouter>                      // 5. routing
-            <App />
-          </BrowserRouter>
-        </ShopProvider>
-      </AuthProvider>
+      <I18nProvider>                           // 3. language context (ka/en)
+        <AuthProvider>                         // 4. who is signed in (uses QueryClient)
+          <ShopProvider>                       // 5. wishlist (needs the user id from AuthProvider)
+            <BrowserRouter>                    // 6. routing
+              <App />
+            </BrowserRouter>
+          </ShopProvider>
+        </AuthProvider>
+      </I18nProvider>
     </ToastProvider>
     <ReactQueryDevtools initialIsOpen={false} />   // dev only (the "flower" button)
   </QueryClientProvider>
@@ -333,8 +345,9 @@ Why this order?
 
 1. `QueryClientProvider` is outermost: `AuthProvider` needs `useQueryClient()` to clear the cart cache on login/logout.
 2. `ToastProvider` has no dependencies, but hooks such as `useAddToCart` need `useToast()`.
-3. `AuthProvider` must wrap `ShopProvider` because the wishlist is stored *per user id*.
-4. `BrowserRouter` is innermost of the providers; `useShop()` and `useAddToCart()` use router hooks (`useNavigate`, `useLocation`) so they must be called under the router.
+3. `I18nProvider` makes `useTranslation()` available to all components; it has no React dependency upward.
+4. `AuthProvider` must wrap `ShopProvider` because the wishlist is stored *per user id*.
+5. `BrowserRouter` is innermost of the providers; `useShop()` and `useAddToCart()` use router hooks (`useNavigate`, `useLocation`) so they must be called under the router.
 
 `App.jsx` then renders the route table (next section). The global stylesheet `styles/global.css` is imported once in `main.jsx`.
 
@@ -481,17 +494,34 @@ Stored in `localStorage` under `shop:<userId>` as `{ wishlist: [productId, …] 
 
 ### 6.5 Color theme (`lib/theme.js`)
 
-The theme (`'light'` | `'dark'`) is the `data-theme` attribute on `<html>`; CSS reads only this attribute (`styles/theme.css`). The choice is saved in `localStorage` under `theme`; until the user chooses, the OS preference (`prefers-color-scheme`) is used and followed live.
+The theme preference (`'light'` | `'dark'` | `'system'`) is stored in `localStorage` under `theme`. The resolved theme (`'light'` | `'dark'`) is set as the `data-theme` attribute on `<html>`; CSS reads only this attribute (`styles/theme.css`). When the preference is `'system'`, the resolved theme live-follows the OS via `matchMedia('prefers-color-scheme: dark')`.
+
+**FOUC prevention:** An inline `<script>` in `index.html` `<head>` reads `localStorage.theme`, resolves `system` via `matchMedia`, and sets `data-theme`, `color-scheme`, and `<meta name="theme-color">` **before the first paint**. This is an intentional exception to ADR 0002 ("never read localStorage outside React").
 
 | Function | What it does |
 | --- | --- |
 | `initTheme()` | Applies the saved (or OS) theme; called once in `main.jsx` before the first render |
-| `getTheme()` | Reads `data-theme` from `<html>` |
-| `setTheme(theme)` | Saves to `localStorage` (inside `try / catch`: blocked storage only means "not saved"), applies, notifies subscribers and turns on a short color transition for this one switch |
-| `toggleTheme()` | Switches light ⇄ dark |
-| `subscribe(listener)` | For `useSyncExternalStore`; also listens to the `storage` event (another tab changed the theme) and to the OS theme change while nothing is saved |
+| `getPreference()` | Returns the stored preference: `'light'`, `'dark'`, or `'system'` |
+| `getTheme()` | Returns the resolved theme: `'light'` or `'dark'` (resolves `system` via `matchMedia`) |
+| `setTheme(pref)` | Saves `pref` to `localStorage`, applies the resolved theme, notifies subscribers, turns on a short color transition |
+| `subscribe(listener)` | For `useSyncExternalStore`; also listens to the `storage` event (another tab changed the theme) and to the OS theme change while preference is `system` |
 
-React reads the state through `useTheme()` (`hooks/useTheme.js`), which returns `{ theme, isDark, setTheme, toggleTheme }`. There is no Context: the attribute on `<html>` is the single source of truth. See [ADR 0006](./docs/adr/0006-color-theme.md).
+React reads the state through `useTheme()` (`hooks/useTheme.js`), which returns `{ theme, preference, isDark, setTheme }`. There is no Context: the attribute on `<html>` is the single source of truth. See [ADR 0006](./docs/adr/0006-color-theme.md).
+
+### 6.6 Language / i18n (`lib/i18n.jsx`)
+
+The language (`'ka'` | `'en'`) is stored in `localStorage` under `lang` and in `<html lang>`. The `I18nProvider` wraps the app and provides `useTranslation()` which returns `{ lang, setLang, t }`.
+
+| Export | What it does |
+| --- | --- |
+| `I18nProvider` | React Context provider; reads `localStorage.lang` on mount, defaults to `'ka'`; updates `<html lang>` on change |
+| `useTranslation()` | Returns `{ lang, setLang, t }` — the current language, a setter, and the translation function |
+| `t(key, params?)` | Looks up `key` in the current language's JSON dictionary (e.g. `t('cart.addToCart')`); supports `{{param}}` interpolation |
+| `formatPriceI18n(value, currency, lang)` | `Intl.NumberFormat` with `ka-GE` or `en-US` locale; produces `₾1 510` / `₾1,510` |
+| `formatDateI18n(iso, lang)` | `Intl.DateTimeFormat` with locale-aware date formatting |
+| `getCategoryName(cat, lang)` | Returns `cat.nameEn` for English, `cat.name` for Georgian |
+
+Translation dictionaries: `src/locales/ka.json` and `src/locales/en.json` (~250 keys each, organised by feature: `header`, `footer`, `catalog`, `product`, `cart`, `auth`, `checkout`, `stub`, etc.). See [ADR 0007](./docs/adr/0007-i18n-strategy.md).
 
 ---
 
@@ -508,7 +538,7 @@ Every HTTP call in the app goes through this one function.
 | Headers | `Content-Type: application/json` is added **only when there is a body** (so plain `GET`s avoid a CORS preflight) |
 | Response | JSON is parsed when the content type is JSON; an empty body (e.g. 204) gives `{}` |
 | Errors | Non-2xx responses throw an **`ApiError`** |
-| Session loss | On `401` with code `TOKEN_EXPIRED` or `INVALID_TOKEN`: remove token and hard-redirect to `/login` |
+| Session loss | On `401` with code `TOKEN_EXPIRED` or `INVALID_TOKEN`: remove token and throw an `ApiError` (the calling hook navigates to `/login` with `state.from` preserved, so the user returns to the same page after re-login) |
 | Exceptions to the redirect | `POST /auth/login`, `POST /auth/register` (a 401 there is a normal form error) and `GET /auth/me` (the startup check, handled by `AuthProvider`) |
 
 ```js
@@ -694,10 +724,10 @@ The API returns `specs` as `{ "<Georgian name>": "value" }` for every category.
 
 Shows the image; if `src` is `null` or the image fails to load (`onError`), shows a neutral placeholder. It remembers **which URL failed** (`failedSrc`), so a different URL (another product, a fixed image) is tried again automatically. Decorative images (`alt=""`) hide the placeholder from screen readers.
 
-### `lib/format.js`
+### `lib/format.js` (legacy)
 
-* `formatPrice(value, currency = 'GEL')` → `₾1,510`, `$1,200`, `€99` (unknown currencies use `"CODE "` as prefix).
-* `formatWarranty(months)` → `1 year`, `2 years`, `6 months`, or `—` when empty.
+* `formatPrice(value, currency = 'GEL')` → `₾1,510`, `$1,200`, `€99` (unknown currencies use `"CODE "` as prefix). **Superseded** by `formatPriceI18n` from `lib/i18n.jsx`, which uses `Intl.NumberFormat` for locale-aware formatting. Kept for reference; no component imports it any more.
+* `formatWarranty(months)` → `1 year`, `2 years`, `6 months`, or `—` when empty. **Superseded** by `formatWarrantyI18n` in `lib/i18n.jsx`.
 
 ---
 
@@ -1331,7 +1361,7 @@ Checked on 17.10.2026: `npm run build` passes, `npm run lint` reports 2 errors (
 * **Deep imports bypass the barrels:** `useAuth` is not exported by the `@features/auth` barrel, so 15 files import `@features/auth/hooks/useAuth` directly. Exporting it from `features/auth/index.js` would remove the deep path.
 * **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider` (line 16), a commented `oldPrice` line in `ProductCard` (line 48), `profileLabel` in `Header` is always `'Sign in'`. `AuthProvider.logout` still has a `console.error('err logout', …)`.
 * **Language of comments:** the comments in `checkout/lib/card.js` (`detectBrand`) are in Russian, all other comments and the UI are in English. The API's own labels (filter labels, spec names) are in Georgian.
-* **Dark theme is an override layer:** `styles/theme.css` overrides about 110 hard-coded `#000` / `#fff` colors of component stylesheets instead of those components using tokens, so a new component with a hard-coded color looks wrong in dark mode until it gets a rule there. Replacing the hard-coded colors with tokens would remove most overrides. In dark mode a very short white flash on reload is possible (the theme is applied by JS, not by an inline script in `index.html`; ADR 0006), and product photos are shown on a light tile because they are shot on white.
+* **Dark theme is an override layer:** `styles/theme.css` overrides about 110 hard-coded `#000` / `#fff` colors of component stylesheets instead of those components using tokens, so a new component with a hard-coded color looks wrong in dark mode until it gets a rule there. Replacing the hard-coded colors with tokens would remove most overrides. Product photos are shown on a light tile because they are shot on white. (**Fixed in FE-009:** the FOUC — flash of wrong theme on reload — is eliminated by an inline `<script>` in `index.html` `<head>` that applies the theme before the first paint.)
 * **Token in `localStorage`:** simple and common, but readable by any script running on the page (XSS risk). HttpOnly cookies would be the more secure alternative if the API supported them.
 * **Bundle size:** one JS chunk of about 567 kB; routes could be code-split with `React.lazy` + `Suspense` (account, cart, addresses, checkout and forgot-password pages are good first candidates).
 * **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutErrors.js`, `checkoutFormat.js`, `checkoutRoutes.js`, `format.js`, `specs.js`, `isTokenExpired`) are ideal first targets; `passesLuhn`, `isExpiryValid` and `detectBrand` have clear input / output tables.
@@ -1361,4 +1391,4 @@ Checked on 17.10.2026: `npm run build` passes, `npm run lint` reports 2 errors (
 | **`pending_payment` / `paid`** | The two order statuses the front end knows: the order exists but the code is not confirmed yet / the code is confirmed |
 | **`devCode`** | A learning-mode field of the API that contains the confirmation code; the UI never fills it in automatically |
 | **`'use no memo'`** | A directive that tells the React Compiler not to optimise one component |
-| **FE-00x** | Task identifiers from the course/project backlog referenced in code comments (FE-001/002 auth, FE-004 profile, FE-005 cart, FE-006 checkout) |
+| **FE-00x** | Task identifiers from the course/project backlog referenced in code comments (FE-001/002 auth, FE-004 profile, FE-005 cart, FE-006 checkout, FE-008 i18n, FE-009 theme upgrade) |

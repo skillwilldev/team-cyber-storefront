@@ -7,6 +7,7 @@ import { AuthProvider } from '@features/auth';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
 import { ToastProvider } from '@shared/ui';
+import { I18nProvider } from '@/lib/i18n';
 import { initTheme } from '@/lib/theme';
 import App from './App';
 import './styles/global.css';
@@ -17,6 +18,7 @@ initTheme();
  * Provider order:
  *   QueryClientProvider — server state (catalog): cache, loading/error states, refetching
  *   ToastProvider       — short messages ("Added to cart")
+ *   I18nProvider        — language context (FE-008): ka/en, saved in localStorage
  *   AuthProvider        — client state: who is signed in (token + user)
  *   ShopProvider        — client state: wishlist of the signed-in user (needs AuthProvider)
  *   The CART is server state: it lives in the TanStack Query cache under ['cart'] (see src/api/cartQueries.js)
@@ -27,13 +29,15 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <AuthProvider>
-          <ShopProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </ShopProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <ShopProvider>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </ShopProvider>
+          </AuthProvider>
+        </I18nProvider>
       </ToastProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

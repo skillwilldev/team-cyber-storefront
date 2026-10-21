@@ -1,0 +1,10 @@
+/* Georgian display font (TKT-Caps, one weight). Used site-wide (body font-family) but only for Georgian
+   code points: Latin letters, digits and ₾ keep falling back to Inter. */
+@font-face {
+  font-family: 'ADG2';
+  src: url('../assets/fonts/ADG2.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F;
+}

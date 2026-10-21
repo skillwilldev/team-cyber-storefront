@@ -1,38 +1,40 @@
 import { Link } from 'react-router-dom';
-import { formatPrice } from '@/lib/format';
+import { useTranslation, formatPriceI18n } from '@/lib/i18n';
 import './CartSummary.css';
 
 /** Totals come from the server (`totalQty`, `subtotal`). Checkout is blocked while any line has a stock problem. */
 export default function CartSummary({ totalQty, subtotal, currency, hasStockIssues }) {
+  const { t, lang } = useTranslation();
+
   return (
     <aside className="cart-summary" aria-labelledby="cart-summary-title">
-      <h2 id="cart-summary-title">Order Summary</h2>
+      <h2 id="cart-summary-title">{t('cartSummary.title')}</h2>
 
       <dl>
         <div>
-          <dt>Items</dt>
+          <dt>{t('cartSummary.items')}</dt>
           <dd>{totalQty}</dd>
         </div>
         <div className="cart-summary__subtotal">
-          <dt>Subtotal</dt>
-          <dd aria-live="polite">{formatPrice(subtotal, currency)}</dd>
+          <dt>{t('cartSummary.subtotal')}</dt>
+          <dd aria-live="polite">{formatPriceI18n(subtotal, currency, lang)}</dd>
         </div>
       </dl>
 
-      <p className="cart-summary__note">Delivery cost is calculated at checkout.</p>
+      <p className="cart-summary__note">{t('cartSummary.deliveryNote')}</p>
 
       {hasStockIssues ? (
         <>
           <p className="cart-summary__warn" id="cart-summary-warn">
-            Some items are out of stock or exceed the available quantity. Fix them to continue.
+            {t('cartSummary.stockWarning')}
           </p>
           <button type="button" className="cart-summary__btn" disabled aria-describedby="cart-summary-warn">
-            Checkout
+            {t('cartSummary.checkout')}
           </button>
         </>
       ) : (
         <Link to="/checkout" className="cart-summary__btn">
-          Checkout
+          {t('cartSummary.checkout')}
         </Link>
       )}
     </aside>

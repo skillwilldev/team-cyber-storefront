@@ -115,8 +115,9 @@ export async function apiRequest(endpoint, { auth = true, ...options } = {}) {
       !isSessionCheck
     ) {
       removeToken();
-      window.location.href = '/login';
-      // Throw to stop further execution
+      // Do NOT hard-redirect (window.location.href = '/login') — it reloads the page and loses
+      // state.from, so useAddToCart can never return the user to the product they were viewing.
+      // Instead, throw so the calling hook can navigate('/login', { state: { from } }) itself.
       throw new ApiError(401, { message: 'Session expired. Please sign in again.', code: 'TOKEN_EXPIRED' });
     }
 

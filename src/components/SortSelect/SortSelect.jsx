@@ -1,17 +1,29 @@
-import { SORT_OPTIONS } from '../../lib/catalog';
+import { useTranslation } from '@/lib/i18n';
 import { ChevronIcon } from '../icons/icons';
 import './SortSelect.css';
 
+const SORT_KEYS = [
+  'rating-desc',
+  'price-asc',
+  'price-desc',
+  'newest',
+  'oldest',
+  'popular',
+  'title-asc',
+];
+
 export default function SortSelect({ value, onChange }) {
+  const { t } = useTranslation();
+
   return (
     <div className="sort-select">
       <label className="sr-only" htmlFor="sort">
-        Sort products
+        {t('catalog.sortLabel')}
       </label>
       <select id="sort" value={value} onChange={(e) => onChange(e.target.value)}>
-        {SORT_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
+        {SORT_KEYS.map((key) => (
+          <option key={key} value={key}>
+            {t(`sort.${key}`)}
           </option>
         ))}
       </select>

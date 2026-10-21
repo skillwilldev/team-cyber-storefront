@@ -3,24 +3,20 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { useCart } from '@features/cart/hooks/useCart';
 import { useShop } from '@features/shop';
-import { BurgerIcon, CartIcon, HeartIcon, SearchIcon, UserIcon } from '../icons/icons';
+import { useTranslation } from '@/lib/i18n';
+import { BagIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from './HeaderIcons';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import Logo from '../Logo/Logo';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import UserMenu from '../UserMenu/UserMenu';
 import './Header.css';
 
-const NAV = [
-  { label: 'Home', to: '/' },
-  { label: 'About', to: '/about' },
-  { label: 'Contact Us', to: '/contact' },
-  { label: 'Blog', to: '/blog' },
-];
-
 const SEARCH_DELAY = 400;
 
-function HeaderSearch({ urlQuery }) {
+function HeaderSearch({ urlQuery, id = 'search', className = '' }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
   const [query, setQuery] = useState(urlQuery);
   const [syncedUrlQuery, setSyncedUrlQuery] = useState(urlQuery);
   const timer = useRef(null);
@@ -57,15 +53,15 @@ function HeaderSearch({ urlQuery }) {
   };
 
   return (
-    <form className="header__search" role="search" onSubmit={onSearch}>
-      <label htmlFor="search">
-        <SearchIcon size={24} />
-        <span className="sr-only">Search</span>
+    <form className={`header__search ${className}`.trim()} role="search" onSubmit={onSearch}>
+      <label htmlFor={id}>
+        <SearchIcon />
+        <span className="sr-only">{t('common.search')}</span>
       </label>
       <input
         type="text"
-        id="search"
-        placeholder="Search"
+        id={id}
+        placeholder={t('catalog.searchPlaceholder')}
         value={query}
         onChange={onChange}
       />
@@ -78,6 +74,7 @@ export default function Header() {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, logout, isLoading } = useAuth();
   const { wishlistCount } = useShop();
+  const { t } = useTranslation();
   // the badge is the server's `totalQty` from the shared ['cart'] cache (0 for guests / while loading)
   const { data: cart } = useCart();
   const cartCount = cart?.totalQty ?? 0;
@@ -85,6 +82,22 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const urlQuery = searchParams.get('q') ?? '';
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [menuOpen]);
+
+  const NAV = [
+    { label: t('nav.home'), to: '/' },
+    { label: t('nav.about'), to: '/about' },
+    { label: t('nav.contactUs'), to: '/contact' },
+    { label: t('nav.blog'), to: '/blog' },
+  ];
 
   const handleLogout = async () => {
     closeMenu();
@@ -96,123 +109,142 @@ export default function Header() {
     to === '/' ? !NAV.slice(1).some((item) => pathname.startsWith(item.to)) : pathname.startsWith(to);
 
   const profileTo = isAuthenticated ? '/account' : '/login';
-  const profileLabel = 'Sign in';
+
+  const iconLabel = (key, count, fallbackKey) => (count > 0 ? t(key, { count }) : t(fallbackKey));
 
   return (
     <header className="header">
       <div className="container">
         <div className="header__inner">
-          <div className="header__left">
-            <Link to="/" className="logo" aria-label="Cyber — home">
-              <Logo />
-            </Link>
-            <HeaderSearch urlQuery={urlQuery} />
-          </div>
-          <div className="header__nav">
-            <nav aria-label="Main">
-              <ul>
-                {NAV.map((item) => (
-                  <li key={item.to} className={isActive(item.to) ? 'active' : undefined}>
-                    <Link to={item.to}>{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+          <Link to="/" className="header__logo" aria-label={t('header.home')}>
+            <Logo />
+          </Link>
+
+          <HeaderSearch urlQuery={urlQuery} className="header__search--desktop" />
+
+          <nav className="header__nav" aria-label={t('header.navMain')}>
+            <ul>
+              {NAV.map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} aria-current={isActive(item.to) ? 'page' : undefined}>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
           <div className="header__btns">
             <Link
               to="/wishlist"
-              className="header__cart"
-              aria-label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : 'Wishlist'}
+              className="header__icon-btn"
+              aria-label={iconLabel('cart.wishlistCount', wishlistCount, 'wishlist.title')}
             >
-              <HeartIcon size={32} />
+              <HeartIcon />
               {wishlistCount > 0 && <span className="header__badge">{wishlistCount}</span>}
             </Link>
-            <Link to="/cart" className="header__cart" aria-label={cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}>
-              <CartIcon size={32} />
+            <Link
+              to="/cart"
+              className="header__icon-btn"
+              aria-label={iconLabel('cart.cartCount', cartCount, 'cart.cart')}
+            >
+              <BagIcon />
               {cartCount > 0 && <span className="header__badge">{cartCount}</span>}
             </Link>
 
             <div className="header__profile-slot">
               {isLoading ? (
-                <span className="loader" role="status">Loading</span>
+                <span className="skeleton header__avatar-skeleton" role="status" aria-label={t('common.loading')} />
               ) : isAuthenticated ? (
                 <UserMenu />
               ) : (
-                <Link to={profileTo} className="header__profile" aria-label={profileLabel} title={profileLabel}>
-                  <UserIcon size={32} />
+                <Link to={profileTo} className="header__icon-btn" aria-label={t('header.signIn')} title={t('header.signIn')}>
+                  <UserIcon />
                 </Link>
               )}
             </div>
 
+            <span className="header__divider" aria-hidden="true" />
+
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
+
           <button
             type="button"
             className="header__burger"
-            aria-label="Menu"
+            aria-label={menuOpen ? t('header.close') : t('header.menu')}
             aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <BurgerIcon size={32} />
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <nav className="header__menu" aria-label="Mobile">
+        <nav className="header__menu" id="mobile-menu" aria-label={t('header.navMobile')}>
           <div className="container">
+            <HeaderSearch urlQuery={urlQuery} id="search-mobile" className="header__search--mobile" />
+
             <ul>
               {NAV.map((item) => (
-                <li key={item.to} className={isActive(item.to) ? 'active' : undefined}>
-                  <Link to={item.to} onClick={closeMenu}>
+                <li key={item.to}>
+                  <Link to={item.to} onClick={closeMenu} aria-current={isActive(item.to) ? 'page' : undefined}>
                     {item.label}
                   </Link>
                 </li>
               ))}
-              <li className={pathname.startsWith('/cart') ? 'active' : undefined}>
-                <Link to="/cart" onClick={closeMenu}>
-                  {cartCount > 0 ? `Cart (${cartCount})` : 'Cart'}
+              <li>
+                <Link to="/wishlist" onClick={closeMenu} aria-current={pathname.startsWith('/wishlist') ? 'page' : undefined}>
+                  {iconLabel('cart.wishlistCount', wishlistCount, 'wishlist.title')}
                 </Link>
               </li>
-              <li
-                className={!isLoading && pathname.startsWith(profileTo) ? 'active' : undefined}
-                style={isLoading ? { visibility: 'hidden' } : undefined}
-                aria-hidden={isLoading || undefined}
-              >
-                <Link to={profileTo} onClick={closeMenu} tabIndex={isLoading ? -1 : undefined}>
-                  {isAuthenticated ? 'Account' : 'Sign in'}
+              <li>
+                <Link to="/cart" onClick={closeMenu} aria-current={pathname.startsWith('/cart') ? 'page' : undefined}>
+                  {iconLabel('cart.cartCount', cartCount, 'cart.cart')}
                 </Link>
               </li>
-              {!isLoading && isAuthenticated && (
-                <li className={pathname.startsWith('/orders') ? 'active' : undefined}>
-                  <Link to="/orders" onClick={closeMenu}>
-                    Orders
-                  </Link>
-                </li>
-              )}
-              {!isLoading && isAuthenticated && (
-                <li className={pathname.startsWith('/addresses') ? 'active' : undefined}>
-                  <Link to="/addresses" onClick={closeMenu}>
-                    Address
-                  </Link>
-                </li>
-              )}
-              {!isLoading && isAuthenticated && (
+              {!isLoading && (
                 <li>
-                  <button type="button" onClick={handleLogout}>
-                    Logout
-                  </button>
+                  <Link
+                    to={profileTo}
+                    onClick={closeMenu}
+                    aria-current={pathname.startsWith(profileTo) ? 'page' : undefined}
+                  >
+                    {isAuthenticated ? t('userMenu.account') : t('header.signIn')}
+                  </Link>
                 </li>
               )}
-              <li className="header__menu-theme">
-                <span>Dark theme</span>
-                <ThemeToggle />
-              </li>
+              {!isLoading && isAuthenticated && (
+                <>
+                  <li>
+                    <Link to="/orders" onClick={closeMenu} aria-current={pathname.startsWith('/orders') ? 'page' : undefined}>
+                      {t('userMenu.orders')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/addresses" onClick={closeMenu} aria-current={pathname.startsWith('/addresses') ? 'page' : undefined}>
+                      {t('userMenu.address')}
+                    </Link>
+                  </li>
+                  <li>
+                    <button type="button" onClick={handleLogout}>
+                      {t('userMenu.logout')}
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
+
+            <div className="header__menu-tools">
+              <ThemeToggle withLabel />
+              <LanguageSwitcher />
+            </div>
           </div>
         </nav>
       )}
     </header>
   );
-}
+}

@@ -1,25 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/lib/i18n';
 import { FacebookIcon, InstagramIcon, TikTokIcon, TwitterIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
 import './Footer.css';
-
-const SERVICES = [
-  'Bonus program',
-  'Gift cards',
-  'Credit and payment',
-  'Service contracts',
-  'Non-cash account',
-  'Payment',
-];
-
-const ASSISTANCE = [
-  'Find an order',
-  'Terms of delivery',
-  'Exchange and return of goods',
-  'Guarantee',
-  'Frequently asked questions',
-  'Terms of use of the site',
-];
 
 const SOCIALS = [
   { label: 'Twitter', Icon: TwitterIcon },
@@ -44,6 +27,26 @@ function LinkList({ title, items }) {
 }
 
 export default function Footer() {
+  const { t } = useTranslation();
+
+  const SERVICES = [
+    t('footer.bonusProgram'),
+    t('footer.giftCards'),
+    t('footer.creditPayment'),
+    t('footer.serviceContracts'),
+    t('footer.nonCashAccount'),
+    t('footer.payment'),
+  ];
+
+  const ASSISTANCE = [
+    t('footer.findOrder'),
+    t('footer.deliveryTerms'),
+    t('footer.exchangeReturn'),
+    t('footer.guarantee'),
+    t('footer.faq'),
+    t('footer.siteTerms'),
+  ];
+
   return (
     <footer className="footer">
       <div className="container">
@@ -53,7 +56,7 @@ export default function Footer() {
               <Link to="/" className="footer__logo" aria-label="Cyber — home">
                 <Logo />
               </Link>
-              <p>We are a residential interior design firm located in Portland. Our boutique-studio offers more than</p>
+              <p>{t('footer.description')}</p>
             </div>
             <ul className="footer__socials">
               {SOCIALS.map(({ label, Icon }) => (
@@ -65,8 +68,8 @@ export default function Footer() {
               ))}
             </ul>
           </div>
-          <LinkList title="Services" items={SERVICES} />
-          <LinkList title="Assistance to the buyer" items={ASSISTANCE} />
+          <LinkList title={t('footer.services')} items={SERVICES} />
+          <LinkList title={t('footer.assistance')} items={ASSISTANCE} />
         </div>
       </div>
     </footer>

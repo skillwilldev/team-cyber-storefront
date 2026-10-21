@@ -23,6 +23,13 @@ import CatalogPage from './pages/CatalogPage/CatalogPage';
 import FiltersPage from './pages/FiltersPage/FiltersPage';
 import ProductPage from './pages/ProductPage/ProductPage';
 import StubPage from './pages/StubPage/StubPage';
+import { useTranslation } from './lib/i18n';
+
+/** Wrapper: reads i18n keys and passes translated text to StubPage. */
+function TranslatedStub({ titleKey, textKey }) {
+  const { t } = useTranslation();
+  return <StubPage title={t(titleKey)} text={textKey ? t(textKey) : undefined} />;
+}
 
 /**
  * Routes
@@ -119,13 +126,13 @@ export default function App() {
           }
         />
 
-        <Route path="about" element={<StubPage title="About" />} />
-        <Route path="contact" element={<StubPage title="Contact Us" />} />
-        <Route path="blog" element={<StubPage title="Blog" />} />
-        <Route path="wishlist" element={<StubPage title="Wishlist" text="The wishlist page is coming soon." />} />
+        <Route path="about" element={<TranslatedStub titleKey="stub.about" />} />
+        <Route path="contact" element={<TranslatedStub titleKey="stub.contact" />} />
+        <Route path="blog" element={<TranslatedStub titleKey="stub.blog" />} />
+        <Route path="wishlist" element={<TranslatedStub titleKey="stub.wishlist" textKey="stub.wishlistText" />} />
         <Route
           path="*"
-          element={<StubPage title="Page not found" text="The page you are looking for does not exist." />}
+          element={<TranslatedStub titleKey="stub.notFound" textKey="stub.notFoundText" />}
         />
       </Route>
     </Routes>

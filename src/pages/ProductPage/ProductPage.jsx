@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useCategory, useProduct } from '@api/catalogQueries';
 import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
+import { useTranslation, formatPriceI18n, getCategoryName } from '../../lib/i18n';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
   BatteryIcon,
@@ -22,7 +23,6 @@ import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductImage from '../../components/ProductImage/ProductImage';
 import QueryError from '../../components/QueryError/QueryError';
 import Stars from '../../components/Stars/Stars';
-import { formatPrice, formatWarranty } from '../../lib/format';
 import { getColorHex } from '../../lib/filterLabels';
 import { buildSpecGroups, getQuickSpecs, getSpecLabel } from '../../lib/specs';
 import StubPage from '../StubPage/StubPage';
@@ -71,10 +71,22 @@ function ProductSkeleton() {
   );
 }
 
+function formatWarrantyI18n(months, t) {
+  if (!months) return t('warranty.none');
+  if (months % 12 === 0) {
+    const years = months / 12;
+    return years === 1
+      ? t('warranty.year_one', { count: years })
+      : t('warranty.year_other', { count: years });
+  }
+  return t('warranty.months', { count: months });
+}
+
 function ProductView({ product }) {
   const { data: category } = useCategory(product.category?.slug);
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
+  const { t, lang } = useTranslation();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showMoreSpecs, setShowMoreSpecs] = useState(false);
 
@@ -89,7 +101,7 @@ function ProductView({ product }) {
   const related = product.related ?? [];
 
   const categorySlug = product.category?.slug ?? 'smartphones';
-  const categoryLabel = category?.nameEn ?? product.category?.name ?? 'Category';
+  const categoryLabel = getCategoryName(category ?? product.category, lang) || 'Category';
 
   return (
     <>
@@ -97,8 +109,8 @@ function ProductView({ product }) {
       <div className="container">
         <Breadcrumbs
           items={[
-            { label: 'Home', to: '/' },
-            { label: 'Catalog', to: '/' },
+            { label: t('common.home'), to: '/' },
+            { label: t('common.catalog'), to: '/' },
             { label: categoryLabel, to: `/?category=${categorySlug}` },
             { label: brand, to: `/?category=${categorySlug}&brand=${encodeURIComponent(brand)}` },
             { label: title },
@@ -115,7 +127,7 @@ function ProductView({ product }) {
                   <li key={src}>
                     <button
                       type="button"
-                      aria-label={`Photo ${i + 1}`}
+                      aria-label={t('product.photo', { n: i + 1 })}
                       aria-current={i === photoIndex}
                       onClick={() => setPhotoIndex(i)}
                     >
@@ -134,14 +146,14 @@ function ProductView({ product }) {
             <h1>{title}</h1>
 
             <p className="product__price">
-              <b>{formatPrice(price, currency)}</b>
-              {oldPrice && <s>{formatPrice(oldPrice, currency)}</s>}
+              <b>{formatPriceI18n(price, currency, lang)}</b>
+              {oldPrice && <s>{formatPriceI18n(oldPrice, currency, lang)}</s>}
               {discountPercent > 0 && <span className="product__badge">-{discountPercent}%</span>}
             </p>
 
             {color && (
               <div className="product__colors">
-                <span id="colors-label">Color :</span>
+                <span id="colors-label">{t('product.color')}</span>
                 <ul role="radiogroup" aria-labelledby="colors-label">
                   <li>
                     <button
@@ -192,7 +204,7 @@ function ProductView({ product }) {
                 aria-pressed={isInWishlist(product.id)}
                 onClick={() => toggleWishlist(product.id)}
               >
-                {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                {isInWishlist(product.id) ? t('product.removeFromWishlist') : t('product.addToWishlist')}
               </button>
               <button
                 type="button"
@@ -200,7 +212,7 @@ function ProductView({ product }) {
                 disabled={!inStock || isAdding}
                 onClick={() => addToCart(product)}
               >
-                {!inStock ? 'Out of stock' : isAdding ? 'Adding…' : 'Add to Cart'}
+                {!inStock ? t('cart.outOfStock') : isAdding ? t('cart.adding') : t('cart.addToCart')}
               </button>
             </div>
 
@@ -210,8 +222,8 @@ function ProductView({ product }) {
                   <TruckIcon size={24} />
                 </span>
                 <div>
-                  <small>Free Delivery</small>
-                  <b>1-2 day</b>
+                  <small>{t('product.freeDelivery')}</small>
+                  <b>{t('product.deliveryTime')}</b>
                 </div>
               </li>
               <li>
@@ -219,8 +231,8 @@ function ProductView({ product }) {
                   <StoreIcon size={24} />
                 </span>
                 <div>
-                  <small>{inStock ? 'In Stock' : 'Out of Stock'}</small>
-                  <b>{inStock ? `${stock} pcs` : '—'}</b>
+                  <small>{inStock ? t('product.inStock') : t('product.outOfStock')}</small>
+                  <b>{inStock ? `${stock} ${t('common.pcs')}` : '—'}</b>
                 </div>
               </li>
               <li>
@@ -228,8 +240,8 @@ function ProductView({ product }) {
                   <ShieldCheckIcon size={24} />
                 </span>
                 <div>
-                  <small>Guaranteed</small>
-                  <b>{formatWarranty(product.warrantyMonths)}</b>
+                  <small>{t('product.guaranteed')}</small>
+                  <b>{formatWarrantyI18n(product.warrantyMonths, t)}</b>
                 </div>
               </li>
             </ul>
@@ -240,7 +252,7 @@ function ProductView({ product }) {
       <section className="details-band">
         <div className="container">
           <div className="details">
-            <h2>Details</h2>
+            <h2>{t('product.details')}</h2>
             {product.description && <p className="details__text">{product.description}</p>}
             {groups.main.map((g) => (
               <SpecTable key={g.title} group={g} />
@@ -253,7 +265,7 @@ function ProductView({ product }) {
                 aria-expanded={showMoreSpecs}
                 onClick={() => setShowMoreSpecs((v) => !v)}
               >
-                {showMoreSpecs ? 'View Less' : 'View More'}
+                {showMoreSpecs ? t('common.viewLess') : t('common.viewMore')}
                 <ChevronIcon direction={showMoreSpecs ? 'up' : 'down'} size={16} />
               </button>
             )}
@@ -265,12 +277,12 @@ function ProductView({ product }) {
           so only the real numbers are shown — no demo reviews. */}
       <section className="reviews">
         <div className="container">
-          <h2>Reviews</h2>
+          <h2>{t('product.reviews')}</h2>
 
           <div className="reviews__summary">
             <div className="reviews__score">
               <b>{Number(rating).toFixed(1)}</b>
-              <span>of {reviewsCount} reviews</span>
+              <span>{t('product.ofReviews', { count: reviewsCount })}</span>
               <Stars value={rating} />
             </div>
           </div>
@@ -280,7 +292,7 @@ function ProductView({ product }) {
       {related.length > 0 && (
         <section className="related">
           <div className="container">
-            <h2>Related Products</h2>
+            <h2>{t('product.relatedProducts')}</h2>
             <ul>
               {related.map((p) => (
                 <li key={p.id}>
@@ -297,11 +309,12 @@ function ProductView({ product }) {
 
 export default function ProductPage() {
   const { slug } = useParams();
+  const { t } = useTranslation();
   const { data: product, isPending, isError, error, refetch } = useProduct(slug);
 
   if (isPending) return <ProductSkeleton />;
   if (isError) {
-    if (error.status === 404) return <StubPage title="Product not found" text="We could not find this product." />;
+    if (error.status === 404) return <StubPage title={t('product.productNotFound')} text={t('product.productNotFoundText')} />;
 
     return <QueryError message={error.message} onRetry={() => refetch()} />;
   }

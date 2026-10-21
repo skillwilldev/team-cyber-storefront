@@ -1,13 +1,16 @@
+import { useTranslation } from '@/lib/i18n';
 import './QueryError.css';
 
-export default function QueryError({ title = 'Something went wrong', message, onRetry }) {
+export default function QueryError({ title, message, onRetry }) {
+  const { t } = useTranslation();
+
   return (
     <div className="query-error" role="alert">
-      <h2>{title}</h2>
+      <h2>{title || t('common.somethingWentWrong')}</h2>
       {message && <p>{message}</p>}
       {onRetry && (
         <button type="button" onClick={onRetry}>
-          Try again
+          {t('common.tryAgain')}
         </button>
       )}
     </div>

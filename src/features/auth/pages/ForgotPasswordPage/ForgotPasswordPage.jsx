@@ -8,6 +8,7 @@ import {
   resetPasswordSchema,
 } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
+import { useTranslation } from '@/lib/i18n';
 import {
   Button,
   Input,
@@ -31,6 +32,7 @@ import './ForgotPasswordPage.css';
  * Step 3: New password → POST /auth/reset-password → success message → redirect to /login
  */
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
@@ -43,16 +45,16 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-page__header">
-        <h1 className="auth-page__title">Reset your password</h1>
+        <h1 className="auth-page__title">{t('auth.resetTitle')}</h1>
         <p className="auth-page__subtitle">
-          {step === 1 && 'Enter your email to receive a reset code'}
-          {step === 2 && 'Enter the 6-digit verification code'}
-          {step === 3 && !isComplete && 'Create a new secure password'}
-          {isComplete && 'Your password has been updated'}
+          {step === 1 && t('auth.resetStep1')}
+          {step === 2 && t('auth.resetStep2')}
+          {step === 3 && !isComplete && t('auth.resetStep3')}
+          {isComplete && t('auth.resetComplete')}
         </p>
         {!isComplete && (
           <div className="auth-page__step-info" style={{ marginTop: '8px' }}>
-            Step {step} of 3
+            {t('auth.stepOf', { step })}
           </div>
         )}
       </div>
@@ -64,7 +66,7 @@ export default function ForgotPasswordPage() {
         <div className="auth-page__dev-banner">
           <IconTerminal size={16} />
           <span>
-            <strong>Dev Mode:</strong> Your code is <code>{devCode}</code>
+            <strong>{t('auth.devModeCode')}</strong> <code>{devCode}</code>
           </span>
         </div>
       )}
@@ -110,7 +112,7 @@ export default function ForgotPasswordPage() {
       <div className="auth-page__divider">
         <Link to="/login" className="auth-page__back-link">
           <IconArrowLeft size={16} />
-          Back to sign in
+          {t('auth.backToSignIn')}
         </Link>
       </div>
     </div>
@@ -127,6 +129,7 @@ function Step1Email({
   setDevCode,
   setStep,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -155,13 +158,13 @@ function Step1Email({
         setDevCode(data.devCode);
       }
 
-      setBannerSuccess('If an account exists for this email, we\'ve sent a reset link.');
+      setBannerSuccess(t('auth.emailSent'));
       setStep(2);
     } catch (err) {
       if (err.code === 'VALIDATION_ERROR' && err.errors) {
         setBannerError(Object.values(err.errors).join('. '));
       } else {
-        setBannerError(err.message || 'Request failed. Please try again.');
+        setBannerError(err.message || t('auth.requestFailed'));
       }
     } finally {
       setIsSubmitting(false);
@@ -170,7 +173,7 @@ function Step1Email({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="auth-page__form" noValidate>
-      <FormField label="Email" error={errors.email?.message} htmlFor="fp-email" required>
+      <FormField label={t('auth.email')} error={errors.email?.message} htmlFor="fp-email" required>
         <Input
           id="fp-email"
           type="email"
@@ -182,7 +185,7 @@ function Step1Email({
         />
       </FormField>
       <Button type="submit" isLoading={isSubmitting}>
-        Send Reset Code
+        {t('auth.sendResetCode')}
       </Button>
     </form>
   );
@@ -198,6 +201,7 @@ function Step2Code({
   setResetToken,
   setStep,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -225,13 +229,13 @@ function Step2Code({
       setStep(3);
     } catch (err) {
       if (err.code === 'INVALID_RESET_CODE' || err.status === 400) {
-        setError('code', { message: 'Code is invalid or expired' });
+        setError('code', { message: t('auth.codeInvalidExpired') });
       } else if (err.code === 'TOO_MANY_ATTEMPTS' || err.status === 429) {
-        setBannerError('Too many attempts. Please request a new code.');
+        setBannerError(t('auth.tooManyAttempts'));
         // Optionally go back to step 1
         setTimeout(() => setStep(1), 3000);
       } else {
-        setBannerError(err.message || 'Verification failed. Please try again.');
+        setBannerError(err.message || t('auth.verificationFailed'));
       }
     } finally {
       setIsSubmitting(false);
@@ -240,10 +244,10 @@ function Step2Code({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="auth-page__form" noValidate>
-      <FormField label="Verification Code" error={errors.code?.message} htmlFor="fp-code" required>
+      <FormField label={t('auth.verificationCode')} error={errors.code?.message} htmlFor="fp-code" required>
         <Input
           id="fp-code"
-          placeholder="Enter 6-digit code"
+          placeholder={t('auth.enterCode')}
           error={errors.code?.message}
           disabled={isSubmitting}
           icon={IconKeyRound}
@@ -251,7 +255,7 @@ function Step2Code({
         />
       </FormField>
       <Button type="submit" isLoading={isSubmitting}>
-        Verify Code
+        {t('auth.verifyCode')}
       </Button>
     </form>
   );
@@ -265,6 +269,7 @@ function Step3NewPassword({
   setBannerError,
   setIsComplete,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -291,9 +296,9 @@ function Step3NewPassword({
       setIsComplete(true);
     } catch (err) {
       if (err.code === 'RESET_TOKEN_USED') {
-        setBannerError('This reset link has already been used. Please request a new one.');
+        setBannerError(t('auth.resetTokenUsed'));
       } else {
-        setBannerError(err.message || 'Password reset failed. Please try again.');
+        setBannerError(err.message || t('auth.resetFailed'));
       }
     } finally {
       setIsSubmitting(false);
@@ -302,17 +307,17 @@ function Step3NewPassword({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="auth-page__form" noValidate>
-      <FormField label="New Password" error={errors.password?.message} htmlFor="fp-new-password" required>
+      <FormField label={t('auth.newPassword')} error={errors.password?.message} htmlFor="fp-new-password" required>
         <PasswordInput
           id="fp-new-password"
-          placeholder="Min 8 characters"
+          placeholder={t('auth.minChars')}
           error={errors.password?.message}
           disabled={isSubmitting}
           {...register('password')}
         />
       </FormField>
       <Button type="submit" isLoading={isSubmitting}>
-        Update Password
+        {t('auth.updatePassword')}
       </Button>
     </form>
   );
@@ -320,12 +325,13 @@ function Step3NewPassword({
 
 // ---- Success view after password reset ----
 function SuccessView() {
+  const { t } = useTranslation();
   return (
     <div className="auth-page__success">
       <div className="auth-page__success-icon">
         <IconCheckCircle size={32} />
       </div>
-      <p>Your password has been successfully updated. You can now sign in with your new password.</p>
+      <p>{t('auth.resetSuccess')}</p>
     </div>
   );
 }
