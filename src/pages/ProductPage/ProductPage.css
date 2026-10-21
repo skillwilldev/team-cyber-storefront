@@ -510,9 +510,7 @@
     padding-top: 48px;
   }
 
-  .related ul {
-    grid-template-columns: repeat(2, 1fr);
-  }
+
 
 
   .reviews {
@@ -533,6 +531,25 @@
   }
 }
 
+@media (max-width: 860px) {
+  .related ul {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .related ul {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+@media (max-width: 460px) {
+  .related ul {
+    gap: 12px;
+  }
+}
+
 @media (max-width: 500px) {
   .product__quick {
     grid-template-columns: repeat(1, 1fr);
@@ -544,7 +561,13 @@
 }
 
 @media (max-width: 400px) {
+  .related ul {
+    gap: 10px;
+  }
+}
+
+/* @media (max-width: 400px) {
   .catalog__grid {
     grid-template-columns: repeat(1, 1fr);
   }
-}
+} */

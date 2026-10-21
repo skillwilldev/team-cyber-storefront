@@ -4,6 +4,7 @@ import { useShop } from '@features/shop';
 import { formatPrice } from '../../lib/format';
 import { HeartIcon } from '../icons/icons';
 import ProductImage from '../ProductImage/ProductImage';
+import { StarIcon } from '../icons/icons';
 import Stars from '../Stars/Stars';
 import './ProductCard.css';
 
@@ -36,10 +37,21 @@ export default function ProductCard({ product }) {
         <h3 className="product-card__title">{title}</h3>
       </Link>
 
-      <p className="product-card__rating">
+      <p className="product-card__rating product-card__rating--desktop">
         <Stars value={rating ?? 0} size={14} />
         <span>
           {Number(rating ?? 0).toFixed(1)} ({reviewsCount ?? 0})
+        </span>
+      </p>
+
+      <p className="product-card__rating product-card__rating--mobile">
+        <span className="product-card__rating-badge">
+          <StarIcon size={12} filled={true} />
+          <span>{Number(rating ?? 0).toFixed(1)}</span>
+        </span>
+
+        <span className="product-card__reviews-count">
+          ({reviewsCount ?? 0})
         </span>
       </p>
 

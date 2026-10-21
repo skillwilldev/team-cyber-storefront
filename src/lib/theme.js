@@ -64,11 +64,11 @@ export function setTheme(theme) {
   } catch {
     /* not saved, still applied for this session */
   }
-  const root = document.documentElement;
-  root.classList.add('theme-switching');
+  // const root = document.documentElement;
+  // root.classList.add('theme-switching');
   apply(next);
   notify();
-  window.setTimeout(() => root.classList.remove('theme-switching'), 300);
+  // window.setTimeout(() => root.classList.remove('theme-switching'), 300);
 }
 
 export function toggleTheme() {

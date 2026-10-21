@@ -21,6 +21,8 @@
   cursor: pointer;
 }
 
+
+
 .sort-select svg {
   position: absolute;
   top: 50%;
@@ -29,6 +31,9 @@
   pointer-events: none;
 }
 
+
+
+
 @media (max-width: 1023px) {
   .sort-select {
     width: 100%;
@@ -36,5 +41,15 @@
 
   .sort-select select {
     height: 55px;
+  }
+}
+
+@media (max-width: 400px) {
+  .sort-select select {
+    height: 44px;
+  }
+
+  .sort-select svg {
+    right: 10px;
   }
 }
