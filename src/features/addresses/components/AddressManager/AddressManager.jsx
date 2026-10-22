@@ -4,7 +4,7 @@ import { PlusIcon } from '@/components/icons/checkoutIcons';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
 import { useToast } from '@shared/ui';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { getGenericMessage } from '@features/checkout/lib/checkoutErrors';
 import { useAddresses } from '../../hooks/useAddresses';
 import { MAX_ADDRESSES } from '../../lib/addressForm';

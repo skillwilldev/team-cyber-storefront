@@ -1,4 +1,5 @@
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { amountToFreeShipping, formatShippingFee } from '../../lib/checkoutFormat';
 import './OrderSummary.css';
 
@@ -8,7 +9,8 @@ import './OrderSummary.css';
  * (The mockup also shows "Estimated tax"; the API has no tax, so the card shows only what the API really charges.)
  */
 export default function OrderSummary({ checkout, address }) {
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const { items, subtotal, shippingFee, total, currency, freeShippingFrom } = checkout;
   const missing = amountToFreeShipping({ subtotal, freeShippingFrom, shippingFee });
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useCategory } from '@api/catalogQueries';
-import { useTranslation } from '../../lib/i18n';
+import { useTranslation } from 'react-i18next';
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
 import { ChevronIcon } from '../../components/icons/icons';
 import QueryError from '../../components/QueryError/QueryError';

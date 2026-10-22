@@ -1,5 +1,5 @@
 import { CloseIcon, PencilIcon } from '@/components/icons/checkoutIcons';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './AddressCard.css';
 
 function Details({ address }) {

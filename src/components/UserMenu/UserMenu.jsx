@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks/useAuth';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './UserMenu.css';
 
 /** Avatar circle with the first letter of the name (like Gmail) + dropdown: name, email, Account, Orders, Address, Logout. */

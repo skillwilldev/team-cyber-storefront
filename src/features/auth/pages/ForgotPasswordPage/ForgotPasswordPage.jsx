@@ -8,7 +8,7 @@ import {
   resetPasswordSchema,
 } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   Input,

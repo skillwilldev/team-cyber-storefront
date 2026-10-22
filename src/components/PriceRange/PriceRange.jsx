@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './PriceRange.css';
 
 const format = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');

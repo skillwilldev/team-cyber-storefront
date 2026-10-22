@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { AddressManager, useAddresses } from '@features/addresses';
 import { checkoutPath } from '../../lib/checkoutRoutes';
 

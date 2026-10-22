@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './LoadingHint.css';
 
 /**

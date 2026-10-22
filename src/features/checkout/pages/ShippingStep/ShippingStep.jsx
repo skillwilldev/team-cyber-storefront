@@ -2,7 +2,8 @@ import { useId, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import QueryError from '@/components/QueryError/QueryError';
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { useCheckout } from '../../hooks/useCheckout';
 import { useSelectedAddress } from '../../hooks/useSelectedAddress';
 import {
@@ -25,7 +26,8 @@ export default function ShippingStep() {
   const name = useId();
   const { data: checkout } = useCheckout();
   const { address, isPending, isError, error, refetch } = useSelectedAddress();
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   // a lazy initial value: the date is fixed once per visit and the render stays pure
   const [today] = useState(() => new Date());
 

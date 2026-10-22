@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { useCart } from '@features/cart/hooks/useCart';
 import { useShop } from '@features/shop';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { BagIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from './HeaderIcons';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import Logo from '../Logo/Logo';

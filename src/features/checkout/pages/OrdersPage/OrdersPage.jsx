@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { useOrders } from '../../hooks/useOrders';
 import { formatDateTime, shortOrderNumber } from '../../lib/checkoutFormat';
 import { orderPath } from '../../lib/checkoutRoutes';
@@ -16,7 +17,8 @@ const MAX_THUMBS = 4;
  */
 export default function OrdersPage() {
   const { data, isPending, isError, error, refetch } = useOrders();
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   // unknown statuses fall back to the raw value from the server
   const statusLabel = (status) => {
     const key = `orders.status.${status}`;

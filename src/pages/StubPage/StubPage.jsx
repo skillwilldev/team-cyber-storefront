@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './StubPage.css';
 
 export default function StubPage({ title, text }) {

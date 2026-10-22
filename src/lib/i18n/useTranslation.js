@@ -1,9 +1,0 @@
-import { useContext } from 'react';
-import { I18nContext } from './I18nContext';
-
-/** Returns { lang, setLang, t }. */
-export function useTranslation() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error('useTranslation must be used within I18nProvider');
-  return ctx;
-}

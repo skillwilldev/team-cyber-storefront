@@ -23,7 +23,7 @@ import CatalogPage from './pages/CatalogPage/CatalogPage';
 import FiltersPage from './pages/FiltersPage/FiltersPage';
 import ProductPage from './pages/ProductPage/ProductPage';
 import StubPage from './pages/StubPage/StubPage';
-import { useTranslation } from './lib/i18n';
+import { useTranslation } from 'react-i18next';
 
 /** Wrapper: reads i18n keys and passes translated text to StubPage. */
 function TranslatedStub({ titleKey, textKey }) {

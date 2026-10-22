@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useTranslation, getFilterOptionLabel } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { getFilterOptionLabel } from '@/lib/i18n';
 import { getColorHex, getFilterTitle } from '../../lib/filterLabels';
 import Checkbox from '../Checkbox/Checkbox';
 import { ChevronIcon, SearchIcon } from '../icons/icons';
@@ -101,7 +102,8 @@ export default function FilterPanel({
   priceDelay,
 }) {
   const [open, setOpen] = useState(() => new Set(defaultOpen));
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const toggleSection = (id) =>
     setOpen((prev) => {
       const next = new Set(prev);

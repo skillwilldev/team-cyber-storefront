@@ -3,7 +3,8 @@ import ActionButton from '@/components/ActionButton/ActionButton';
 import { CheckCircleIcon } from '@/components/icons/checkoutIcons';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { Alert } from '@shared/ui';
 import { useOrder } from '../../hooks/useOrder';
 import { formatDateTime, formatShippingFee, shortOrderNumber } from '../../lib/checkoutFormat';
@@ -19,7 +20,8 @@ import './OrderPage.css';
 export default function OrderPage() {
   const { id } = useParams();
   const { data, isPending, isError, error, refetch } = useOrder(id);
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
 
   if (isPending) {
     return (

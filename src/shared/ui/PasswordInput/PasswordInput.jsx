@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import Input from '../Input/Input';
 import { IconLock, IconEye, IconEyeOff } from '../Icons/Icons';
 import './PasswordInput.css';

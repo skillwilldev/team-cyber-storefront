@@ -1,5 +1,5 @@
 import { PaymentIcon, PinIcon, ShipmentIcon } from '@/components/icons/checkoutIcons';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { CHECKOUT_STEPS } from '../../lib/checkoutRoutes';
 import './CheckoutStepper.css';
 

@@ -5,7 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
 import { useAuth } from '@features/auth/hooks/useAuth';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { Button, Input, PasswordInput, FormField, Alert, IconMail } from '@shared/ui';
 import './LoginPage.css';
 

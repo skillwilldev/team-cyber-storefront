@@ -6,7 +6,7 @@ import { useCreateOrder } from '@api/checkoutQueries';
 import ActionButton from '@/components/ActionButton/ActionButton';
 import QueryError from '@/components/QueryError/QueryError';
 import { Alert, FormField, Input } from '@shared/ui';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import CardPreview from '../../components/CardPreview/CardPreview';
 import OrderSummary from '../../components/OrderSummary/OrderSummary';
 import { useCheckout } from '../../hooks/useCheckout';

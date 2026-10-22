@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useCategory, useProduct } from '@api/catalogQueries';
 import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
-import { useTranslation, formatPriceI18n, formatRatingI18n, getCategoryName } from '../../lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n, formatRatingI18n, getCategoryName } from '../../lib/i18n';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
   BatteryIcon,
@@ -74,10 +75,7 @@ function ProductSkeleton() {
 function formatWarrantyI18n(months, t) {
   if (!months) return t('warranty.none');
   if (months % 12 === 0) {
-    const years = months / 12;
-    return years === 1
-      ? t('warranty.year_one', { count: years })
-      : t('warranty.year_other', { count: years });
+    return t('warranty.year', { count: months / 12 }); // i18next picks year_one / year_other
   }
   return t('warranty.months', { count: months });
 }
@@ -86,7 +84,8 @@ function ProductView({ product }) {
   const { data: category } = useCategory(product.category?.slug);
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showMoreSpecs, setShowMoreSpecs] = useState(false);
 

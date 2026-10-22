@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAddCartItem } from '@api/cartQueries';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { useToast } from '@shared/ui';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { getCartErrorMessage } from '../lib/cartErrors';
 
 /**

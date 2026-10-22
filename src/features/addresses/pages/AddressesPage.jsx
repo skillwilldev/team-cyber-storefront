@@ -1,4 +1,4 @@
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import AddressManager from '../components/AddressManager/AddressManager';
 import { MAX_ADDRESSES } from '../lib/addressForm';
 import './AddressesPage.css';

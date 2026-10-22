@@ -1,5 +1,5 @@
 import { MinusIcon, PlusIcon } from '@/components/icons/icons';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { MIN_QTY } from '../../lib/cartRules';
 import './QuantityStepper.css';
 

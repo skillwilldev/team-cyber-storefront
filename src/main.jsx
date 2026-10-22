@@ -7,7 +7,7 @@ import { AuthProvider } from '@features/auth';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
 import { ToastProvider } from '@shared/ui';
-import { I18nProvider } from '@/lib/i18n';
+import '@/lib/i18n'; // initialises i18next (react-i18next picks it up through initReactI18next)
 import { initTheme } from '@/lib/theme';
 import App from './App';
 import './styles/global.css';
@@ -17,7 +17,7 @@ initTheme();
 /**
  * Provider order:
  *   QueryClientProvider — server state (catalog): cache, loading/error states, refetching
- *   I18nProvider        — language context (FE-008): ka/en, saved in localStorage (above Toast: the toast close button is translated)
+ *   i18next             — no provider: `import '@/lib/i18n'` initialises it once, useTranslation() from react-i18next reads it (FE-008): ka/en, saved in localStorage
  *   ToastProvider       — short messages ("Added to cart")
  *   AuthProvider        — client state: who is signed in (token + user)
  *   ShopProvider        — client state: wishlist of the signed-in user (needs AuthProvider)
@@ -28,17 +28,15 @@ initTheme();
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <ShopProvider>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
-            </ShopProvider>
-          </AuthProvider>
-        </ToastProvider>
-      </I18nProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <ShopProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </ShopProvider>
+        </AuthProvider>
+      </ToastProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>,

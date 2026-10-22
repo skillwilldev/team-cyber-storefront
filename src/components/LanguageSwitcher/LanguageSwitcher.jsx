@@ -1,4 +1,5 @@
-import { useTranslation, LANGUAGES } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { LANGUAGES } from '@/lib/i18n';
 import './LanguageSwitcher.css';
 
 /** Short labels written in the language itself (Georgian uses the ADG2 font in the header). */
@@ -10,7 +11,8 @@ const LABELS = { ka: 'ქარ', en: 'ENG' };
  * so adding a third language only needs a new entry in LANGUAGES / LABELS.
  */
 export default function LanguageSwitcher({ className = '' }) {
-  const { lang, setLang, t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const index = Math.max(0, LANGUAGES.indexOf(lang));
 
   return (
@@ -28,7 +30,7 @@ export default function LanguageSwitcher({ className = '' }) {
           lang={code}
           aria-pressed={lang === code}
           className="lang-switch__btn"
-          onClick={() => setLang(code)}
+          onClick={() => i18n.changeLanguage(code)}
           title={t(`lang.${code}`)}
         >
           {LABELS[code] ?? code.toUpperCase()}

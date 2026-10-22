@@ -1,4 +1,4 @@
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { IconAlertCircle } from '../Icons/Icons';
 import './FormField.css';
 

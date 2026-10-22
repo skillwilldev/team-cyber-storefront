@@ -1,5 +1,5 @@
 import { useTheme } from '@/hooks/useTheme';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { MonitorIcon, MoonIcon, SunIcon } from '../Header/HeaderIcons';
 import './ThemeToggle.css';
 

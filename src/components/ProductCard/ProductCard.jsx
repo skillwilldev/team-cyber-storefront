@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
-import { useTranslation, formatPriceI18n, formatRatingI18n } from '../../lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n, formatRatingI18n } from '../../lib/i18n';
 import { HeartIcon } from '../icons/icons';
 import ProductImage from '../ProductImage/ProductImage';
 import { StarIcon } from '../icons/icons';
@@ -11,7 +12,8 @@ import './ProductCard.css';
 export default function ProductCard({ product }) {
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const { id, slug, title, brand, image, price, oldPrice, discountPercent, currency, rating, reviewsCount, inStock } =
     product;
 

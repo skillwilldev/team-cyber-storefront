@@ -1,4 +1,4 @@
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { ChevronIcon } from '../icons/icons';
 import './Pagination.css';
 

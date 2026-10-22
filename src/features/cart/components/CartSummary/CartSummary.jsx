@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import './CartSummary.css';
 
 /** Totals come from the server (`totalQty`, `subtotal`). Checkout is blocked while any line has a stock problem. */
 export default function CartSummary({ totalQty, subtotal, currency, hasStockIssues }) {
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
 
   return (
     <aside className="cart-summary" aria-labelledby="cart-summary-title">

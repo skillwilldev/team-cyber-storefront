@@ -1,4 +1,4 @@
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import './QueryError.css';
 
 export default function QueryError({ title, message, onRetry }) {

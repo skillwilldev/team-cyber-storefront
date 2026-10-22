@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useRemoveCartItem, useUpdateCartItem } from '@api/cartQueries';
 import ProductImage from '@/components/ProductImage/ProductImage';
 import { TrashIcon } from '@/components/icons/icons';
-import { useTranslation, formatPriceI18n } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { getCartErrorMessage } from '../../lib/cartErrors';
 import { getMaxQty, getStockIssue } from '../../lib/cartRules';
 import QuantityStepper from '../QuantityStepper/QuantityStepper';
@@ -19,7 +20,8 @@ export default function CartLine({ item }) {
   const { id, qty, lineTotal, product } = item;
   const update = useUpdateCartItem();
   const remove = useRemoveCartItem();
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
 
   const isBusy = update.isPending || remove.isPending;
   const stockIssue = getStockIssue(item, t);

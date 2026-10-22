@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import { FacebookIcon, InstagramIcon, TikTokIcon, TwitterIcon } from '../icons/icons';
 import Logo from '../Logo/Logo';
 import './Footer.css';

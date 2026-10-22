@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
 import CartLine from '../../components/CartLine/CartLine';

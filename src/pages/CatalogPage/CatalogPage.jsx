@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useCategory, useProducts } from '@api/catalogQueries';
-import { useTranslation, getCategoryName } from '../../lib/i18n';
+import { useTranslation } from 'react-i18next';
+import { getCategoryName } from '../../lib/i18n';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
 import { SlidersIcon } from '../../components/icons/icons';
@@ -34,7 +35,8 @@ export default function CatalogPage() {
   const { params, setFilters, setSort, setPage } = useCatalogParams();
   const { search } = useLocation();
   const isMobile = useMediaQuery(MOBILE_QUERY);
-  const { t, lang } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const limit = isMobile ? 8 : 9;
 
   const categoryQ = useCategory(params.category);

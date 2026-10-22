@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '@shared/api/apiClient';
 import { profileSchema } from '@shared/lib/validators';
 import { useAuth } from '@features/auth/hooks/useAuth';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Button,

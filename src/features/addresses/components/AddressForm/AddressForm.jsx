@@ -7,7 +7,7 @@ import { addressSchema } from '@shared/lib/validators';
 import { Alert, FormField, Input, useToast } from '@shared/ui';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { getGenericMessage } from '@features/checkout/lib/checkoutErrors';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 import {
   MAX_ADDRESSES,
   applyServerErrors,
