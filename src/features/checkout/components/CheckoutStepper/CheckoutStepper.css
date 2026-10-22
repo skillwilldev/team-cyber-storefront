@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #a4a4a4;
+  color: var(--c-gray);
 }
 
 .checkout-steps__item--current {

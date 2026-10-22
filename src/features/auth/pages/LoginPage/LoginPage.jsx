@@ -88,7 +88,7 @@ export default function LoginPage() {
           <Input
             id="login-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
             disabled={isSubmitting}
             icon={IconMail}

@@ -66,7 +66,7 @@
   top: 16px;
   left: 0;
   right: 0;
-  border-top: 1px dashed #8d8d8d;
+  border-top: 1px dashed var(--c-border);
 }
 
 .addr-manager__add-icon {
@@ -82,11 +82,11 @@
 }
 
 .addr-manager__add button:disabled {
-  color: #a4a4a4;
+  color: var(--c-gray);
 }
 
 .addr-manager__add button:disabled .addr-manager__add-icon {
-  background: #a4a4a4;
+  background: var(--c-gray);
 }
 
 .addr-manager__add p {

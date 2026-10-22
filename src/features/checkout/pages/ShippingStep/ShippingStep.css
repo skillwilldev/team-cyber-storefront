@@ -53,16 +53,16 @@
 
 /* greyed-out rows (not supported by the API) */
 .shipping-option--disabled label {
-  color: #a4a4a4;
+  color: var(--c-gray);
   cursor: not-allowed;
 }
 
 .shipping-option--disabled input {
-  border-color: #a4a4a4;
+  border-color: var(--c-gray);
 }
 
 .shipping-option--disabled .shipping-option__text {
-  color: #a4a4a4;
+  color: var(--c-gray);
 }
 
 .checkout-step__hint a {

@@ -177,7 +177,7 @@ function Step1Email({
         <Input
           id="fp-email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t('auth.emailPlaceholder')}
           error={errors.email?.message}
           disabled={isSubmitting}
           icon={IconMail}

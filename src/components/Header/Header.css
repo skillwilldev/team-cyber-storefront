@@ -225,7 +225,7 @@
   padding: 16px 0 20px;
   border-bottom: 1px solid var(--c-border-light);
   background: var(--t-bg);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-popover);
 }
 
 .header__search--mobile {

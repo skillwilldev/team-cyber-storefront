@@ -99,7 +99,7 @@ export default function RegisterPage() {
           <Input
             id="reg-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
             disabled={isSubmitting}
             icon={IconMail}

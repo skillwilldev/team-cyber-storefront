@@ -1,35 +1,12 @@
 /**
  * The API returns Georgian filter labels ("ბრენდი"), the UI needs i18n.
- * Known keys get a translated title via `t('filter.<key>')`, unknown keys fall back to the API label.
- *
- * When `t` is not available (e.g. outside React), English fallback from FILTER_TITLES is used.
- */
-const FILTER_TITLES = {
-  brand: 'Brand',
-  price: 'Price',
-  storage: 'Built-in memory',
-  ram: 'RAM',
-  color: 'Color',
-  os: 'Operating system',
-  type: 'Type',
-  material: 'Material',
-  size: 'Size',
-  gender: 'Gender',
-  season: 'Season',
-  availability: 'Availability',
-};
-
-/**
- * Returns the localized filter title. If `t` is provided, uses i18n.
- * Falls back to FILTER_TITLES or the API label.
+ * Known keys get a translated title via `t('filter.<key>')`; unknown keys fall back to the API label.
+ * All titles live in locales/*.json (no text in code).
  */
 export const getFilterTitle = (group, t) => {
-  if (t) {
-    const translated = t(`filter.${group.key}`);
-    // if t() returned the key itself (no translation), fall back
-    if (translated !== `filter.${group.key}`) return translated;
-  }
-  return FILTER_TITLES[group.key] ?? group.label ?? group.key;
+  const translated = t(`filter.${group.key}`);
+  // t() returns the key itself when there is no translation → use the API label
+  return translated !== `filter.${group.key}` ? translated : (group.label ?? group.key);
 };
 
 // Swatch colors for the "color" filter type; unknown values get a neutral grey (the label is always shown too).

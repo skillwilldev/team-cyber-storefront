@@ -15,7 +15,7 @@
   z-index: 1;
   width: 24px;
   height: 24px;
-  color: #9a9a9a;
+  color: var(--c-gray);
 }
 
 .product-card__like svg {
@@ -132,7 +132,7 @@
   font-size: 14px;
   line-height: 20px;
   font-weight: 500;
-  color: #a0a0a0;
+  color: var(--c-gray);
 }
 
 .product-card__btn:disabled {
@@ -155,7 +155,7 @@
   font-size: 13px;
   line-height: 16px;
   font-weight: 500;
-  color: #a0a0a0;
+  color: var(--c-gray);
   text-transform: uppercase;
 }
 
@@ -224,7 +224,7 @@
   }
 
   .product-card__reviews-count {
-    color: #6b6b6b;
+    color: var(--c-gray-text);
     font-weight: 500;
   }
 

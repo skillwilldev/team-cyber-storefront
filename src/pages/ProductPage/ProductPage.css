@@ -122,7 +122,7 @@
   font-size: 24px;
   line-height: 32px;
   font-weight: 500;
-  color: #a0a0a0;
+  color: var(--c-gray);
 }
 
 .product__colors {
@@ -201,7 +201,7 @@
   display: block;
   font-size: 12px;
   line-height: 16px;
-  color: #a0a0a0;
+  color: var(--c-gray);
 }
 
 .product__quick b {
@@ -248,14 +248,14 @@
   height: 56px;
   border-radius: 8px;
   background: var(--c-surface);
-  color: #8a8a8a;
+  color: var(--c-gray);
 }
 
 .product__perks small {
   display: block;
   font-size: 12px;
   line-height: 16px;
-  color: #a0a0a0;
+  color: var(--c-gray);
 }
 
 .product__perks b {
@@ -331,7 +331,7 @@
   margin-top: 24px;
   font-size: 14px;
   line-height: 24px;
-  color: #8b8b8b;
+  color: var(--c-gray);
 }
 
 .details .btn-more {
@@ -409,7 +409,7 @@
 .reviews__score span {
   margin: 4px 0 12px;
   font-size: 14px;
-  color: #8b8b8b;
+  color: var(--c-gray);
 }
 
 

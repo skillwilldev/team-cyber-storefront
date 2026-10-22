@@ -6,19 +6,16 @@
  * INSUFFICIENT_STOCK 409, RESEND_TOO_SOON 429 (retryAfterSeconds), ORDER_NOT_FOUND 404.
  */
 
-export const NETWORK_ERROR_MESSAGE = 'Network error. Check your connection and try again.';
-
 /** fetch() rejects with a TypeError when there is no network at all */
 export const isNetworkError = (error) => error instanceof TypeError;
 
 /**
- * Generic fallback text for an unexpected error.
- * Pass `t` to get it in the current language (the English text is only a fallback outside React).
+ * Generic fallback text for an unexpected error, in the current language (`t` from useTranslation()).
  * A message that came from the server is shown as the server wrote it (the API is not translated).
  */
 export const getGenericMessage = (error, t) => {
-  if (isNetworkError(error)) return t ? t('errors.network') : NETWORK_ERROR_MESSAGE;
-  return error?.message || (t ? t('errors.generic') : 'Something went wrong. Please try again.');
+  if (isNetworkError(error)) return t('errors.network');
+  return error?.message || t('errors.generic');
 };
 
 /**
@@ -31,7 +28,7 @@ export function getStockProblems(error, t) {
 
   return list.map((item, index) => ({
     key: item?.productId ?? item?.id ?? item?.slug ?? index,
-    title: item?.title ?? item?.name ?? item?.slug ?? (t ? t('checkout.stockFallbackTitle') : 'A product from your cart'),
+    title: item?.title ?? item?.name ?? item?.slug ?? t('checkout.stockFallbackTitle'),
     available: Number.isInteger(item?.available) ? item.available : null,
   }));
 }

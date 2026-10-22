@@ -70,7 +70,7 @@
 }
 
 .confirm__link:disabled {
-  color: #a4a4a4;
+  color: var(--c-gray);
   text-decoration: none;
   cursor: not-allowed;
 }
