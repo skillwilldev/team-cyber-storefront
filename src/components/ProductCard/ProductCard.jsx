@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
-import { useTranslation, formatPriceI18n } from '../../lib/i18n';
+import { useTranslation, formatPriceI18n, formatRatingI18n } from '../../lib/i18n';
 import { HeartIcon } from '../icons/icons';
 import ProductImage from '../ProductImage/ProductImage';
 import { StarIcon } from '../icons/icons';
@@ -41,14 +41,14 @@ export default function ProductCard({ product }) {
       <p className="product-card__rating product-card__rating--desktop">
         <Stars value={rating ?? 0} size={14} />
         <span>
-          {Number(rating ?? 0).toFixed(1)} ({reviewsCount ?? 0})
+          {formatRatingI18n(rating, lang)} ({reviewsCount ?? 0})
         </span>
       </p>
 
       <p className="product-card__rating product-card__rating--mobile">
         <span className="product-card__rating-badge">
           <StarIcon size={12} filled={true} />
-          <span>{Number(rating ?? 0).toFixed(1)}</span>
+          <span>{formatRatingI18n(rating, lang)}</span>
         </span>
 
         <span className="product-card__reviews-count">

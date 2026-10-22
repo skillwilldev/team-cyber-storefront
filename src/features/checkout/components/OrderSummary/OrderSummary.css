@@ -1,7 +1,7 @@
 .order-summary {
   align-self: start;
   padding: 32px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--c-divider);
   border-radius: 8px;
 }
 
@@ -35,7 +35,7 @@
   width: 40px;
   height: 40px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--t-img-blend);
 }
 
 .order-summary__name {
@@ -92,13 +92,13 @@
 }
 
 .order-summary__row--strong {
-  color: #000;
+  color: var(--c-black);
   font-weight: 600;
 }
 
 .order-summary__row--total {
   padding-top: 16px;
-  border-top: 1px solid #e6e6e6;
+  border-top: 1px solid var(--c-divider);
   font-size: 20px;
   line-height: 28px;
 }

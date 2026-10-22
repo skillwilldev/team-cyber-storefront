@@ -8,15 +8,6 @@ import { formatDateTime, shortOrderNumber } from '../../lib/checkoutFormat';
 import { orderPath } from '../../lib/checkoutRoutes';
 import './OrdersPage.css';
 
-const STATUS_LABELS_EN = {
-  paid: 'Paid',
-  pending_payment: 'Awaiting payment',
-};
-const STATUS_LABELS_KA = {
-  paid: 'გადახდილი',
-  pending_payment: 'გადახდის მოლოდინში',
-};
-
 const MAX_THUMBS = 4;
 
 /**
@@ -26,7 +17,12 @@ const MAX_THUMBS = 4;
 export default function OrdersPage() {
   const { data, isPending, isError, error, refetch } = useOrders();
   const { t, lang } = useTranslation();
-  const STATUS_LABELS = lang === 'ka' ? STATUS_LABELS_KA : STATUS_LABELS_EN;
+  // unknown statuses fall back to the raw value from the server
+  const statusLabel = (status) => {
+    const key = `orders.status.${status}`;
+    const text = t(key);
+    return text === key ? status : text;
+  };
 
   let content;
 
@@ -46,8 +42,8 @@ export default function OrdersPage() {
   } else if (data.items.length === 0) {
     content = (
       <div className="orders-page__empty">
-        <p>{lang === 'ka' ? 'თქვენ ჯერ არ გაქვთ შეკვეთები.' : 'You have no orders yet.'}</p>
-        <ActionButton to="/">{lang === 'ka' ? 'შოპინგის დაწყება' : 'Go shopping'}</ActionButton>
+        <p>{t('orders.empty')}</p>
+        <ActionButton to="/">{t('orders.goShopping')}</ActionButton>
       </div>
     );
   } else {
@@ -63,12 +59,12 @@ export default function OrdersPage() {
                 <div className="order-row__head">
                   <div>
                     <b className="order-row__number">
-                      {lang === 'ka' ? 'შეკვეთა' : 'Order'} № {shortOrderNumber(order.id)}
+                      {t('orders.order')} № {shortOrderNumber(order.id)}
                     </b>
                     <span className="order-row__date">{formatDateTime(order.createdAt, lang)}</span>
                   </div>
                   <span className={`order-row__status order-row__status--${order.status}`}>
-                    {STATUS_LABELS[order.status] ?? order.status}
+                    {statusLabel(order.status)}
                   </span>
                 </div>
 
@@ -89,7 +85,7 @@ export default function OrdersPage() {
                   </div>
                   <div className="order-row__sum">
                     <span>
-                      {totalQty} {lang === 'ka' ? t('common.pcs') : (totalQty === 1 ? 'item' : 'items')}
+                      {t('orders.items', { count: totalQty })}
                     </span>
                     <b>{formatPriceI18n(order.total, order.currency, lang)}</b>
                   </div>

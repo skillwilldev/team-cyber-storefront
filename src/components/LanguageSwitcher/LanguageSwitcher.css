@@ -4,10 +4,10 @@
   display: inline-grid;
   grid-template-columns: repeat(var(--n, 2), 1fr);
   align-items: stretch;
-  height: 40px;
+  height: 36px;
   padding: var(--pad);
   border: 1px solid var(--c-border-light);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--c-surface);
   flex-shrink: 0;
 }

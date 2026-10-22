@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
+import { useTranslation } from '@/lib/i18n';
 import CheckoutStepper from '../../components/CheckoutStepper/CheckoutStepper';
 import { useCheckout } from '../../hooks/useCheckout';
 import { CHECKOUT_STEPS } from '../../lib/checkoutRoutes';
@@ -18,6 +19,7 @@ import './CheckoutPages.css';
  */
 export default function CheckoutLayout() {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
   const { data: checkout, isPending, isError, error, refetch } = useCheckout({ refetchOnMount: 'always' });
   const current = CHECKOUT_STEPS.find((step) => pathname.endsWith(`/${step.key}`))?.key ?? 'address';
 
@@ -37,7 +39,7 @@ export default function CheckoutLayout() {
 
   return (
     <>
-      <title>Checkout — Cyber</title>
+      <title>{t('checkout.pageTitle')} — Cyber</title>
       <div className="container checkout">
         <CheckoutStepper current={current} />
         <Outlet />

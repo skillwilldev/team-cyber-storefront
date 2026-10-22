@@ -3,7 +3,7 @@
   align-items: center;
   border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--t-bg);
 }
 
 .qty-stepper button {
@@ -24,7 +24,7 @@
 }
 
 .qty-stepper button:disabled {
-  color: #c4c4c4;
+  color: var(--t-icon-disabled);
 }
 
 .qty-stepper output {

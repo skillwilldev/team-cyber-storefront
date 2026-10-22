@@ -115,11 +115,11 @@
   border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
-  color: #92400E;
+  color: var(--t-banner-text);
 }
 
 .auth-page__dev-banner code {
-  background-color: #FDE68A;
+  background-color: var(--t-banner-code-bg);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: var(--font-weight-bold);

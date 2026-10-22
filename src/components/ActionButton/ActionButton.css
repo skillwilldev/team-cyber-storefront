@@ -6,7 +6,7 @@
   min-width: 160px;
   height: 56px;
   padding: 0 32px;
-  border: 1px solid #000;
+  border: 1px solid var(--c-black);
   border-radius: 8px;
   font-size: 16px;
   line-height: 24px;
@@ -16,13 +16,13 @@
 }
 
 .action-btn--solid {
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
 }
 
 .action-btn--outline {
-  background: #fff;
-  color: #000;
+  background: var(--t-bg);
+  color: var(--c-black);
 }
 
 .action-btn:hover:not(:disabled) {
@@ -34,15 +34,15 @@
 }
 
 .action-btn:disabled {
-  border-color: #c4c4c4;
-  background: #c4c4c4;
-  color: #fff;
+  border-color: var(--t-disabled);
+  background: var(--t-disabled);
+  color: var(--t-disabled-text);
   cursor: not-allowed;
 }
 
 .action-btn--outline:disabled {
-  background: #fff;
-  color: #c4c4c4;
+  background: var(--t-bg);
+  color: var(--t-disabled-text-outline);
 }
 
 /* the label keeps its space while loading → the width of the button does not jump */

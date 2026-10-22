@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { IconLoader } from '@shared/ui';
+import { useTranslation } from '@/lib/i18n';
 import './ProtectedRoute.css';
 
 
@@ -16,12 +17,13 @@ import './ProtectedRoute.css';
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="auth-loading">
         <IconLoader size={32} />
-        <p className="auth-loading__text">Checking session...</p>
+        <p className="auth-loading__text">{t('auth.checkingSession')}</p>
       </div>
     );
   }

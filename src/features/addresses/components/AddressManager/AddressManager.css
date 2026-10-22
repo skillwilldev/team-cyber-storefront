@@ -77,8 +77,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
 }
 
 .addr-manager__add button:disabled {

@@ -77,13 +77,13 @@ export default function ConfirmPage() {
       } else if (err.code === 'ORDER_ALREADY_PAID') {
         navigate(orderPath(currentOrder.id), { replace: true });
       } else if (err.code === 'INSUFFICIENT_STOCK') {
-        setStockProblems(getStockProblems(err));
+        setStockProblems(getStockProblems(err, t));
       } else if (err.code === 'ORDER_NOT_FOUND') {
         orderQuery.refetch();
       } else if (err.code === 'VALIDATION_ERROR' && err.errors?.code) {
         setError('code', { type: 'server', message: err.errors.code }, { shouldFocus: true });
       } else if (err.code !== 'TOKEN_EXPIRED') {
-        setBanner(getGenericMessage(err));
+        setBanner(getGenericMessage(err, t));
       }
     }
   }, [confirm, orderQuery, navigate, setError, toast, t]);
@@ -107,7 +107,7 @@ export default function ConfirmPage() {
       } else if (err.code === 'ORDER_ALREADY_PAID') {
         navigate(orderPath(currentOrder.id), { replace: true });
       } else if (err.code !== 'TOKEN_EXPIRED') {
-        toast.error(getGenericMessage(err));
+        toast.error(getGenericMessage(err, t));
       }
     }
   }, [resend, orderQuery, navigate, reset, toast, t]);

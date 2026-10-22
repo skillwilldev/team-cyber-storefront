@@ -17,8 +17,8 @@ initTheme();
 /**
  * Provider order:
  *   QueryClientProvider — server state (catalog): cache, loading/error states, refetching
+ *   I18nProvider        — language context (FE-008): ka/en, saved in localStorage (above Toast: the toast close button is translated)
  *   ToastProvider       — short messages ("Added to cart")
- *   I18nProvider        — language context (FE-008): ka/en, saved in localStorage
  *   AuthProvider        — client state: who is signed in (token + user)
  *   ShopProvider        — client state: wishlist of the signed-in user (needs AuthProvider)
  *   The CART is server state: it lives in the TanStack Query cache under ['cart'] (see src/api/cartQueries.js)
@@ -28,8 +28,8 @@ initTheme();
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <I18nProvider>
+      <I18nProvider>
+        <ToastProvider>
           <AuthProvider>
             <ShopProvider>
               <BrowserRouter>
@@ -37,8 +37,8 @@ createRoot(document.getElementById('root')).render(
               </BrowserRouter>
             </ShopProvider>
           </AuthProvider>
-        </I18nProvider>
-      </ToastProvider>
+        </ToastProvider>
+      </I18nProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>,

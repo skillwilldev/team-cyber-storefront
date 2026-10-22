@@ -1,4 +1,5 @@
 import { MinusIcon, PlusIcon } from '@/components/icons/icons';
+import { useTranslation } from '@/lib/i18n';
 import { MIN_QTY } from '../../lib/cartRules';
 import './QuantityStepper.css';
 
@@ -7,11 +8,12 @@ import './QuantityStepper.css';
  * `disabled` is set by the parent while a request is in flight (see docs/adr/0003-cart-quantity-stepper.md).
  */
 export default function QuantityStepper({ qty, max, disabled = false, label, onChange }) {
+  const { t } = useTranslation();
   return (
-    <div className="qty-stepper" role="group" aria-label={`Quantity: ${label}`}>
+    <div className="qty-stepper" role="group" aria-label={t('a11y.quantityOf', { label })}>
       <button
         type="button"
-        aria-label={`Decrease quantity of ${label}`}
+        aria-label={t('a11y.decreaseQty', { label })}
         disabled={disabled || qty <= MIN_QTY}
         onClick={() => onChange(qty - 1)}
       >
@@ -20,7 +22,7 @@ export default function QuantityStepper({ qty, max, disabled = false, label, onC
       <output aria-live="polite">{qty}</output>
       <button
         type="button"
-        aria-label={`Increase quantity of ${label}`}
+        aria-label={t('a11y.increaseQty', { label })}
         disabled={disabled || qty >= max}
         onClick={() => onChange(qty + 1)}
       >

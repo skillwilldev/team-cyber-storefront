@@ -19,8 +19,8 @@
   background: var(--c-input);
 }
 .pagination__btn[aria-current=page] {
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
 }
 .pagination__arrow:disabled {
   opacity: 0.3;

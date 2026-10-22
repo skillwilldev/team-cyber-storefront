@@ -4,6 +4,7 @@ import { PlusIcon } from '@/components/icons/checkoutIcons';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
 import { useToast } from '@shared/ui';
+import { useTranslation } from '@/lib/i18n';
 import { getGenericMessage } from '@features/checkout/lib/checkoutErrors';
 import { useAddresses } from '../../hooks/useAddresses';
 import { MAX_ADDRESSES } from '../../lib/addressForm';
@@ -35,6 +36,7 @@ function AddressesSkeleton() {
 export default function AddressManager({ selectable = false, selectedId = null, onSelect, onCreated }) {
   const radioName = useId();
   const toast = useToast();
+  const { t } = useTranslation();
   const { data, isPending, isError, error, refetch } = useAddresses({ refetchOnMount: 'always' });
   const remove = useDeleteAddress();
   const update = useUpdateAddress();
@@ -57,12 +59,12 @@ export default function AddressManager({ selectable = false, selectedId = null, 
     setBusyId(address.id);
     try {
       await remove.mutateAsync({ id: address.id });
-      toast.success('Address deleted');
+      toast.success(t('addresses.deleted'));
       setConfirmDeleteId(null);
     } catch (err) {
       // 404: it is already gone (another tab) — the list reloads by itself, nothing else to do
       if (err.code === 'ADDRESS_NOT_FOUND') setConfirmDeleteId(null);
-      else if (err.code !== 'TOKEN_EXPIRED') toast.error(getGenericMessage(err));
+      else if (err.code !== 'TOKEN_EXPIRED') toast.error(getGenericMessage(err, t));
     } finally {
       setBusyId(null);
     }
@@ -72,9 +74,9 @@ export default function AddressManager({ selectable = false, selectedId = null, 
     setBusyId(address.id);
     try {
       await update.mutateAsync({ id: address.id, isDefault: true });
-      toast.success('Default address changed');
+      toast.success(t('addresses.defaultChanged'));
     } catch (err) {
-      if (err.code !== 'TOKEN_EXPIRED') toast.error(getGenericMessage(err));
+      if (err.code !== 'TOKEN_EXPIRED') toast.error(getGenericMessage(err, t));
     } finally {
       setBusyId(null);
     }
@@ -83,12 +85,12 @@ export default function AddressManager({ selectable = false, selectedId = null, 
   return (
     <div className="addr-manager">
       {!isEmpty && (
-        <ul className="addr-manager__list" aria-label="Delivery addresses">
+        <ul className="addr-manager__list" aria-label={t('addresses.listLabel')}>
           {addresses.map((address) => (
             <li key={address.id}>
               {editingId === address.id ? (
-                <section className="addr-manager__panel" aria-label="Edit address">
-                  <h2 className="addr-manager__panel-title">Edit address</h2>
+                <section className="addr-manager__panel" aria-label={t('addresses.editTitle')}>
+                  <h2 className="addr-manager__panel-title">{t('addresses.editTitle')}</h2>
                   <AddressForm
                     address={address}
                     onSaved={() => setEditingId(null)}
@@ -120,13 +122,13 @@ export default function AddressManager({ selectable = false, selectedId = null, 
       )}
 
       {showCreateForm ? (
-        <section className="addr-manager__panel" aria-label={isEmpty ? 'Add your first address' : 'Add new address'}>
-          <h2 className="addr-manager__panel-title">{isEmpty ? 'Add your first address' : 'Add new address'}</h2>
+        <section className="addr-manager__panel" aria-label={isEmpty ? t('addresses.addFirst') : t('addresses.addNew')}>
+          <h2 className="addr-manager__panel-title">{isEmpty ? t('addresses.addFirst') : t('addresses.addNew')}</h2>
           {isEmpty && (
             <p className="addr-manager__hint">
               {selectable
-                ? 'You have no saved addresses yet. Add a delivery address to continue.'
-                : 'You have no saved addresses yet. Add one — it will be available when you place an order.'}
+                ? t('addresses.emptyHintCheckout')
+                : t('addresses.emptyHint')}
             </p>
           )}
           <AddressForm
@@ -144,9 +146,9 @@ export default function AddressManager({ selectable = false, selectedId = null, 
             <span className="addr-manager__add-icon">
               <PlusIcon size={18} />
             </span>
-            Add New Address
+            {t('addresses.addNewButton')}
           </button>
-          {limitReached && <p>You have reached the limit of {MAX_ADDRESSES} addresses. Delete one to add another.</p>}
+          {limitReached && <p>{t('addresses.limitReached', { max: MAX_ADDRESSES })}</p>}
         </div>
       )}
     </div>

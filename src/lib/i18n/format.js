@@ -11,15 +11,18 @@ const priceFormatters = {};
  */
 export function formatPriceI18n(value, currency = 'GEL', lang = DEFAULT_LANG) {
   const locale = INTL_LOCALES[lang] ?? INTL_LOCALES[DEFAULT_LANG];
-  const key = `${locale}-${currency}`;
+  // whole prices stay clean (₾1,510); fractions keep two digits (₾1,510.50)
+  const digits = Number.isInteger(Number(value)) ? 0 : 2;
+  const key = `${locale}-${currency}-${digits}`;
   if (!priceFormatters[key]) {
     const currencyCode = currency === 'GEL' ? 'GEL' : currency;
     try {
       priceFormatters[key] = new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: currencyCode,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        currencyDisplay: 'narrowSymbol', // en-US would print "GEL 1,510" otherwise; we want "₾1,510"
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
       });
     } catch {
       // fallback
@@ -67,4 +70,15 @@ export function getFilterOptionLabel(option, filterKey, lang = DEFAULT_LANG) {
     return v.charAt(0).toUpperCase() + v.slice(1);
   }
   return option.label || option.value || '';
+}
+
+const ratingFormatters = {};
+
+/**
+ * Rating with one decimal, locale-aware: 4.5 → "4.5" (en) / "4,5" (ka).
+ */
+export function formatRatingI18n(value, lang = DEFAULT_LANG) {
+  const locale = INTL_LOCALES[lang] ?? INTL_LOCALES[DEFAULT_LANG];
+  ratingFormatters[locale] ??= new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return ratingFormatters[locale].format(Number(value ?? 0));
 }

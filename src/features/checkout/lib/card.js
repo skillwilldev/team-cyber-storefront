@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 /**
  * Bank-card helpers (FE-006). Pure functions, no React.
+ * The messages of `cardSchema` are `validation.*` keys — <FormField> translates them.
  */
 
 export function formatCardNumber(value) {
@@ -57,12 +58,12 @@ export function detectBrand(number) {
 export const cardSchema = z.object({
   number: z
     .string()
-    .refine((v) => /^\d{13,19}$/.test(v.replace(/\s/g, '')), 'Card number must have 13–19 digits')
-    .refine((v) => passesLuhn(v), 'Enter a valid card number'),
-  holder: z.string().trim().min(2, 'Enter the name on the card'),
+    .refine((v) => /^\d{13,19}$/.test(v.replace(/\s/g, '')), 'validation.cardNumberDigits')
+    .refine((v) => passesLuhn(v), 'validation.cardNumberInvalid'),
+  holder: z.string().trim().min(2, 'validation.cardHolder'),
   expiry: z
     .string()
-    .regex(/^\d{2}\/\d{2}$/, 'Use the format MM/YY')
-    .refine((v) => isExpiryValid(v), 'The card is expired or the date is not valid'),
-  cvc: z.string().regex(/^\d{3,4}$/, 'CVV must be 3 or 4 digits'),
+    .regex(/^\d{2}\/\d{2}$/, 'validation.cardExpiryFormat')
+    .refine((v) => isExpiryValid(v), 'validation.cardExpired'),
+  cvc: z.string().regex(/^\d{3,4}$/, 'validation.cvv'),
 });

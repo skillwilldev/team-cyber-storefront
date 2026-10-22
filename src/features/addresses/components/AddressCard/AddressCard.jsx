@@ -1,13 +1,16 @@
 import { CloseIcon, PencilIcon } from '@/components/icons/checkoutIcons';
+import { useTranslation } from '@/lib/i18n';
 import './AddressCard.css';
 
 function Details({ address }) {
+  const { t } = useTranslation();
+
   return (
     <div className="addr-card__details">
       <div className="addr-card__head">
         <span className="addr-card__name">{address.fullName}</span>
         {address.label && <span className="addr-card__tag">{address.label}</span>}
-        {address.isDefault && <span className="addr-card__tag addr-card__tag--light">Default</span>}
+        {address.isDefault && <span className="addr-card__tag addr-card__tag--light">{t('addresses.default')}</span>}
       </div>
       <p>
         {address.address}, {address.city}
@@ -38,6 +41,8 @@ export default function AddressCard({
   onConfirmDelete,
   isBusy = false,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`addr-card${selected ? ' addr-card--selected' : ''}`} aria-busy={isBusy || undefined}>
       {selectable ? (
@@ -58,26 +63,26 @@ export default function AddressCard({
       )}
 
       {isConfirmingDelete ? (
-        <div className="addr-card__confirm" role="group" aria-label="Confirm deleting this address">
-          <span>Delete this address?</span>
+        <div className="addr-card__confirm" role="group" aria-label={t('addresses.deleteGroupLabel')}>
+          <span>{t('addresses.deleteQuestion')}</span>
           <button type="button" className="addr-card__link" onClick={onCancelDelete} disabled={isBusy}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="button" className="addr-card__link addr-card__link--danger" onClick={onConfirmDelete} disabled={isBusy}>
-            Delete
+            {t('common.delete')}
           </button>
         </div>
       ) : (
         <div className="addr-card__actions">
           {onSetDefault && !address.isDefault && (
             <button type="button" className="addr-card__link" onClick={() => onSetDefault(address)} disabled={isBusy}>
-              Set as default
+              {t('addresses.setDefault')}
             </button>
           )}
           <button
             type="button"
             className="addr-card__icon"
-            aria-label={`Edit address: ${address.fullName}, ${address.address}`}
+            aria-label={t('addresses.editAria', { name: address.fullName, address: address.address })}
             onClick={() => onEdit(address.id)}
             disabled={isBusy}
           >
@@ -86,7 +91,7 @@ export default function AddressCard({
           <button
             type="button"
             className="addr-card__icon"
-            aria-label={`Delete address: ${address.fullName}, ${address.address}`}
+            aria-label={t('addresses.deleteAria', { name: address.fullName, address: address.address })}
             onClick={() => onAskDelete(address.id)}
             disabled={isBusy}
           >

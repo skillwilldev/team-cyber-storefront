@@ -25,8 +25,8 @@
   --color-border-hover: #9CA3AF;
   --color-text: #111827;
   --color-text-secondary: #4B5563;
-  --color-text-muted: #9CA3AF;
-  --color-placeholder: #9CA3AF;
+  --color-text-muted: #6B7280; /* AA on white */
+  --color-placeholder: #6B7280; /* AA on white */
   --color-disabled-bg: #F3F4F6;
   --color-disabled-text: #9CA3AF;
 

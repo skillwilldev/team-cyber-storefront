@@ -39,8 +39,8 @@ export default function OrderSummary({ checkout, address }) {
           </dd>
         </div>
         <div>
-          <dt>{lang === 'ka' ? 'მიწოდების მეთოდი' : 'Shipment method'}</dt>
-          <dd>{formatShippingFee(shippingFee, currency, lang)}</dd>
+          <dt>{t('checkout.shipmentMethodLabel')}</dt>
+          <dd>{formatShippingFee(shippingFee, currency, lang, t)}</dd>
         </div>
       </dl>
 
@@ -50,20 +50,18 @@ export default function OrderSummary({ checkout, address }) {
           <dd>{formatPriceI18n(subtotal, currency, lang)}</dd>
         </div>
         <div className="order-summary__row">
-          <dt>{lang === 'ka' ? 'მიწოდება' : 'Shipping & Handling'}</dt>
-          <dd>{formatShippingFee(shippingFee, currency, lang)}</dd>
+          <dt>{t('checkout.shippingHandling')}</dt>
+          <dd>{formatShippingFee(shippingFee, currency, lang, t)}</dd>
         </div>
         <div className="order-summary__row order-summary__row--strong order-summary__row--total">
-          <dt>{lang === 'ka' ? 'სულ' : 'Total'}</dt>
+          <dt>{t('checkout.total')}</dt>
           <dd>{formatPriceI18n(total, currency, lang)}</dd>
         </div>
       </dl>
 
       {missing > 0 && (
         <p className="order-summary__hint">
-          {lang === 'ka'
-            ? `დაამატეთ კიდევ ${formatPriceI18n(missing, currency, lang)} და მიწოდება უფასოა.`
-            : `Add ${formatPriceI18n(missing, currency, lang)} more and the delivery is free.`}
+          {t('checkout.addMoreForFree', { amount: formatPriceI18n(missing, currency, lang) })}
         </p>
       )}
     </aside>

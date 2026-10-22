@@ -10,9 +10,9 @@
 .breadcrumbs li {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-right: 20px;
-  font-size: 16px;
+  gap: 10px;
+  margin-right: 10px;
+  font-size: 15px;
   line-height: 24px;
   color: var(--c-gray);
 }
@@ -21,8 +21,8 @@
 }
 .breadcrumbs li:last-child {
   margin-right: 0;
-  color: #000;
+  color: var(--c-black);
 }
 .breadcrumbs a:hover {
-  color: #000;
+  color: var(--c-black);
 }

@@ -11,21 +11,27 @@ export const NETWORK_ERROR_MESSAGE = 'Network error. Check your connection and t
 /** fetch() rejects with a TypeError when there is no network at all */
 export const isNetworkError = (error) => error instanceof TypeError;
 
-/** Generic fallback text for an unexpected error. */
-export const getGenericMessage = (error) =>
-  isNetworkError(error) ? NETWORK_ERROR_MESSAGE : error?.message || 'Something went wrong. Please try again.';
+/**
+ * Generic fallback text for an unexpected error.
+ * Pass `t` to get it in the current language (the English text is only a fallback outside React).
+ * A message that came from the server is shown as the server wrote it (the API is not translated).
+ */
+export const getGenericMessage = (error, t) => {
+  if (isNetworkError(error)) return t ? t('errors.network') : NETWORK_ERROR_MESSAGE;
+  return error?.message || (t ? t('errors.generic') : 'Something went wrong. Please try again.');
+};
 
 /**
  * INSUFFICIENT_STOCK carries `items[]` — the products that no longer have enough stock.
  * The shape is not documented in detail, so every field is read defensively.
  * → [{ key, title, available }]
  */
-export function getStockProblems(error) {
+export function getStockProblems(error, t) {
   const list = Array.isArray(error?.data?.items) ? error.data.items : [];
 
   return list.map((item, index) => ({
     key: item?.productId ?? item?.id ?? item?.slug ?? index,
-    title: item?.title ?? item?.name ?? item?.slug ?? 'A product from your cart',
+    title: item?.title ?? item?.name ?? item?.slug ?? (t ? t('checkout.stockFallbackTitle') : 'A product from your cart'),
     available: Number.isInteger(item?.available) ? item.available : null,
   }));
 }

@@ -94,7 +94,7 @@ export default function PaymentStep() {
       navigate(confirmPath(result.orderId, address.id));
     } catch (err) {
       if (err.code === 'CARD_DECLINED') {
-        setCardBanner('Your card was declined. Please try another card.');
+        setCardBanner(t('checkout.cardDeclined'));
       } else if (err.code === 'VALIDATION_ERROR' && err.errors) {
         const { fields, shipping, other } = splitOrderErrors(err.errors);
         let first = true;
@@ -107,16 +107,16 @@ export default function PaymentStep() {
       } else if (err.code === 'CART_EMPTY') {
         navigate('/cart', { replace: true });
       } else if (err.code === 'INSUFFICIENT_STOCK') {
-        setStockProblems(getStockProblems(err));
+        setStockProblems(getStockProblems(err, t));
       } else if (err.code === 'UNAUTHORIZED') {
         navigate('/login', { state: { from: location } });
       } else if (err.code !== 'TOKEN_EXPIRED') {
-        setBanner(getGenericMessage(err));
+        setBanner(getGenericMessage(err, t));
       }
     } finally {
       inFlight.current = false;
     }
-  }, [createOrder, address, navigate, reset, location, setError]);
+  }, [createOrder, address, navigate, reset, location, setError, t]);
 
   if (isPending) return <span className="skeleton" style={{ height: 480, marginTop: 64 }} aria-busy="true" />;
   if (isError) return <QueryError message={error.message} onRetry={() => refetch()} />;
@@ -153,7 +153,7 @@ export default function PaymentStep() {
           </button>
         </div>
 
-        <form className="cyber-form payment__form" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form className="cyber-form payment__form" onSubmit={(event) => handleSubmit(onSubmit)(event)} noValidate>
           {cardBanner && <Alert type="error" message={cardBanner} />}
           {banner && <Alert type="error" message={banner} />}
           {addressProblems.length > 0 && (
@@ -226,7 +226,7 @@ export default function PaymentStep() {
                 id="card-expiry"
                 inputMode="numeric"
                 autoComplete="cc-exp"
-                placeholder="MM/YY"
+                placeholder={t('checkout.expPlaceholder')}
                 maxLength={5}
                 error={errors.expiry?.message}
                 {...expiryField}

@@ -50,36 +50,32 @@ export default function OrderPage() {
 
   return (
     <>
-      <title>{isPaid ? (lang === 'ka' ? 'შეკვეთა გადახდილია' : 'Order paid') : (lang === 'ka' ? 'შეკვეთა' : 'Order')} — Cyber</title>
+      <title>{isPaid ? t('orders.titlePaid') : t('orders.order')} — Cyber</title>
       <div className="container order-page">
         <header className="order-page__header">
           {isPaid && <CheckCircleIcon size={48} className="order-page__check" />}
           <div>
             <h1 className="order-page__title">
-              {isPaid
-                ? (lang === 'ka' ? 'გმადლობთ! თქვენი შეკვეთა გადახდილია' : 'Thank you! Your order is paid')
-                : (lang === 'ka' ? 'თქვენი შეკვეთა ჯერ არ არის გადახდილი' : 'Your order is not paid yet')}
+              {isPaid ? t('orders.thanks') : t('orders.notPaidYet')}
             </h1>
             <p className="order-page__lead">
-              {lang === 'ka' ? 'შეკვეთა' : 'Order'} № <b>{shortOrderNumber(order.id)}</b>
-              {isPaid && order.paidAt && <> · {lang === 'ka' ? 'გადახდილია' : 'paid'} {formatDateTime(order.paidAt, lang)}</>}
+              {t('orders.order')} № <b>{shortOrderNumber(order.id)}</b>
+              {isPaid && order.paidAt && <> · {t('orders.paid')} {formatDateTime(order.paidAt, lang)}</>}
             </p>
           </div>
         </header>
 
         {!isPaid && (
           <div className="order-page__notice">
-            <Alert type="warning" message={lang === 'ka'
-              ? 'გადახდა არ არის დასრულებული. შეიყვანეთ კოდი ელ-ფოსტიდან ამ შეკვეთის გადასახდელად.'
-              : 'The payment is not completed. Enter the code from the e-mail to pay for this order.'} />
+            <Alert type="warning" message={t('orders.paymentNotCompleted')} />
             <ActionButton to={confirmPath(order.id)}>
-              {lang === 'ka' ? 'გადახდის კოდის შეყვანა' : 'Enter the payment code'}
+              {t('orders.enterCode')}
             </ActionButton>
           </div>
         )}
 
         <div className="order-page__layout">
-          <ul className="order-page__items" aria-label={lang === 'ka' ? 'პროდუქტები შეკვეთაში' : 'Products in the order'}>
+          <ul className="order-page__items" aria-label={t('orders.productsInOrder')}>
             {order.items.map((item) => (
               <li key={`${item.productId ?? item.slug}-${item.title}`} className="order-item">
                 <img src={item.image} alt="" width="72" height="72" loading="lazy" />
@@ -107,18 +103,18 @@ export default function OrderPage() {
                 <dd>{formatPriceI18n(order.subtotal, order.currency, lang)}</dd>
               </div>
               <div>
-                <dt>{lang === 'ka' ? 'მიწოდება' : 'Shipping'}</dt>
-                <dd>{formatShippingFee(order.shippingFee, order.currency, lang)}</dd>
+                <dt>{t('checkout.shipping')}</dt>
+                <dd>{formatShippingFee(order.shippingFee, order.currency, lang, t)}</dd>
               </div>
               <div className="order-page__total">
-                <dt>{lang === 'ka' ? 'სულ' : 'Total'}</dt>
+                <dt>{t('checkout.total')}</dt>
                 <dd>{formatPriceI18n(order.total, order.currency, lang)}</dd>
               </div>
             </dl>
 
             <dl className="order-page__details">
               <div>
-                <dt>{lang === 'ka' ? 'მიწოდების მისამართი' : 'Delivery address'}</dt>
+                <dt>{t('orders.deliveryAddress')}</dt>
                 <dd>
                   {order.shipping.fullName}
                   <br />
@@ -136,7 +132,7 @@ export default function OrderPage() {
                 </div>
               )}
               <div>
-                <dt>{lang === 'ka' ? 'შეკვეთის თარიღი' : 'Order date'}</dt>
+                <dt>{t('orders.orderDate')}</dt>
                 <dd>{formatDateTime(order.createdAt, lang)}</dd>
               </div>
             </dl>
@@ -144,7 +140,7 @@ export default function OrderPage() {
         </div>
 
         <div className="order-page__actions">
-          <ActionButton to="/">{lang === 'ka' ? 'შოპინგის გაგრძელება' : 'Continue shopping'}</ActionButton>
+          <ActionButton to="/">{t('orders.continueShopping')}</ActionButton>
         </div>
       </div>
     </>

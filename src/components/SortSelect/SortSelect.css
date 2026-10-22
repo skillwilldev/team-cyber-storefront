@@ -15,10 +15,16 @@
   padding: 0 44px 0 16px;
   border: 1px solid var(--c-border-light);
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  color: #000;
+  color: var(--c-black);
   cursor: pointer;
+}
+
+@media (max-width: 360px) {
+  .sort-select select {
+    padding: 0 38px 0 10px;
+  }
 }
 
 

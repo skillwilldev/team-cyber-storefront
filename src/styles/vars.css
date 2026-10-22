@@ -1,6 +1,6 @@
 :root {
   --c-black: #000;
-  --c-gray: #a4a4a4;
+  --c-gray: #707070; /* text colour: 4.9:1 on white (AA) */
   --c-gray-text: #6b6b6b;
   --c-border: #cfcfcf;
   --c-border-light: #d9d9d9;

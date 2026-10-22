@@ -42,15 +42,15 @@ export default function ShippingStep() {
   return (
     <section className="checkout-step" aria-labelledby="step-shipping-title">
       <h1 id="step-shipping-title" className="checkout-step__title">
-        {lang === 'ka' ? 'მიწოდების მეთოდი' : 'Shipment Method'}
+        {t('checkout.shipmentMethod')}
       </h1>
 
       <ul className="shipping-options" role="radiogroup" aria-labelledby="step-shipping-title">
         <li className="shipping-option shipping-option--active">
           <label>
             <input type="radio" name={name} checked readOnly />
-            <strong>{formatShippingFee(shippingFee, currency, lang)}</strong>
-            <span className="shipping-option__text">{lang === 'ka' ? 'ჩვეულებრივი მიწოდება' : 'Regular shipment'}</span>
+            <strong>{formatShippingFee(shippingFee, currency, lang, t)}</strong>
+            <span className="shipping-option__text">{t('checkout.regularShipment')}</span>
             <time className="shipping-option__date" dateTime={arrival.toISOString().slice(0, 10)}>
               {formatShipmentDate(arrival, lang)}
             </time>
@@ -59,32 +59,28 @@ export default function ShippingStep() {
         <li className="shipping-option shipping-option--disabled">
           <label>
             <input type="radio" name={name} disabled />
-            <strong>{lang === 'ka' ? 'ექსპრესი' : 'Express'}</strong>
-            <span className="shipping-option__text">{lang === 'ka' ? 'მიიღეთ მიწოდება რაც შეიძლება სწრაფად' : 'Get your delivery as soon as possible'}</span>
+            <strong>{t('checkout.express')}</strong>
+            <span className="shipping-option__text">{t('checkout.expressText')}</span>
             <span className="shipping-option__date">{t('checkout.notAvailable')}</span>
           </label>
         </li>
         <li className="shipping-option shipping-option--disabled">
           <label>
             <input type="radio" name={name} disabled />
-            <strong>{lang === 'ka' ? 'დაგეგმილი' : 'Schedule'}</strong>
-            <span className="shipping-option__text">{lang === 'ka' ? 'აირჩიეთ თარიღი, როდის გსურთ მიწოდება' : 'Pick a date when you want to get your delivery'}</span>
+            <strong>{t('checkout.schedule')}</strong>
+            <span className="shipping-option__text">{t('checkout.scheduleText')}</span>
             <span className="shipping-option__date">{t('checkout.notAvailable')}</span>
           </label>
         </li>
       </ul>
 
       <p className="checkout-step__hint">
-        {lang === 'ka'
-          ? `მიწოდება: ${address.address}, ${address.city}. `
-          : `Delivering to ${address.address}, ${address.city}. `}
-        <Link to={checkoutPath('address', address.id)}>{lang === 'ka' ? 'მისამართის შეცვლა' : 'Change address'}</Link>
+        {t('checkout.deliveringTo', { address: address.address, city: address.city })}{' '}
+        <Link to={checkoutPath('address', address.id)}>{t('checkout.changeAddress')}</Link>
         {missing > 0 && (
           <>
             {' '}
-            {lang === 'ka'
-              ? `დაამატეთ კიდევ ${formatPriceI18n(missing, currency, lang)} და მიწოდება უფასოა.`
-              : `Add ${formatPriceI18n(missing, currency, lang)} more and the delivery is free.`}
+            {t('checkout.addMoreForFree', { amount: formatPriceI18n(missing, currency, lang) })}
           </>
         )}
       </p>

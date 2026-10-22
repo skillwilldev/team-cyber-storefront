@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useCategory, useProduct } from '@api/catalogQueries';
 import { useAddToCart } from '@features/cart/hooks/useAddToCart';
 import { useShop } from '@features/shop';
-import { useTranslation, formatPriceI18n, getCategoryName } from '../../lib/i18n';
+import { useTranslation, formatPriceI18n, formatRatingI18n, getCategoryName } from '../../lib/i18n';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumbs';
 import {
   BatteryIcon,
@@ -97,7 +97,7 @@ function ProductView({ product }) {
   const colorName = product.specs?.['ფერი'] ?? color;
   const storage = product.attributes?.storage;
   const quick = getQuickSpecs(product.specs);
-  const groups = buildSpecGroups(product.specs);
+  const groups = buildSpecGroups(product.specs, t);
   const related = product.related ?? [];
 
   const categorySlug = product.category?.slug ?? 'smartphones';
@@ -188,7 +188,7 @@ function ProductView({ product }) {
                     <li key={key}>
                       <Icon size={20} />
                       <div>
-                        <span>{getSpecLabel(key)}</span>
+                        <span>{getSpecLabel(key, t)}</span>
                         <b>{value}</b>
                       </div>
                     </li>
@@ -281,7 +281,7 @@ function ProductView({ product }) {
 
           <div className="reviews__summary">
             <div className="reviews__score">
-              <b>{Number(rating).toFixed(1)}</b>
+              <b>{formatRatingI18n(rating, lang)}</b>
               <span>{t('product.ofReviews', { count: reviewsCount })}</span>
               <Stars value={rating} />
             </div>

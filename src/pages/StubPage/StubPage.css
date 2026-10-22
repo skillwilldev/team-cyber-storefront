@@ -1,16 +1,19 @@
 .stub {
-  padding-top: 96px;
-  padding-bottom: 96px;
+  padding-top: 96px !important;
+  padding-bottom: 96px !important;
   text-align: center;
 }
+
 .stub h1 {
   font-size: 40px;
   font-weight: 600;
 }
+
 .stub p {
   margin-top: 16px;
-  color: #656565;
+  color: var(--t-text-soft);
 }
+
 .stub a {
   display: inline-block;
   margin-top: 24px;

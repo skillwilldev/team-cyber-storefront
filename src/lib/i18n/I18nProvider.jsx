@@ -18,16 +18,49 @@
  *   t('cart.cartCount', { count: 5 })  →  "Cart (5)"
  *   The pattern is {{key}} in the JSON value.
  *
+ * Plurals:
+ *   When `count` is a number, t() first looks for `<key>_<category>` (Intl.PluralRules: one, other…),
+ *   then `<key>_other`, then `<key>`.  t('orders.items', { count: 1 }) → orders.items_one
+ *
  * See ADR 0007 for the full decision record.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ka from '../../locales/ka.json';
 import en from '../../locales/en.json';
-import { DEFAULT_LANG, LANGUAGES, LANG_KEY, applyLang, getInitialLang } from './config';
+import { DEFAULT_LANG, INTL_LOCALES, LANGUAGES, LANG_KEY, applyLang, getInitialLang } from './config';
 import { I18nContext } from './I18nContext';
 
 const MESSAGES = { ka, en };
+
+const pluralRules = {};
+
+/** 'one' | 'other' | … for this language (Intl.PluralRules, no library). */
+function pluralCategory(lang, count) {
+  const locale = INTL_LOCALES[lang] ?? INTL_LOCALES[DEFAULT_LANG];
+  pluralRules[locale] ??= new Intl.PluralRules(locale);
+  return pluralRules[locale].select(count);
+}
+
+/** 'cart.title' → messages.cart.title (a string) or undefined. */
+function lookup(messages, key) {
+  let value = messages;
+  for (const part of key.split('.')) {
+    if (value == null || typeof value !== 'object') return undefined;
+    value = value[part];
+  }
+  return typeof value === 'string' ? value : undefined;
+}
+
+/** Plural-aware lookup in ONE language. */
+function resolveKey(lang, key, params) {
+  const messages = MESSAGES[lang];
+  if (typeof params?.count === 'number') {
+    const plural = lookup(messages, `${key}_${pluralCategory(lang, params.count)}`) ?? lookup(messages, `${key}_other`);
+    if (plural !== undefined) return plural;
+  }
+  return lookup(messages, key);
+}
 
 export function I18nProvider({ children }) {
   const [lang, setLangState] = useState(getInitialLang);
@@ -49,30 +82,21 @@ export function I18nProvider({ children }) {
    */
   const t = useCallback(
     (key, params) => {
-      const messages = MESSAGES[lang] ?? MESSAGES[DEFAULT_LANG];
-      const parts = key.split('.');
-      let value = messages;
-      for (const p of parts) {
-        if (value == null || typeof value !== 'object') { value = undefined; break; }
-        value = value[p];
-      }
-      if (typeof value !== 'string') {
-        // fallback: try the other language
-        let fb = MESSAGES[lang === 'ka' ? 'en' : 'ka'];
-        for (const p of parts) {
-          if (fb == null || typeof fb !== 'object') { fb = undefined; break; }
-          fb = fb[p];
-        }
-        if (typeof fb === 'string') value = fb;
-        else return key; // key itself as last resort
-      }
-      if (params) {
-        return value.replace(/\{\{(\w+)\}\}/g, (_, k) => (params[k] !== undefined ? String(params[k]) : `{{${k}}}`));
-      }
-      return value;
+      const current = MESSAGES[lang] ? lang : DEFAULT_LANG;
+      const other = current === 'ka' ? 'en' : 'ka';
+      // the other language is the fallback; the key itself is the last resort
+      const value = resolveKey(current, key, params) ?? resolveKey(other, key, params);
+      if (value === undefined) return key;
+      if (!params) return value;
+      return value.replace(/\{\{(\w+)\}\}/g, (_, k) => (params[k] !== undefined ? String(params[k]) : `{{${k}}}`));
     },
     [lang],
   );
+
+  // <meta name="description"> follows the language too (the <title> is just the brand name)
+  useEffect(() => {
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
+  }, [t]);
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
 

@@ -1,14 +1,14 @@
 .filter + .filter {
-  margin-top: 24px;
+  margin-top: 20px;
 }
 .filter__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 0 10px;
+  padding: 7px 0 7px;
   border-bottom: 1px solid var(--c-border);
-  font-size: 20px;
+  font-size: 15px;
   line-height: 24px;
   font-weight: 500;
   text-align: left;
@@ -34,7 +34,7 @@
   width: 3px;
 }
 .filter__scroll::-webkit-scrollbar-thumb {
-  background: #000;
+  background: var(--c-black);
   border-radius: 3px;
 }
 .filter__scroll {
@@ -54,7 +54,7 @@
   font-weight: 500;
 }
 .filter__search input::placeholder {
-  color: #656565;
+  color: var(--t-text-soft);
   opacity: 0.5;
 }
 .filter__search label {
@@ -63,7 +63,7 @@
   left: 16px;
   transform: translateY(-50%);
   display: flex;
-  color: #656565;
+  color: var(--t-text-soft);
 }
 .filter__list {
   display: flex;
@@ -87,5 +87,5 @@
   cursor: pointer;
 }
 .filter__reset:hover {
-  color: #000;
+  color: var(--c-black);
 }

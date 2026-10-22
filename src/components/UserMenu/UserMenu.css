@@ -6,8 +6,8 @@
 .user-menu__avatar {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--c-black);
   color: var(--t-on-fg);
@@ -32,10 +32,10 @@
   z-index: 20;
   min-width: 220px;
   padding: 8px 0;
-  background: var(--t-bg);
+  background: var(--t-popover-bg);
   border: 1px solid var(--c-border-light);
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-popover);
 }
 .user-menu__user {
   display: flex;

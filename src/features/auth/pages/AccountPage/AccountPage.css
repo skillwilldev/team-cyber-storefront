@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   padding: var(--space-6) var(--space-4);
-  background: linear-gradient(135deg, #eef2ff 0%, #f1f5f9 50%, #f0fdf4 100%);
+  background: var(--g-auth-shell);
 }
 
 .account__card {
@@ -18,7 +18,7 @@
   gap: var(--space-6);
   padding: var(--space-6) var(--space-5);
   background: var(--color-surface);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--t-card-edge);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
 }

@@ -10,7 +10,7 @@
 }
 
 .addr-card--selected {
-  border-color: #000;
+  border-color: var(--c-black);
 }
 
 .addr-card[aria-busy='true'] {
@@ -36,18 +36,18 @@ label.addr-card__main {
   width: 24px;
   height: 24px;
   margin: 2px 0 0;
-  border: 2px solid #000;
+  border: 2px solid var(--c-black);
   border-radius: 50%;
-  background: #fff;
+  background: var(--t-bg);
   cursor: pointer;
 }
 
 .addr-card__radio:checked {
-  background: radial-gradient(circle, #000 0 5px, #fff 6px);
+  background: radial-gradient(circle, var(--c-black) 0 5px, var(--t-bg) 6px);
 }
 
 .addr-card__radio:focus-visible {
-  outline: 2px solid #000;
+  outline: 2px solid var(--c-black);
   outline-offset: 3px;
 }
 
@@ -55,7 +55,7 @@ label.addr-card__main {
   min-width: 0;
   font-size: 16px;
   line-height: 28px;
-  color: #1d1d3b;
+  color: var(--t-text-navy);
 }
 
 .addr-card__details p {
@@ -77,8 +77,8 @@ label.addr-card__main {
   height: 24px;
   padding: 0 10px;
   border-radius: 4px;
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
@@ -86,8 +86,8 @@ label.addr-card__main {
 }
 
 .addr-card__tag--light {
-  background: #e4e4e4;
-  color: #000;
+  background: var(--t-tag-bg);
+  color: var(--c-black);
 }
 
 .addr-card__actions,
@@ -113,11 +113,11 @@ label.addr-card__main {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  color: #000;
+  color: var(--c-black);
 }
 
 .addr-card__icon:hover:not(:disabled) {
-  background: #e9e9e9;
+  background: var(--t-icon-hover-bg);
 }
 
 .addr-card__link {

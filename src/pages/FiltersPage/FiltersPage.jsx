@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useCategory } from '@api/catalogQueries';
+import { useTranslation } from '../../lib/i18n';
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
 import { ChevronIcon } from '../../components/icons/icons';
 import QueryError from '../../components/QueryError/QueryError';
@@ -12,6 +13,7 @@ import './FiltersPage.css';
 /** Mobile filters screen: the changes are applied only after pressing "Apply". */
 
 export default function FiltersPage() {
+  const { t } = useTranslation();
   const { params } = useCatalogParams();
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -30,12 +32,12 @@ export default function FiltersPage() {
   return (
     <div className="container filters-page">
       <div className="filters-page__top">
-        <Link to={{ pathname: '/', search }} aria-label="Back to catalog" className="filters-page__back">
+        <Link to={{ pathname: '/', search }} aria-label={t('common.backToCatalog')} className="filters-page__back">
           <ChevronIcon direction="left" size={28} />
         </Link>
-        <h1>Filters</h1>
+        <h1>{t('catalog.filters')}</h1>
         <button type="button" className="filters-page__reset" onClick={() => setDraft(emptyFilters())}>
-          Clear all
+          {t('catalog.clearAll')}
         </button>
       </div>
 
@@ -60,7 +62,7 @@ export default function FiltersPage() {
       )}
 
       <button type="button" className="filters-page__apply" onClick={apply} disabled={!categoryQ.data}>
-        Apply
+        {t('catalog.apply')}
       </button>
     </div>
   );

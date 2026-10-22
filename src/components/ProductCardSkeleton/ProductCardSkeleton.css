@@ -6,7 +6,7 @@
   border-radius: 8px;
 }
 .product-card-skeleton .skeleton {
-  background-color: #e6e6e6;
+  background-color: var(--t-skeleton-bg);
 }
 .product-card-skeleton__img {
   height: 160px;

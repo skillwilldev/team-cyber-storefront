@@ -53,7 +53,7 @@ export default function Footer() {
         <div className="footer__inner">
           <div className="footer__about">
             <div>
-              <Link to="/" className="footer__logo" aria-label="Cyber — home">
+              <Link to="/" className="footer__logo" aria-label={t('header.home')}>
                 <Logo />
               </Link>
               <p>{t('footer.description')}</p>

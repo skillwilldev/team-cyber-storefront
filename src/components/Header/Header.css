@@ -170,7 +170,7 @@
 .header__divider {
   width: 1px;
   height: 24px;
-  margin: 0 6px;
+  margin-right: 6px;
   background: var(--c-border-light);
 }
 
@@ -181,11 +181,11 @@
 /* counter on the wishlist / cart icons */
 .header__badge {
   position: absolute;
-  top: -2px;
-  right: -3px;
-  min-width: 16px;
+  top: -3px;
+  right: -1px;
+  /* min-width: 16px; */
   height: 16px;
-  padding: 0 4px;
+  padding: 0 6px;
   border: 2px solid var(--t-bg);
   box-sizing: content-box;
   border-radius: 10px;
@@ -271,7 +271,7 @@
 
 .header__menu-tools .theme-toggle {
   width: auto;
-  flex: 1;
+  /* flex: 1; */
 }
 
 @media (min-width: 1024px) {
@@ -303,6 +303,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .header__search,
   .header__nav a,
   .header__icon-btn {

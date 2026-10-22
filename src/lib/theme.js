@@ -52,12 +52,23 @@ function apply(theme) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', META_COLOR[theme]);
 }
 
+// let switchTimer;
+
+// /** Short colour transition for the moment of switching (CSS: html.theme-switching in styles/theme.css). */
+// function animateSwitch() {
+//   const root = document.documentElement;
+//   root.classList.add('theme-switching');
+//   clearTimeout(switchTimer);
+//   switchTimer = setTimeout(() => root.classList.remove('theme-switching'), 300);
+// }
+
 function notify() {
   listeners.forEach((listener) => listener());
 }
 
 function sync() {
   const preference = readStored() ?? SYSTEM;
+  // animateSwitch();
   apply(resolve(preference));
   notify();
 }
@@ -86,6 +97,7 @@ export function setTheme(preference) {
   } catch {
     /* not saved, still applied for this session */
   }
+  // animateSwitch();
   apply(resolve(next));
   notify();
 }

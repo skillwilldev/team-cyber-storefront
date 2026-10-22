@@ -27,19 +27,19 @@
   width: 24px;
   height: 24px;
   margin: 0;
-  border: 2px solid #000;
+  border: 2px solid var(--c-black);
   border-radius: 50%;
-  background: #fff;
+  background: var(--t-bg);
 }
 
 .shipping-option input:checked {
-  background: radial-gradient(circle, #000 0 5px, #fff 6px);
+  background: radial-gradient(circle, var(--c-black) 0 5px, var(--t-bg) 6px);
 }
 
 .shipping-option__text {
   flex: 1;
   min-width: 0;
-  color: #1d1d3b;
+  color: var(--t-text-navy);
 }
 
 .shipping-option__date {
@@ -48,7 +48,7 @@
 }
 
 .shipping-option--active {
-  border-color: #000;
+  border-color: var(--c-black);
 }
 
 /* greyed-out rows (not supported by the API) */
@@ -66,7 +66,7 @@
 }
 
 .checkout-step__hint a {
-  color: #000;
+  color: var(--c-black);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

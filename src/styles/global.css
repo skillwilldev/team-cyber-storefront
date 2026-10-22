@@ -31,7 +31,7 @@ body {
   font-family: 'ADG2', 'Inter', sans-serif;
   font-size: 16px;
   color: var(--c-black);
-  background: #fff;
+  background: var(--t-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -78,7 +78,7 @@ body {
 .skeleton {
   display: block;
   border-radius: 8px;
-  background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+  background: var(--g-skeleton);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
