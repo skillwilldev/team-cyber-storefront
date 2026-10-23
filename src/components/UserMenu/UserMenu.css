@@ -55,7 +55,9 @@
   overflow-wrap: anywhere;
 }
 .user-menu__item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   height: auto;
   padding: 10px 16px;
@@ -64,6 +66,16 @@
   line-height: 20px;
   font-weight: 500;
 }
+.user-menu__item .hicon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--c-gray-text);
+  transition: color 0.15s ease;
+}
 .user-menu__item:hover {
   background: var(--c-surface);
+}
+.user-menu__item:hover .hicon {
+  color: var(--c-black);
 }

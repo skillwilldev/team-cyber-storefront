@@ -49,6 +49,27 @@ export const UserIcon = (p) => (
   </Icon>
 );
 
+export const OrdersIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
+    <path d="m4 7 8 4 8-4M12 11v10" />
+  </Icon>
+);
+
+export const MapPinIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21Z" />
+    <circle cx="12" cy="10" r="2.5" />
+  </Icon>
+);
+
+export const LogoutIcon = (p) => (
+  <Icon {...p}>
+    <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
+    <path d="m16 8 4 4-4 4M20 12H10" />
+  </Icon>
+);
+
 export const MenuIcon = (p) => (
   <Icon {...p}>
     <path d="M4 7h16M4 12h16M4 17h16" />

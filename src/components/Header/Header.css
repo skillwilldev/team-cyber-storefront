@@ -170,7 +170,7 @@
 .header__divider {
   width: 1px;
   height: 24px;
-  margin-right: 6px;
+  margin: 0 6px;
   background: var(--c-border-light);
 }
 

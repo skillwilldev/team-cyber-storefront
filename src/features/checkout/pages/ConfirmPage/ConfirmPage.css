@@ -104,4 +104,39 @@
   .confirm__card {
     padding: 24px 16px;
   }
+
+
+}
+
+@media (max-width: 500px) {
+  .confirm__actions {
+    flex-direction: column;
+
+    .action-btn {
+      min-height: 56px;
+      padding: 0;
+    }
+  }
+
+  .confirm__card h1 {
+    text-align: center;
+  }
+}
+
+@media (max-width: 370px) {
+  .confirm__card h1 {
+    font-size: 20px;
+  }
+
+  .confirm__card .confirm__lead {
+    font-size: 14px;
+  }
+
+  .confirm__total {
+    font-size: 14px;
+  }
+
+  .cyber-form .input {
+    font-size: 12px;
+  }
 }
