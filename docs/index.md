@@ -22,18 +22,19 @@ An ADR is a short document about **one** decision: the situation, what was chose
 | [0003](./adr/0003-cart-quantity-stepper.md) | Cart quantity stepper: how to handle fast clicks | FE-005 | Accepted |
 | [0004](./adr/0004-profile-current-password.md) | Profile page: current password in the form, not in a modal | FE-004 | Accepted |
 | [0005](./adr/0005-checkout-state-in-url.md) | Checkout state: `orderId` and chosen address in the URL, card only in the form | FE-006 | Accepted |
-| [0006](./adr/0006-color-theme.md) | Color theme: light / dark / system, FOUC prevention with inline script, `data-theme` on `<html>` | FE-009 | Accepted (updated) |
-| [0007](./adr/0007-i18n-strategy.md) | Internationalization: Georgian + English, JSON + React Context, `Intl` for prices | FE-008 | Accepted |
+| [0006](./adr/0006-color-theme.md) | Color theme: light / dark / system, FOUC prevention with inline script, `data-theme` on `<html>` | FE-009 | Accepted (updated 2026-10-23) |
+| [0007](./adr/0007-i18n-strategy.md) | Internationalization: Georgian + English, JSON files, `Intl` for prices, what is and is not translated | FE-008 | Accepted; the React integration is superseded by 0008 |
+| [0008](./adr/0008-react-i18next.md) | i18n: `react-i18next` instead of the home-made Context | FE-008 | Accepted |
 
 ### ADR template
 
-Copy this when a new decision has to be recorded (next number: `0008`):
+Copy this when a new decision has to be recorded (next number: `0009`):
 
 ```md
 # ADR 000X: Short title of the decision
 
 - **Status:** Proposed | Accepted | Superseded by ADR 000Y
-- **Date:** 2026-10-11
+- **Date:** YYYY-MM-DD
 - **Ticket:** FE-00X
 
 ## Context
@@ -53,7 +54,7 @@ What gets better, what gets worse, what must be remembered later.
 
 - [Week 1](../journal/week-1.md)
 - [Week 2](../journal/week-2.md)
-- [Week 3](../journal/week-3.md) (i18n, 3-state theme, bug fixes from lecturer feedback)
+- [Week 3](../journal/week-3.md) (i18n with react-i18next, 3-state theme without flash, theme tokens, bug fixes from lecturer feedback)
 
 ## Related code
 
@@ -67,4 +68,5 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/features/auth/pages/AccountPage/AccountPage.jsx` | [0004](./adr/0004-profile-current-password.md) |
 | `src/features/checkout/pages/PaymentStep/PaymentStep.jsx`, `src/features/checkout/pages/ConfirmPage/ConfirmPage.jsx`, `src/features/checkout/lib/checkoutRoutes.js`, `src/features/checkout/hooks/useSelectedAddress.js` | [0005](./adr/0005-checkout-state-in-url.md) |
 | `src/lib/theme.js`, `src/hooks/useTheme.js`, `src/components/ThemeToggle/`, `src/styles/theme.css`, `index.html` (inline script) | [0006](./adr/0006-color-theme.md) |
-| `src/lib/i18n.jsx`, `src/locales/`, `src/components/LanguageSwitcher/`, `src/lib/filterLabels.js` | [0007](./adr/0007-i18n-strategy.md) |
+| `src/locales/`, `src/lib/filterLabels.js`, `src/lib/specs.js`, `src/lib/i18n/format.js`, `index.html` (inline script, `lang`) | [0007](./adr/0007-i18n-strategy.md) |
+| `src/lib/i18n/` (`config.js`, `i18n.js`, `index.js`), `src/components/LanguageSwitcher/`, `src/main.jsx` | [0008](./adr/0008-react-i18next.md) |

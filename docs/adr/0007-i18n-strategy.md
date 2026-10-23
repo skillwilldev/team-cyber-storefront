@@ -1,8 +1,10 @@
 # ADR 0007: Internationalization — Georgian + English, JSON + React Context
 
-- **Status:** Accepted
+- **Status:** Accepted. The React-integration part (own `I18nProvider` / `useTranslation()`) is **superseded by [ADR 0008](./0008-react-i18next.md)**; the rest still applies.
 - **Date:** 2026-10-21
 - **Ticket:** FE-008
+
+> **Update 2026-10-23.** The code now uses `react-i18next` (ADR 0008), so the rows about `I18nProvider` / `src/lib/i18n.jsx`, the rejection of `react-i18next` and "no new npm dependencies" are kept below as the original decision, not as the current state. Also changed since: spec **names** are now translated through `SPEC_I18N_KEYS` in `src/lib/specs.js` (instead of the `SPEC_LABELS` map), and the formatters live in `src/lib/i18n/format.js`. The table of what is and is not translated, and the `Accept-Language` note, are in ADR 0008.
 
 ## Context
 
