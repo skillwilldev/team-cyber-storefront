@@ -19,6 +19,7 @@
   color: var(--color-text);
   line-height: var(--line-height-tight);
   margin-bottom: var(--space-2);
+  text-align: center;
 }
 
 .auth-page__subtitle {

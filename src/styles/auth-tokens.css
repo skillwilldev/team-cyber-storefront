@@ -1,9 +1,9 @@
 :root {
   /* --- Colors --- */
   --color-primary: #000;
-  --color-primary-hover: #4338CA;
+  --color-primary-hover: #262626;
   --color-primary-light: #EEF2FF;
-  --color-primary-ring: rgba(79, 70, 229, 0.18);
+  --color-primary-ring: rgba(0, 0, 0, 0.15);
 
   --color-error: #DC2626;
   --color-error-hover: #B91C1C;
