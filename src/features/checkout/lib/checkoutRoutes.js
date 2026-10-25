@@ -4,9 +4,9 @@
  *   :orderId        the pending order on the code screen
  */
 export const CHECKOUT_STEPS = [
-  { key: 'address', label: 'Address' },
-  { key: 'shipping', label: 'Shipping' },
-  { key: 'payment', label: 'Payment' },
+  { key: 'address', labelKey: 'checkout.stepAddress' },
+  { key: 'shipping', labelKey: 'checkout.stepShipping' },
+  { key: 'payment', labelKey: 'checkout.payment' },
 ];
 
 /** /checkout/shipping?address=abc */

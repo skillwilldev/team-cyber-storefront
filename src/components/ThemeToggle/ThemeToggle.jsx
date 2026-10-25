@@ -1,60 +1,49 @@
 import { useTheme } from '@/hooks/useTheme';
+import { useTranslation } from 'react-i18next';
+import { MonitorIcon, MoonIcon, SunIcon } from '../Header/HeaderIcons';
 import './ThemeToggle.css';
 
-function SunIcon() {
-  return (
-    <svg
-      className="theme-toggle__icon theme-toggle__icon--sun"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-    </svg>
-  );
-}
+/** Order of the cycle: light → dark → system → light … */
+const MODES = [
+  { value: 'light', Icon: SunIcon, switchKey: 'theme.switchToLight' },
+  { value: 'dark', Icon: MoonIcon, switchKey: 'theme.switchToDark' },
+  { value: 'system', Icon: MonitorIcon, switchKey: 'theme.switchToSystem' },
+];
 
-function MoonIcon() {
-  return (
-    <svg
-      className="theme-toggle__icon theme-toggle__icon--moon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-    </svg>
-  );
-}
+/**
+ * Theme toggle: ONE button that cycles light → dark → system.
+ * The three icons are stacked; the active one turns and fades in, the others turn and fade out.
+ * `withLabel` (mobile menu) turns it into a full-width row with the name of the current mode.
+ * The three states of FE-009 are kept: `system` still follows the OS preference live.
+ */
+export default function ThemeToggle({ className = '', withLabel = false }) {
+  const { preference, setTheme } = useTheme();
+  const { t } = useTranslation();
 
-/** Light / dark switch. The choice is saved to localStorage (see lib/theme.js). */
-export default function ThemeToggle({ className = '' }) {
-  const { isDark, toggleTheme } = useTheme();
+  const current = Math.max(0, MODES.findIndex((m) => m.value === preference));
+  const next = MODES[(current + 1) % MODES.length];
+  const nextLabel = t(next.switchKey);
 
   return (
     <button
       type="button"
-      role="switch"
-      aria-checked={isDark}
-      aria-label="Dark theme"
-      title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-      className={`theme-toggle ${className}`.trim()}
-      onClick={toggleTheme}
+      className={`theme-toggle${withLabel ? ' theme-toggle--row' : ''} ${className}`.trim()}
+      onClick={() => setTheme(next.value)}
+      aria-label={nextLabel}
+      title={nextLabel}
     >
-      <span className="theme-toggle__thumb" aria-hidden="true" />
-      <SunIcon />
-      <MoonIcon />
+      <span className="theme-toggle__icons" aria-hidden="true">
+        {MODES.map(({ value, Icon }, i) => (
+          <span
+            key={value}
+            className="theme-toggle__icon"
+            data-state={i === current ? 'active' : i < current ? 'before' : 'after'}
+          >
+            <Icon />
+          </span>
+        ))}
+      </span>
+      {withLabel && <span className="theme-toggle__label">{t(`theme.${MODES[current].value}`)}</span>}
     </button>
   );
 }

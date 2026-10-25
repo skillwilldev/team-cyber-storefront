@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ToastContext } from './ToastContext';
 import './Toast.css';
 
@@ -11,6 +12,7 @@ let nextToastId = 1;
  * Screen readers: success → role="status" (polite), error → role="alert" (assertive).
  */
 export function ToastProvider({ children }) {
+  const { t: tr } = useTranslation();
   const [toasts, setToasts] = useState([]);
   const timers = useRef(new Map());
 
@@ -49,7 +51,7 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast--${t.type}`} role={t.type === 'error' ? 'alert' : 'status'}>
             <span>{t.message}</span>
-            <button type="button" className="toast__close" aria-label="Dismiss" onClick={() => dismiss(t.id)}>
+            <button type="button" className="toast__close" aria-label={tr('a11y.dismiss')} onClick={() => dismiss(t.id)}>
               ×
             </button>
           </div>

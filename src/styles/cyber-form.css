@@ -16,7 +16,7 @@
   padding: 0 20px;
   border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--t-input-bg);
   font-size: 16px;
 }
 
@@ -25,12 +25,12 @@
 }
 
 .cyber-form .input:hover:not(:disabled):not(.input--error) {
-  border-color: #000;
+  border-color: var(--c-black);
 }
 
 .cyber-form .input:focus:not(.input--error) {
-  border-color: #000;
-  box-shadow: 0 0 0 1px #000;
+  border-color: var(--c-black);
+  box-shadow: 0 0 0 1px var(--c-black);
 }
 
 .cyber-form .input.input--error {
@@ -51,6 +51,6 @@
   width: 20px;
   height: 20px;
   margin: 0;
-  accent-color: #000;
+  accent-color: var(--c-black);
   cursor: pointer;
 }

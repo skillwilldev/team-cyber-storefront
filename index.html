@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ka">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -13,6 +13,35 @@
     />
     <meta name="theme-color" content="#ffffff" />
     <title>Cyber</title>
+    <!--
+      FOUC prevention (FE-009): this inline script runs BEFORE the first paint.
+      It reads the saved theme preference from localStorage and applies the resolved
+      theme to <html> immediately, so the user never sees a wrong-color flash.
+      It also reads the saved language and sets <html lang>.
+      This is one of the rare cases where code lives outside React, in index.html.
+    -->
+    <script>
+      (function () {
+        try {
+          // Theme
+          var THEME_KEY = 'theme';
+          var pref = localStorage.getItem(THEME_KEY);
+          var resolved;
+          if (pref === 'dark') resolved = 'dark';
+          else if (pref === 'light') resolved = 'light';
+          else resolved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          var root = document.documentElement;
+          root.setAttribute('data-theme', resolved);
+          root.style.colorScheme = resolved;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', resolved === 'dark' ? '#111114' : '#ffffff');
+
+          // Language
+          var lang = localStorage.getItem('lang');
+          if (lang === 'ka' || lang === 'en') root.lang = lang;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

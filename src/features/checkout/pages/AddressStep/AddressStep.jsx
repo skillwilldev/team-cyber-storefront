@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ActionButton from '@/components/ActionButton/ActionButton';
+import { useTranslation } from 'react-i18next';
 import { AddressManager, useAddresses } from '@features/addresses';
 import { checkoutPath } from '../../lib/checkoutRoutes';
 
@@ -14,6 +15,7 @@ import { checkoutPath } from '../../lib/checkoutRoutes';
  * Priority of the preselection: what the user just clicked → ?address= (coming back from step 2/3) → the default address.
  */
 export default function AddressStep() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { data } = useAddresses();
   const [pickedId, setPickedId] = useState(null);
@@ -27,7 +29,7 @@ export default function AddressStep() {
   return (
     <section className="checkout-step" aria-labelledby="step-address-title">
       <h1 id="step-address-title" className="checkout-step__title">
-        Select Address
+        {t('checkout.selectAddress')}
       </h1>
 
       <div className="checkout-step__body">
@@ -39,14 +41,14 @@ export default function AddressStep() {
         />
       </div>
 
-      {!selectedId && <p className="checkout-step__hint">Add a delivery address to continue.</p>}
+      {!selectedId && <p className="checkout-step__hint">{t('checkout.addAddressHint')}</p>}
 
       <div className="checkout-actions">
         <ActionButton to="/cart" variant="outline">
-          Back
+          {t('common.back')}
         </ActionButton>
         <ActionButton to={selectedId ? checkoutPath('shipping', selectedId) : undefined} disabled={!selectedId}>
-          Next
+          {t('common.next')}
         </ActionButton>
       </div>
     </section>

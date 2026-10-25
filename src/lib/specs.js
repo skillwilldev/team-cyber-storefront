@@ -1,35 +1,37 @@
 /**
  * Product `specs` from the API is { "<georgian name>": "value" } — the same shape for every category.
- * Below: English names + grouping for the smartphone keys; unknown keys are shown as they come.
+ * The API is Georgian-only, so the spec NAMES (keys) are mapped to i18n keys (`specs.*` in locales/*.json)
+ * and translated in the UI; the VALUES stay as the API sends them. Unknown names are shown as they come.
  */
-export const SPEC_LABELS = {
-  'ეკრანი': 'Screen',
-  'განახლების სიხშირე': 'Refresh rate',
-  'პროცესორი': 'CPU',
-  'ოპერატიული მეხსიერება': 'RAM',
-  'მეხსიერება': 'Storage',
-  'ძირითადი კამერა': 'Main camera',
-  'წინა კამერა': 'Front camera',
-  'ბატარეა': 'Battery capacity',
-  'დატენვა': 'Charging',
-  'ოპერაციული სისტემა': 'Operating system',
-  'დაცვა': 'Protection class',
-  'ფერი': 'Color',
-  'გარანტია': 'Warranty',
+export const SPEC_I18N_KEYS = {
+  'ეკრანი': 'specs.screen',
+  'განახლების სიხშირე': 'specs.refreshRate',
+  'პროცესორი': 'specs.cpu',
+  'ოპერატიული მეხსიერება': 'specs.ram',
+  'მეხსიერება': 'specs.storage',
+  'ძირითადი კამერა': 'specs.mainCamera',
+  'წინა კამერა': 'specs.frontCamera',
+  'ბატარეა': 'specs.battery',
+  'დატენვა': 'specs.charging',
+  'ოპერაციული სისტემა': 'specs.os',
+  'დაცვა': 'specs.protection',
+  'ფერი': 'specs.color',
+  'გარანტია': 'specs.warranty',
 };
 
 const SPEC_GROUPS = [
-  { title: 'Screen', keys: ['ეკრანი', 'განახლების სიხშირე'] },
-  { title: 'CPU', keys: ['პროცესორი', 'ოპერატიული მეხსიერება', 'მეხსიერება', 'ოპერაციული სისტემა'] },
-  { title: 'Camera', keys: ['ძირითადი კამერა', 'წინა კამერა'] },
-  { title: 'Battery', keys: ['ბატარეა', 'დატენვა'] },
-  { title: 'Protection', keys: ['დაცვა'] },
+  { titleKey: 'specs.groupScreen', keys: ['ეკრანი', 'განახლების სიხშირე'] },
+  { titleKey: 'specs.groupCpu', keys: ['პროცესორი', 'ოპერატიული მეხსიერება', 'მეხსიერება', 'ოპერაციული სისტემა'] },
+  { titleKey: 'specs.groupCamera', keys: ['ძირითადი კამერა', 'წინა კამერა'] },
+  { titleKey: 'specs.groupBattery', keys: ['ბატარეა', 'დატენვა'] },
+  { titleKey: 'specs.groupProtection', keys: ['დაცვა'] },
 ];
 
 // the 6 "quick specs" under the price
 export const QUICK_KEYS = ['ეკრანი', 'პროცესორი', 'ოპერატიული მეხსიერება', 'ძირითადი კამერა', 'წინა კამერა', 'ბატარეა'];
 
-export const getSpecLabel = (key) => SPEC_LABELS[key] ?? key;
+/** Spec name → label in the current language (`t` comes from useTranslation). */
+export const getSpecLabel = (key, t) => (SPEC_I18N_KEYS[key] ? t(SPEC_I18N_KEYS[key]) : key);
 
 export function getQuickSpecs(specs = {}) {
   const known = QUICK_KEYS.filter((key) => specs[key]).map((key) => ({ key, value: specs[key] }));
@@ -41,20 +43,20 @@ export function getQuickSpecs(specs = {}) {
 }
 
 /** → { main: [{ title, rows }], more: [...] } — "more" is hidden behind the "View More" button. */
-export function buildSpecGroups(specs = {}) {
+export function buildSpecGroups(specs = {}, t) {
   const used = new Set();
-  const groups = SPEC_GROUPS.map(({ title, keys }) => {
+  const groups = SPEC_GROUPS.map(({ titleKey, keys }) => {
     const present = keys.filter((key) => specs[key]);
     present.forEach((key) => used.add(key));
 
-    return { title, rows: present.map((key) => ({ label: getSpecLabel(key), value: specs[key] })) };
+    return { title: t(titleKey), rows: present.map((key) => ({ label: getSpecLabel(key, t), value: specs[key] })) };
   }).filter((g) => g.rows.length > 0);
 
   const rest = Object.keys(specs).filter((key) => !used.has(key));
   if (rest.length > 0) {
     groups.push({
-      title: groups.length > 0 ? 'Other' : 'Specifications',
-      rows: rest.map((key) => ({ label: getSpecLabel(key), value: specs[key] })),
+      title: t(groups.length > 0 ? 'specs.groupOther' : 'specs.groupDefault'),
+      rows: rest.map((key) => ({ label: getSpecLabel(key, t), value: specs[key] })),
     });
   }
 

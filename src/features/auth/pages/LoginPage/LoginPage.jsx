@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { Button, Input, PasswordInput, FormField, Alert, IconMail } from '@shared/ui';
 import './LoginPage.css';
 
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [bannerError, setBannerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,14 +60,14 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       if (err.code === 'INVALID_CREDENTIALS' || err.status === 401) {
-        setBannerError('Incorrect email or password');
+        setBannerError(t('auth.incorrectCredentials'));
       } else if (err.code === 'VALIDATION_ERROR' && err.errors) {
         // Map server validation errors to fields
         Object.entries(err.errors).forEach(([field, message]) => {
           setError(field, { message });
         });
       } else {
-        setBannerError(err.message || 'Something went wrong. Please try again.');
+        setBannerError(err.message || t('common.somethingWentWrong'));
       }
     } finally {
       setIsSubmitting(false);
@@ -75,18 +77,18 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-page__header">
-        <h1 className="auth-page__title">Sign in to your account</h1>
-        <p className="auth-page__subtitle">Enter your credentials to continue</p>
+        <h1 className="auth-page__title">{t('auth.signInTitle')}</h1>
+        <p className="auth-page__subtitle">{t('auth.signInSubtitle')}</p>
       </div>
 
       {bannerError && <Alert type="error" message={bannerError} />}
 
       <form onSubmit={handleSubmit(onSubmit)} className="auth-page__form" noValidate>
-        <FormField label="Email" error={errors.email?.message} htmlFor="login-email" required>
+        <FormField label={t('auth.email')} error={errors.email?.message} htmlFor="login-email" required>
           <Input
             id="login-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
             disabled={isSubmitting}
             icon={IconMail}
@@ -94,7 +96,7 @@ export default function LoginPage() {
           />
         </FormField>
 
-        <FormField label="Password" error={errors.password?.message} htmlFor="login-password" required>
+        <FormField label={t('auth.password')} error={errors.password?.message} htmlFor="login-password" required>
           <PasswordInput
             id="login-password"
             placeholder="••••••••"
@@ -106,19 +108,19 @@ export default function LoginPage() {
 
         <div className="auth-page__actions-row">
           <Link to="/forgot-password" className="auth-page__link">
-            Forgot password?
+            {t('auth.forgotPasswordLink')}
           </Link>
         </div>
 
         <Button type="submit" isLoading={isSubmitting}>
-          Sign In
+          {t('auth.login')}
         </Button>
       </form>
 
       <p className="auth-page__footer">
-        Don't have an account?{' '}
+        {t('auth.noAccount')}{' '}
         <Link to="/register" state={location.state} className="auth-page__link">
-          Create an account
+          {t('auth.createAccount')}
         </Link>
       </p>
     </div>

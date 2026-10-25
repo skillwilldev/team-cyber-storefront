@@ -21,8 +21,8 @@
   height: 18px;
   border: 1px solid var(--c-border);
   border-radius: 4px;
-  background: #fff;
-  color: #fff;
+  background: var(--t-bg);
+  color: var(--t-on-fg);
   transition: background-color 0.15s, border-color 0.15s;
 }
 .checkbox__box svg {
@@ -30,21 +30,21 @@
   transition: opacity 0.15s;
 }
 .checkbox__input:checked + .checkbox__box {
-  background: #000;
-  border-color: #000;
+  background: var(--c-black);
+  border-color: var(--c-black);
 }
 .checkbox__input:checked + .checkbox__box svg {
   opacity: 1;
 }
 .checkbox__input:focus-visible + .checkbox__box {
-  outline: 2px solid #000;
+  outline: 2px solid var(--c-black);
   outline-offset: 2px;
 }
 .checkbox:hover .checkbox__box {
-  border-color: #000;
+  border-color: var(--c-black);
 }
 .checkbox__label {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 20px;
   font-weight: 500;
 }
@@ -59,7 +59,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ring-swatch);
 }
 
 /* radio: round control with a dot instead of a tick */
@@ -71,7 +71,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--t-on-fg);
   opacity: 0;
   transition: opacity 0.15s;
 }

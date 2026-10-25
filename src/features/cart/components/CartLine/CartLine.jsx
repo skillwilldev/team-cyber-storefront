@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useRemoveCartItem, useUpdateCartItem } from '@api/cartQueries';
 import ProductImage from '@/components/ProductImage/ProductImage';
 import { TrashIcon } from '@/components/icons/icons';
-import { formatPrice } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
+import { formatPriceI18n } from '@/lib/i18n';
 import { getCartErrorMessage } from '../../lib/cartErrors';
 import { getMaxQty, getStockIssue } from '../../lib/cartRules';
 import QuantityStepper from '../QuantityStepper/QuantityStepper';
@@ -19,9 +20,11 @@ export default function CartLine({ item }) {
   const { id, qty, lineTotal, product } = item;
   const update = useUpdateCartItem();
   const remove = useRemoveCartItem();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
 
   const isBusy = update.isPending || remove.isPending;
-  const stockIssue = getStockIssue(item);
+  const stockIssue = getStockIssue(item, t);
   const requestError = update.isError ? update.error : remove.isError ? remove.error : null;
   const href = `/product/${product.slug}`;
 
@@ -47,8 +50,8 @@ export default function CartLine({ item }) {
           <Link to={href}>{product.title}</Link>
         </h2>
         <p className="cart-line__unit">
-          {formatPrice(product.price, product.currency)}
-          {product.oldPrice ? <s>{formatPrice(product.oldPrice, product.currency)}</s> : null}
+          {formatPriceI18n(product.price, product.currency, lang)}
+          {product.oldPrice ? <s>{formatPriceI18n(product.oldPrice, product.currency, lang)}</s> : null}
         </p>
       </div>
 
@@ -62,12 +65,12 @@ export default function CartLine({ item }) {
         />
       </div>
 
-      <p className="cart-line__total">{formatPrice(lineTotal, product.currency)}</p>
+      <p className="cart-line__total">{formatPriceI18n(lineTotal, product.currency, lang)}</p>
 
       <button
         type="button"
         className="cart-line__remove"
-        aria-label={`Remove ${product.title} from cart`}
+        aria-label={t('cart.removeFromCart', { title: product.title })}
         disabled={isBusy}
         onClick={removeItem}
       >
@@ -77,7 +80,7 @@ export default function CartLine({ item }) {
       {stockIssue && <p className="cart-line__warn">{stockIssue}</p>}
       {requestError && (
         <p className="cart-line__error" role="alert">
-          {getCartErrorMessage(requestError)}
+          {getCartErrorMessage(requestError, t)}
         </p>
       )}
     </li>

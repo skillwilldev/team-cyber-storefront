@@ -1,29 +1,41 @@
 .user-menu {
   position: relative;
+  display: grid;
+  place-items: center;
 }
-.header__btns .user-menu__avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.user-menu__avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
+  font-family: inherit;
   font-size: 13px;
   line-height: 1;
   font-weight: 600;
   user-select: none;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.user-menu__avatar:hover,
+.user-menu__avatar[aria-expanded='true'] {
+  box-shadow: 0 0 0 3px var(--c-surface), 0 0 0 4px var(--c-border);
+}
+.user-menu__avatar:active {
+  transform: scale(0.94);
 }
 .user-menu__dropdown {
   position: absolute;
-  top: calc(100% + 16px);
+  top: calc(100% + 14px);
   right: 0;
   z-index: 20;
   min-width: 220px;
   padding: 8px 0;
-  background: #fff;
+  background: var(--t-popover-bg);
   border: 1px solid var(--c-border-light);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--shadow-popover);
 }
 .user-menu__user {
   display: flex;
@@ -42,9 +54,10 @@
   color: var(--c-gray-text);
   overflow-wrap: anywhere;
 }
-.user-menu__item,
-.header__btns .user-menu__item {
-  display: block;
+.user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   height: auto;
   padding: 10px 16px;
@@ -53,6 +66,16 @@
   line-height: 20px;
   font-weight: 500;
 }
+.user-menu__item .hicon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--c-gray-text);
+  transition: color 0.15s ease;
+}
 .user-menu__item:hover {
   background: var(--c-surface);
+}
+.user-menu__item:hover .hicon {
+  color: var(--c-black);
 }

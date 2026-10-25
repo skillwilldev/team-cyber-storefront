@@ -32,8 +32,8 @@
 }
 
 .payment__tab--active {
-  border-bottom-color: #000;
-  color: #000;
+  border-bottom-color: var(--c-black);
+  color: var(--c-black);
 }
 
 .payment__tab:disabled {

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getFilterOptionLabel } from '@/lib/i18n';
 import { getColorHex, getFilterTitle } from '../../lib/filterLabels';
 import Checkbox from '../Checkbox/Checkbox';
 import { ChevronIcon, SearchIcon } from '../icons/icons';
@@ -32,13 +34,15 @@ function Section({ id, title, open, onToggle, children }) {
   );
 }
 
-function Options({ group, selected, onToggle, onReset, scrollable }) {
+function Options({ group, selected, onToggle, onReset, scrollable, t, lang }) {
   const [query, setQuery] = useState('');
   const isRadio = group.type === 'radio';
   const searchable = group.options.length > 6;
   const q = query.trim().toLowerCase();
   const options = q
-    ? group.options.filter((o) => `${o.label} ${o.value}`.toLowerCase().includes(q))
+    ? group.options.filter((o) =>
+        `${getFilterOptionLabel(o, group.key, lang)} ${o.label ?? ''} ${o.value}`.toLowerCase().includes(q),
+      )
     : group.options;
 
   return (
@@ -47,12 +51,12 @@ function Options({ group, selected, onToggle, onReset, scrollable }) {
         <div className="filter__search">
           <label htmlFor={`search-${group.key}`}>
             <SearchIcon size={24} />
-            <span className="sr-only">Search {getFilterTitle(group).toLowerCase()}</span>
+            <span className="sr-only">{t('common.search')} {getFilterTitle(group, t).toLowerCase()}</span>
           </label>
           <input
             id={`search-${group.key}`}
             type="text"
-            placeholder="Search"
+            placeholder={t('common.search')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -64,19 +68,19 @@ function Options({ group, selected, onToggle, onReset, scrollable }) {
             <Checkbox
               type={isRadio ? 'radio' : 'checkbox'}
               name={isRadio ? `filter-${group.key}` : undefined}
-              label={o.label ?? o.value}
+              label={getFilterOptionLabel(o, group.key, lang)}
               swatch={group.type === 'color' ? getColorHex(o.value) : undefined}
               checked={selected.includes(o.value)}
               onChange={() => onToggle(o.value)}
             />
           </li>
         ))}
-        {options.length === 0 && <li className="filter__empty">Nothing found</li>}
+        {options.length === 0 && <li className="filter__empty">{t('common.nothingFound')}</li>}
       </ul>
       {/* a radio can't be unticked by clicking it again, so there is an explicit reset */}
       {isRadio && selected.length > 0 && (
         <button type="button" className="filter__reset" onClick={onReset}>
-          Reset
+          {t('common.reset')}
         </button>
       )}
     </div>
@@ -98,6 +102,8 @@ export default function FilterPanel({
   priceDelay,
 }) {
   const [open, setOpen] = useState(() => new Set(defaultOpen));
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const toggleSection = (id) =>
     setOpen((prev) => {
       const next = new Set(prev);
@@ -123,7 +129,7 @@ export default function FilterPanel({
   return (
     <div className="filters">
       {withPrice && hasBounds && (
-        <Section id="price" title={getFilterTitle(priceGroup)} open={open.has('price')} onToggle={() => toggleSection('price')}>
+        <Section id="price" title={getFilterTitle(priceGroup, t)} open={open.has('price')} onToggle={() => toggleSection('price')}>
           <PriceRange
             bounds={{ min: priceGroup.min, max: priceGroup.max }}
             min={value.minPrice ?? priceGroup.min}
@@ -144,7 +150,7 @@ export default function FilterPanel({
         <Section
           key={group.key}
           id={group.key}
-          title={getFilterTitle(group)}
+          title={getFilterTitle(group, t)}
           open={open.has(group.key)}
           onToggle={() => toggleSection(group.key)}
         >
@@ -154,6 +160,8 @@ export default function FilterPanel({
             scrollable={scrollable}
             onToggle={(v) => toggleValue(group, v)}
             onReset={() => resetGroup(group)}
+            t={t}
+            lang={lang}
           />
         </Section>
       ))}

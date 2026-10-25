@@ -1,26 +1,28 @@
 /**
- * API error → short text for the user. Decide by `code`, never by `message` (the text may change).
+ * API error → short text for the user, in the current language.
+ * Decide by `code`, never by `message` (the text may change). `t` comes from useTranslation().
  * Codes: OUT_OF_STOCK, INSUFFICIENT_STOCK (+ data.available), PRODUCT_NOT_FOUND, CART_ITEM_NOT_FOUND, VALIDATION_ERROR.
  */
-export function getCartErrorMessage(error) {
+export function getCartErrorMessage(error, t) {
   // fetch() rejects with a TypeError when there is no network at all
-  if (error instanceof TypeError) return 'Network error. Check your connection and try again.';
+  if (error instanceof TypeError) return t('cartErrors.networkError');
 
   switch (error?.code) {
     case 'OUT_OF_STOCK':
-      return 'This product is out of stock';
+      return t('cartErrors.outOfStock');
     case 'INSUFFICIENT_STOCK': {
       const available = error.data?.available;
-      if (available === 0) return 'This product is out of stock';
-      return Number.isInteger(available) ? `Only ${available} in stock` : 'Not enough items in stock';
+      if (available === 0) return t('cartErrors.outOfStock');
+      if (Number.isInteger(available)) return t('cartErrors.onlyNInStock', { count: available });
+      return t('cartErrors.notEnoughStock');
     }
     case 'PRODUCT_NOT_FOUND':
-      return 'This product no longer exists';
+      return t('cartErrors.productNotFound');
     case 'CART_ITEM_NOT_FOUND':
-      return 'This item is no longer in your cart';
+      return t('cartErrors.itemNotInCart');
     case 'VALIDATION_ERROR':
-      return 'Quantity must be between 1 and 99';
+      return t('cartErrors.qtyRange');
     default:
-      return error?.message || 'Something went wrong. Please try again.';
+      return t('cartErrors.genericError');
   }
 }

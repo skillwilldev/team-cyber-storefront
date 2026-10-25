@@ -30,7 +30,7 @@
 .alert--success {
   background-color: var(--color-success-light);
   border-color: var(--color-success-border);
-  color: #065F46;
+  color: var(--t-alert-success-text);
 }
 
 .alert--success .alert__icon {
@@ -41,7 +41,7 @@
 .alert--error {
   background-color: var(--color-error-light);
   border-color: var(--color-error-border);
-  color: #991B1B;
+  color: var(--t-alert-error-text);
 }
 
 .alert--error .alert__icon {
@@ -52,7 +52,7 @@
 .alert--warning {
   background-color: var(--color-warning-light);
   border-color: var(--color-warning-border);
-  color: #92400E;
+  color: var(--t-banner-text);
 }
 
 .alert--warning .alert__icon {

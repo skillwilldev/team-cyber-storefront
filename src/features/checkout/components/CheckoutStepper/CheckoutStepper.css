@@ -15,11 +15,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #a4a4a4;
+  color: var(--c-gray);
 }
 
 .checkout-steps__item--current {
-  color: #000;
+  color: var(--c-black);
 }
 
 .checkout-steps__icon {
@@ -30,12 +30,12 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #cfcfcf;
-  color: #fff;
+  background: var(--t-step-bg);
+  color: var(--t-step-text);
 }
 
 .checkout-steps__item--current .checkout-steps__icon {
-  background: #000;
+  background: var(--c-black);
 }
 
 .checkout-steps__text {

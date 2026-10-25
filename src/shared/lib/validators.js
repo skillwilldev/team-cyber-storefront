@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 /**
  * Zod validation schemas for all auth forms.
+ * Messages are `validation.*` KEYS, not text: <FormField> translates them (ka / en) when it renders the error.
  * Reusable — import any schema in any form that needs it.
  */
 
@@ -9,11 +10,11 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   email: z
     .string()
-    .min(1, 'Email is required')
-    .email('Enter a valid email address'),
+    .min(1, 'validation.emailRequired')
+    .email('validation.emailInvalid'),
   password: z
     .string()
-    .min(1, 'Password is required'),
+    .min(1, 'validation.passwordRequired'),
   // No strength rules on login — user's password may be from older policy
 });
 
@@ -22,22 +23,22 @@ export const registerSchema = z
   .object({
     name: z
       .string()
-      .min(2, 'Name must be at least 2 characters'),
+      .min(2, 'validation.nameMin'),
     email: z
       .string()
-      .min(1, 'Email is required')
-      .email('Enter a valid email address'),
+      .min(1, 'validation.emailRequired')
+      .email('validation.emailInvalid'),
     password: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
-      .regex(/\d/, 'Password must contain at least one digit'),
+      .min(8, 'validation.passwordMin')
+      .regex(/[a-zA-Z]/, 'validation.passwordLetter')
+      .regex(/\d/, 'validation.passwordDigit'),
     confirmPassword: z
       .string()
-      .min(1, 'Please confirm your password'),
+      .min(1, 'validation.confirmRequired'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'validation.passwordsMismatch',
     path: ['confirmPassword'],
   });
 
@@ -45,25 +46,25 @@ export const registerSchema = z
 export const forgotPasswordSchema = z.object({
   email: z
     .string()
-    .min(1, 'Email is required')
-    .email('Enter a valid email address'),
+    .min(1, 'validation.emailRequired')
+    .email('validation.emailInvalid'),
 });
 
 // ---- Forgot password step 2: verification code ----
 export const verifyCodeSchema = z.object({
   code: z
     .string()
-    .min(1, 'Verification code is required')
-    .regex(/^\d{6}$/, 'Code must be exactly 6 digits'),
+    .min(1, 'validation.codeRequired')
+    .regex(/^\d{6}$/, 'validation.codeSixDigits'),
 });
 
 // ---- Forgot password step 3: new password ----
 export const resetPasswordSchema = z.object({
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
-    .regex(/\d/, 'Password must contain at least one digit'),
+    .min(8, 'validation.passwordMin')
+    .regex(/[a-zA-Z]/, 'validation.passwordLetter')
+    .regex(/\d/, 'validation.passwordDigit'),
 });
 
 // ---- Profile edit (PATCH /auth/me) — FE-004 ----
@@ -72,18 +73,18 @@ export const resetPasswordSchema = z.object({
 // `newPassword` '' means "don't change". The confirmation field exists ONLY on the front end.
 export const profileSchema = z
   .object({
-    name: z.string().trim().min(2, 'Name must be at least 2 characters'),
-    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+    name: z.string().trim().min(2, 'validation.nameMin'),
+    email: z.string().trim().min(1, 'validation.emailRequired').email('validation.emailInvalid'),
     newPassword: z
       .string()
-      .refine((v) => v === '' || v.length >= 8, 'Password must be at least 8 characters')
-      .refine((v) => v === '' || /[a-zA-Z]/.test(v), 'Password must contain at least one letter')
-      .refine((v) => v === '' || /\d/.test(v), 'Password must contain at least one digit'),
+      .refine((v) => v === '' || v.length >= 8, 'validation.passwordMin')
+      .refine((v) => v === '' || /[a-zA-Z]/.test(v), 'validation.passwordLetter')
+      .refine((v) => v === '' || /\d/.test(v), 'validation.passwordDigit'),
     confirmNewPassword: z.string(),
-    currentPassword: z.string().min(1, 'Enter your current password to save changes'),
+    currentPassword: z.string().min(1, 'validation.currentPasswordRequired'),
   })
   .refine((d) => d.newPassword === d.confirmNewPassword, {
-    message: 'Passwords do not match',
+    message: 'validation.passwordsMismatch',
     path: ['confirmNewPassword'],
   });
 
@@ -91,14 +92,14 @@ export const profileSchema = z
 // Rules mirror the server (AddressInput): label ≤ 30 (optional), fullName ≥ 2, phone 9–20 chars,
 // city ≥ 2, address ≥ 5. The same phone format is used at checkout (shipping.phone).
 export const addressSchema = z.object({
-  label: z.string().trim().max(30, 'Label must be at most 30 characters'),
-  fullName: z.string().trim().min(2, 'Full name must be at least 2 characters'),
+  label: z.string().trim().max(30, 'validation.labelMax'),
+  fullName: z.string().trim().min(2, 'validation.fullNameMin'),
   phone: z
     .string()
     .trim()
-    .min(1, 'Phone is required')
-    .regex(/^\+?[\d\s()-]{9,20}$/, 'Use a format like +995 555 12 34 56'),
-  city: z.string().trim().min(2, 'City must be at least 2 characters'),
-  address: z.string().trim().min(5, 'Address must be at least 5 characters'),
+    .min(1, 'validation.phoneRequired')
+    .regex(/^\+?[\d\s()-]{9,20}$/, 'validation.phoneFormat'),
+  city: z.string().trim().min(2, 'validation.cityMin'),
+  address: z.string().trim().min(5, 'validation.addressMin'),
   isDefault: z.boolean(),
 });

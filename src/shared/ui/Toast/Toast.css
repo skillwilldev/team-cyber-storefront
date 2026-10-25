@@ -20,8 +20,8 @@
   width: 100%;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-normal);
@@ -49,7 +49,7 @@
 }
 
 .toast__close:focus-visible {
-  outline-color: #fff;
+  outline-color: var(--t-on-fg);
 }
 
 @keyframes toast-in {

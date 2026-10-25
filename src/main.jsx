@@ -7,6 +7,7 @@ import { AuthProvider } from '@features/auth';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
 import { ToastProvider } from '@shared/ui';
+import '@/lib/i18n'; // initialises i18next (react-i18next picks it up through initReactI18next)
 import { initTheme } from '@/lib/theme';
 import App from './App';
 import './styles/global.css';
@@ -16,6 +17,7 @@ initTheme();
 /**
  * Provider order:
  *   QueryClientProvider — server state (catalog): cache, loading/error states, refetching
+ *   i18next             — no provider: `import '@/lib/i18n'` initialises it once, useTranslation() from react-i18next reads it (FE-008): ka/en, saved in localStorage
  *   ToastProvider       — short messages ("Added to cart")
  *   AuthProvider        — client state: who is signed in (token + user)
  *   ShopProvider        — client state: wishlist of the signed-in user (needs AuthProvider)

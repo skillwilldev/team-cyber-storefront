@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAddCartItem } from '@api/cartQueries';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { useToast } from '@shared/ui';
+import { useTranslation } from 'react-i18next';
 import { getCartErrorMessage } from '../lib/cartErrors';
 
 /**
@@ -20,6 +21,7 @@ export function useAddToCart() {
   const navigate = useNavigate();
   const toast = useToast();
   const add = useAddCartItem();
+  const { t } = useTranslation();
 
   const goToLogin = (slug) => navigate('/login', { state: { from: { pathname: `/product/${slug}` } } });
 
@@ -33,10 +35,10 @@ export function useAddToCart() {
     add.mutate(
       { productId: product.id, qty },
       {
-        onSuccess: () => toast.success('Added to cart'),
+        onSuccess: () => toast.success(t('cart.addedToCart')),
         onError: (error) => {
           if (error.status === 401) goToLogin(product.slug);
-          else toast.error(getCartErrorMessage(error));
+          else toast.error(getCartErrorMessage(error, t));
         },
       },
     );

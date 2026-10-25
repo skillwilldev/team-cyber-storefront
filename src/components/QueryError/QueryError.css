@@ -9,15 +9,15 @@
 }
 .query-error p {
   margin-top: 8px;
-  color: #656565;
+  color: var(--t-text-soft);
 }
 .query-error button {
   margin-top: 24px;
   height: 48px;
   padding: 0 32px;
   border-radius: 8px;
-  background: #000;
-  color: #fff;
+  background: var(--c-black);
+  color: var(--t-on-fg);
   font-size: 16px;
   font-weight: 500;
 }

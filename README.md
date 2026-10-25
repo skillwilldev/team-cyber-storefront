@@ -2,7 +2,7 @@
 
 A responsive online electronics store front end built with **React 19**, **React Router 7**, **TanStack Query 5**, **React Hook Form + Zod** and **Vite 8** (with the React Compiler).
 
-It talks to a ready-made REST API and covers the full shopping flow: a data-driven catalog with filters, sorting, search and pagination; product pages; registration, login and password reset; a profile editor; a **server-side shopping cart**; **delivery addresses**; a **3-step checkout** with a simulated card payment and an e-mail code; and the **orders history**.
+It talks to a ready-made REST API and covers the full shopping flow: a data-driven catalog with filters, sorting, search and pagination; product pages; registration, login and password reset; a profile editor; a **server-side shopping cart**; **delivery addresses**; a **3-step checkout** with a simulated card payment and an e-mail code; and the **orders history**. The whole interface is available in **Georgian and English** and in a **light, dark or system** color theme.
 
 > 📐 Want to understand how everything fits together? Read **[ARCHITECTURE.md](./ARCHITECTURE.md)** — folder structure, data flow, module and function reference, API reference and design decisions.
 
@@ -71,8 +71,12 @@ It talks to a ready-made REST API and covers the full shopping flow: a data-driv
 - Header badge always in sync with the cart page (one shared cache entry)
 - Stock-problem detection that blocks checkout until fixed
 
-**Appearance**
-- Light / dark theme: a switch at the right end of the header (and in the mobile menu); the choice is saved in `localStorage`, follows the OS setting until you choose, and is shared between tabs
+**Appearance and language**
+- Light / dark / **system** theme: one button at the right end of the header (and in the mobile menu) cycles the three modes; the choice is saved in `localStorage`, `system` follows the OS setting live, and the choice is shared between tabs
+- No flash of the wrong theme on reload: a tiny inline script in `index.html` applies the theme before the first paint (ADR 0006)
+- Georgian (default) and English: a KA / ENG switch in the header; the language changes without a page reload, is saved in `localStorage` and sets `<html lang>`
+- Prices, dates and ratings are formatted with `Intl` for the current language (for example `1510 ₾` and `1234,56 ₾` in Georgian, `₾1,510` and `₾1,234.56` in English — the exact separators are decided by the browser's `Intl`)
+- The API is single-language, so category names (`nameEn`) and filter labels are translated, while product specs values stay as the API sends them (ADR 0008)
 
 **Quality**
 - Loading skeletons, error states with "Try again", empty states
@@ -93,7 +97,8 @@ It talks to a ready-made REST API and covers the full shopping flow: a data-driv
 | Build tool | Vite 8 |
 | Optimisation | React Compiler (`babel-plugin-react-compiler`) |
 | Linting | ESLint 10 (flat config), `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` |
-| Styling | Plain CSS files per component (BEM-style class names); light / dark theme through the `data-theme` attribute and CSS variables |
+| Styling | Plain CSS files per component (BEM-style class names); light / dark / system theme through the `data-theme` attribute and CSS variables (tokens) |
+| i18n | `i18next` + `react-i18next` (Georgian / English, two JSON dictionaries), `Intl` for numbers, prices and dates |
 | Font | Inter (Google Fonts) |
 
 ---
@@ -195,10 +200,11 @@ src/
 │  ├─ checkout/      CheckoutLayout, Address / Shipping / Payment steps, ConfirmPage, OrderPage, OrdersPage, card helpers
 │  └─ shop/          wishlist (localStorage)
 ├─ pages/            CatalogPage, FiltersPage, ProductPage, StubPage
-├─ components/       Header, Footer, Layout, ProductCard, FilterPanel, PriceRange, Pagination, …
-├─ lib/              pure helpers: URL ⇄ API mapping, price formatting, specs, filter labels; `theme.js` (color-theme store)
+├─ components/       Header, Footer, Layout, ProductCard, FilterPanel, PriceRange, Pagination, ThemeToggle, LanguageSwitcher, …
+├─ lib/              pure helpers: URL ⇄ API mapping, specs, filter labels; `i18n/` (i18next setup, `Intl` formatters); `theme.js` (color-theme store)
+├─ locales/          ka.json, en.json — all UI texts (same keys in both files)
 ├─ hooks/            useCatalogParams, useMediaQuery, useTheme
-└─ styles/           CSS variables, reset, global styles, cyber-form.css (checkout / address inputs), theme.css (dark theme)
+└─ styles/           CSS variables, reset, global styles, cyber-form.css (checkout / address inputs), theme.css (light and dark theme tokens)
 ```
 
 Conventions: every component or page has **its own folder with its own CSS file**; feature folders expose a public API through an `index.js` barrel; path aliases `@`, `@api`, `@shared`, `@features` point to `src/`, `src/api/`, `src/shared/` and `src/features/`; every private cache key (cart, addresses, checkout, orders) is registered in `PRIVATE_QUERY_KEYS` and wiped on login / logout.
@@ -219,11 +225,12 @@ State is split by where it comes from, so each kind has exactly one home:
 | Checkout progress (chosen address, pending order) | **The URL** (`?address=<id>`, `/checkout/confirm/:orderId`) |
 | Card number, holder, expiry, CVC | **Only the payment form** (never stored) |
 | Wishlist | `ShopContext` + `localStorage` (the API has no wishlist yet) |
-| Color theme (light / dark) | **`data-theme` on `<html>`** + `localStorage` (key `theme`) |
+| Color theme (light / dark / system) | **`data-theme` on `<html>`** + `localStorage` (key `theme`) |
+| Language (ka / en) | **i18next** (`useTranslation()`) + `localStorage` (key `lang`) + `<html lang>` |
 
 ### Reading the code in a good order
 
-1. `main.jsx` — the provider stack; `QueryClientProvider` gives the app one shared cache. `initTheme()` applies the saved color theme before the first render.
+1. `main.jsx` — the provider stack; `QueryClientProvider` gives the app one shared cache. `import '@/lib/i18n'` initialises i18next, and `initTheme()` applies the saved color theme before the first render.
 2. `api/queryClient.js` — cache defaults (`staleTime`, `retry`; no retries on 4xx).
 3. `api/catalogApi.js` — plain request functions that know nothing about React.
 4. `api/queryKeys.js` + `api/catalogQueries.js` — a **query key** is the address of data in the cache. Change any value in the key and you get a new request or an instant cache hit.
@@ -292,8 +299,8 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | --- | --- |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Folder structure, data flow, module and API reference |
 | [`docs/index.md`](./docs/index.md) | Index of the documentation |
-| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md), [0005 checkout state in the URL](./docs/adr/0005-checkout-state-in-url.md), [0006 color theme](./docs/adr/0006-color-theme.md) |
-| [`journal/`](./journal) | Weekly development journal: [week 1](./journal/week-1.md), [week 2](./journal/week-2.md) (draft) |
+| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md), [0005 checkout state in the URL](./docs/adr/0005-checkout-state-in-url.md), [0006 color theme](./docs/adr/0006-color-theme.md), [0007 i18n strategy](./docs/adr/0007-i18n-strategy.md), [0008 react-i18next](./docs/adr/0008-react-i18next.md) |
+| [`journal/`](./journal) | Weekly development journal: [week 1](./journal/week-1.md), [week 2](./journal/week-2.md), [week 3](./journal/week-3.md) |
 
 ---
 
@@ -309,13 +316,14 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | Addresses (several, default, edit) | ✅ done |
 | Checkout (3 steps, code, order page) | ✅ done (FE-006); the payment is simulated by the API |
 | Orders history (`/orders`) | ✅ done |
-| Dark theme (header switch, saved in `localStorage`) | ✅ done |
+| Color theme: light / dark / system, no flash on reload (FE-009, bonus) | ✅ done |
+| Georgian + English interface (FE-008, bonus) | ✅ done; the API is single-language, so spec values stay in Georgian (ADR 0008) |
 | Wishlist page | 🚧 placeholder (data is stored locally; no page and no API yet) |
-| Code splitting | 🚧 one JS chunk of ≈ 567 kB (≈ 171 kB gzip) |
+| Code splitting | 🚧 one JS chunk of ≈ 682 kB (≈ 207 kB gzip) |
 | About / Contact / Blog | 🚧 placeholders |
 | Product reviews | 🚧 only rating and count (no API endpoint yet) |
 | Automated tests | ❌ not yet |
-| `npm run lint` | ⚠️ 2 errors (`react-hooks/refs` in `PaymentStep` and `ConfirmPage`); the build passes — see ARCHITECTURE.md → Known limitations |
+| `npm run lint` | ✅ clean (checked on 23.10.2026) |
 
 A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md → Known limitations](./ARCHITECTURE.md#24-known-limitations-and-technical-debt)**.
 
@@ -335,13 +343,16 @@ A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md �
 | Where do I get the 6-digit payment code? | The learning API returns it as `devCode` in the response of `POST /orders` — open DevTools → Network and type it by hand (the app deliberately does not fill it in). |
 | `/checkout/shipping` or `/checkout/payment` sends me back to the address step | The address id is kept in the URL (`?address=<id>`). Without it (or with a deleted address) the step returns to step 1. |
 | `/checkout` sends me to the cart | The cart is empty — there is nothing to buy. |
-| The theme resets after a refresh, or the page flashes white in dark mode | The choice is saved in `localStorage` (key `theme`); if the browser blocks storage (some private modes) it lasts only for the session. A very short white flash on reload in dark mode is a known trade-off (ADR 0006). |
+| The theme or the language resets after a refresh | The choices are saved in `localStorage` (keys `theme`, `lang`); if the browser blocks storage (some private modes) they last only for the session. The page should not flash white in dark mode: the inline script in `index.html` applies the theme before the first paint (ADR 0006). |
+| Part of a product page is Georgian in English mode | The API has one language: spec values, descriptions and brand names come as they are. Spec names, category names and filters are translated (ADR 0008). |
 
 ---
 
 ## Contributing and code style
 
-- Run `npm run lint` before committing; the project uses ESLint's flat config with React Hooks rules. Two `react-hooks/refs` errors in `PaymentStep` and `ConfirmPage` are known (see ARCHITECTURE.md → Known limitations); do not add new ones.
+- Run `npm run lint` before committing; the project uses ESLint's flat config with React Hooks rules and is currently clean — keep it that way.
+- **No text in the code:** every visible string (labels, errors, `aria-label`, `alt`, `title`) comes from `src/locales/*.json` through `t('section.key')`; add the key to **both** `ka.json` and `en.json`. Format prices and dates only with the helpers from `src/lib/i18n`.
+- **No hard-coded colors** for things that change with the theme: use the tokens (`var(--c-*)`, `var(--color-*)`, `var(--t-*)`) and check the page in both themes.
 - Keep **one component per folder** with its own `.css` file and BEM-style class names.
 - Put pure logic (no React) into `src/lib/` or a feature's `lib/` folder so it stays easy to test.
 - Keep request functions separate from hooks (`xxxApi.js` vs `xxxQueries.js`) and add new cache keys to `src/api/queryKeys.js`.

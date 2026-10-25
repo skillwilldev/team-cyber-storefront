@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ChevronIcon } from '../icons/icons';
 import './Pagination.css';
 
@@ -10,14 +11,16 @@ function getPages(page, total) {
 }
 
 export default function Pagination({ page, total, onChange }) {
+  const { t } = useTranslation();
+
   if (total <= 1) return null;
 
   return (
-    <nav className="pagination" aria-label="Pagination">
+    <nav className="pagination" aria-label={t('a11y.pagination')}>
       <button
         type="button"
         className="pagination__arrow"
-        aria-label="Previous page"
+        aria-label={t('a11y.previousPage')}
         disabled={page === 1}
         onClick={() => onChange(page - 1)}
       >
@@ -35,7 +38,7 @@ export default function Pagination({ page, total, onChange }) {
             type="button"
             className="pagination__btn"
             aria-current={item === page ? 'page' : undefined}
-            aria-label={`Page ${item}`}
+            aria-label={t('a11y.page', { n: item })}
             onClick={() => onChange(item)}
           >
             {item}
@@ -46,7 +49,7 @@ export default function Pagination({ page, total, onChange }) {
       <button
         type="button"
         className="pagination__arrow"
-        aria-label="Next page"
+        aria-label={t('a11y.nextPage')}
         disabled={page === total}
         onClick={() => onChange(page + 1)}
       >

@@ -33,7 +33,7 @@
 /* --- Primary variant --- */
 .button--primary {
   background-color: var(--color-primary);
-  color: #FFFFFF;
+  color: var(--t-on-fg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -48,7 +48,7 @@
 }
 
 .button--primary:disabled {
-  background-color: #A5B4FC;
+  background-color: var(--t-disabled-accent);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -62,7 +62,7 @@
 }
 
 .button--secondary:hover:not(:disabled) {
-  background-color: #F9FAFB;
+  background-color: var(--t-hover-soft);
   border-color: var(--color-border-hover);
 }
 

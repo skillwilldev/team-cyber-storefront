@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './PriceRange.css';
 
 const format = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -43,6 +44,7 @@ function PriceInput({ id, label, value, align, onCommit }) {
  * delay = 0 → call onChange immediately (mobile filters screen: nothing is fetched until "Apply").
  */
 export default function PriceRange({ bounds, min, max, onChange, delay = 400 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState({ min, max });
   const [synced, setSynced] = useState({ min, max });
   const timer = useRef(null);
@@ -70,7 +72,7 @@ export default function PriceRange({ bounds, min, max, onChange, delay = 400 }) 
       <div className="price-range__inputs">
         <PriceInput
           id="price-from"
-          label="From"
+          label={t('filter.priceFrom')}
           value={draft.min}
           align="left"
           onCommit={(v) => apply(clamp(v, bounds.min, draft.max), draft.max, true)}
@@ -78,7 +80,7 @@ export default function PriceRange({ bounds, min, max, onChange, delay = 400 }) 
         <span className="price-range__dash" aria-hidden="true" />
         <PriceInput
           id="price-to"
-          label="To"
+          label={t('filter.priceTo')}
           value={draft.max}
           align="right"
           onCommit={(v) => apply(draft.min, clamp(v, draft.min, bounds.max), true)}
@@ -95,7 +97,7 @@ export default function PriceRange({ bounds, min, max, onChange, delay = 400 }) 
           max={bounds.max}
           step={1}
           value={draft.min}
-          aria-label="Minimum price"
+          aria-label={t('a11y.minPrice')}
           onChange={(e) => apply(Math.min(Number(e.target.value), draft.max), draft.max)}
         />
         <input
@@ -104,7 +106,7 @@ export default function PriceRange({ bounds, min, max, onChange, delay = 400 }) 
           max={bounds.max}
           step={1}
           value={draft.max}
-          aria-label="Maximum price"
+          aria-label={t('a11y.maxPrice')}
           onChange={(e) => apply(draft.min, Math.max(Number(e.target.value), draft.min))}
         />
       </div>

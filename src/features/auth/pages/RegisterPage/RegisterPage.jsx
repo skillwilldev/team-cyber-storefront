@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { registerSchema } from '@shared/lib/validators';
 import { apiRequest } from '@shared/api/apiClient';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { Button, Input, PasswordInput, FormField, Alert, IconMail, IconUser } from '@shared/ui';
 import '../LoginPage/LoginPage.css';
 import './RegisterPage.css';
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [bannerError, setBannerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,13 +61,13 @@ export default function RegisterPage() {
       navigate(from, { replace: true });
     } catch (err) {
       if (err.code === 'EMAIL_TAKEN' || err.status === 409) {
-        setError('email', { message: 'This email is already registered' });
+        setError('email', { message: t('auth.emailTaken') });
       } else if (err.code === 'VALIDATION_ERROR' && err.errors) {
         Object.entries(err.errors).forEach(([field, message]) => {
           setError(field, { message });
         });
       } else {
-        setBannerError(err.message || 'Registration failed. Please try again.');
+        setBannerError(err.message || t('auth.registrationFailed'));
       }
     } finally {
       setIsSubmitting(false);
@@ -75,17 +77,17 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-page__header">
-        <h1 className="auth-page__title">Create an account</h1>
-        <p className="auth-page__subtitle">Join us to get started</p>
+        <h1 className="auth-page__title">{t('auth.createAccountTitle')}</h1>
+        <p className="auth-page__subtitle">{t('auth.createAccountSubtitle')}</p>
       </div>
 
       {bannerError && <Alert type="error" message={bannerError} />}
 
       <form onSubmit={handleSubmit(onSubmit)} className="auth-page__form" noValidate>
-        <FormField label="Full Name" error={errors.name?.message} htmlFor="reg-name" required>
+        <FormField label={t('auth.fullName')} error={errors.name?.message} htmlFor="reg-name" required>
           <Input
             id="reg-name"
-            placeholder="Your full name"
+            placeholder={t('auth.yourFullName')}
             error={errors.name?.message}
             disabled={isSubmitting}
             icon={IconUser}
@@ -93,11 +95,11 @@ export default function RegisterPage() {
           />
         </FormField>
 
-        <FormField label="Email" error={errors.email?.message} htmlFor="reg-email" required>
+        <FormField label={t('auth.email')} error={errors.email?.message} htmlFor="reg-email" required>
           <Input
             id="reg-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
             disabled={isSubmitting}
             icon={IconMail}
@@ -105,20 +107,20 @@ export default function RegisterPage() {
           />
         </FormField>
 
-        <FormField label="Password" error={errors.password?.message} htmlFor="reg-password" required>
+        <FormField label={t('auth.password')} error={errors.password?.message} htmlFor="reg-password" required>
           <PasswordInput
             id="reg-password"
-            placeholder="Min 8 characters"
+            placeholder={t('auth.minChars')}
             error={errors.password?.message}
             disabled={isSubmitting}
             {...registerField('password')}
           />
         </FormField>
 
-        <FormField label="Confirm Password" error={errors.confirmPassword?.message} htmlFor="reg-confirm" required>
+        <FormField label={t('auth.confirmPassword')} error={errors.confirmPassword?.message} htmlFor="reg-confirm" required>
           <PasswordInput
             id="reg-confirm"
-            placeholder="Repeat your password"
+            placeholder={t('auth.repeatPassword')}
             error={errors.confirmPassword?.message}
             disabled={isSubmitting}
             {...registerField('confirmPassword')}
@@ -126,14 +128,14 @@ export default function RegisterPage() {
         </FormField>
 
         <Button type="submit" isLoading={isSubmitting}>
-          Create account
+          {t('auth.createAccount')}
         </Button>
       </form>
 
       <p className="auth-page__footer">
-        Already have an account?{' '}
+        {t('auth.haveAccount')}{' '}
         <Link to="/login" state={location.state} className="auth-page__link">
-          Sign in
+          {t('auth.signIn')}
         </Link>
       </p>
     </div>

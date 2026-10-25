@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Input from '../Input/Input';
 import { IconLock, IconEye, IconEyeOff } from '../Icons/Icons';
 import './PasswordInput.css';
@@ -22,6 +23,7 @@ function PasswordInput({
   ref, // prop
   ...rest
 }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -39,7 +41,7 @@ function PasswordInput({
       <button
         type="button"
         className="password-input__toggle"
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={visible ? t('a11y.hidePassword') : t('a11y.showPassword')}
         onClick={() => setVisible((prev) => !prev)}
         tabIndex={0}
       >

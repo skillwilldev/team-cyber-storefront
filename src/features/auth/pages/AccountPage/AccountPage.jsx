@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '@shared/api/apiClient';
 import { profileSchema } from '@shared/lib/validators';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Button,
@@ -36,6 +37,7 @@ export default function AccountPage() {
   'use no memo';
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [banner, setBanner] = useState(null); // { type: 'success' | 'error', message }
 
   const {
@@ -59,7 +61,7 @@ export default function AccountPage() {
 
     const body = buildPatch({ dirtyFields, values, initial: user });
     if (!body) {
-      setBanner({ type: 'error', message: 'There is nothing to change.' });
+      setBanner({ type: 'error', message: t('auth.nothingToChange') });
       return;
     }
 
@@ -68,18 +70,18 @@ export default function AccountPage() {
 
       setUser(data.user); // one source of truth → Header and UserMenu see it
       reset(toFormValues(data.user)); // new defaults: form is clean again, password fields are emptied
-      setBanner({ type: 'success', message: 'Changes saved.' });
+      setBanner({ type: 'success', message: t('auth.changesSaved') });
     } catch (err) {
       if (err.code === 'INVALID_CURRENT_PASSWORD') {
         // 400, not 401 — the session is fine, so the user stays on the page
-        setError('currentPassword', { type: 'server', message: 'Password is incorrect' }, { shouldFocus: true });
+        setError('currentPassword', { type: 'server', message: t('auth.passwordIncorrect') }, { shouldFocus: true });
       } else if (err.code === 'EMAIL_TAKEN' || err.status === 409) {
-        setError('email', { type: 'server', message: 'This email is already registered' }, { shouldFocus: true });
+        setError('email', { type: 'server', message: t('auth.emailTaken') }, { shouldFocus: true });
       } else if (err.code === 'VALIDATION_ERROR' && err.errors) {
         const orphans = applyServerErrors(err.errors, setError);
-        if (orphans.length) setBanner({ type: 'error', message: 'There is nothing to change.' });
+        if (orphans.length) setBanner({ type: 'error', message: t('auth.nothingToChange') });
       } else if (err.code !== 'TOKEN_EXPIRED') {
-        setBanner({ type: 'error', message: err.message || 'Could not save changes. Please try again.' });
+        setBanner({ type: 'error', message: err.message || t('auth.couldNotSave') });
       }
     }
   };
@@ -93,8 +95,8 @@ export default function AccountPage() {
     <div className="account">
       <div className="account__card">
         <header className="account__header">
-          <h1 className="account__title">My profile</h1>
-          <p className="account__subtitle">Update your details. Enter your current password to confirm any change.</p>
+          <h1 className="account__title">{t('auth.myProfile')}</h1>
+          <p className="account__subtitle">{t('auth.profileSubtitle')}</p>
         </header>
 
         {banner && <Alert type={banner.type} message={banner.message} />}
@@ -107,9 +109,9 @@ export default function AccountPage() {
           noValidate
         >
           <section className="account__section" aria-labelledby="acc-personal">
-            <h2 id="acc-personal" className="account__section-title">Personal details</h2>
+            <h2 id="acc-personal" className="account__section-title">{t('auth.personalDetails')}</h2>
 
-            <FormField label="Full name" error={errors.name?.message} htmlFor="acc-name" required>
+            <FormField label={t('auth.fullName')} error={errors.name?.message} htmlFor="acc-name" required>
               <Input
                 id="acc-name"
                 autoComplete="name"
@@ -119,7 +121,7 @@ export default function AccountPage() {
               />
             </FormField>
 
-            <FormField label="Email" error={errors.email?.message} htmlFor="acc-email" required>
+            <FormField label={t('auth.email')} error={errors.email?.message} htmlFor="acc-email" required>
               <Input
                 id="acc-email"
                 type="email"
@@ -132,29 +134,29 @@ export default function AccountPage() {
           </section>
 
           <section className="account__section" aria-labelledby="acc-security">
-            <h2 id="acc-security" className="account__section-title">Security</h2>
-            <p className="account__hint">Leave the new password empty if you do not want to change it.</p>
+            <h2 id="acc-security" className="account__section-title">{t('auth.security')}</h2>
+            <p className="account__hint">{t('auth.passwordHint')}</p>
 
             <div className="account__row">
-              <FormField label="New password" error={errors.newPassword?.message} htmlFor="acc-new-password">
+              <FormField label={t('auth.newPassword')} error={errors.newPassword?.message} htmlFor="acc-new-password">
                 <PasswordInput
                   id="acc-new-password"
                   autoComplete="new-password"
-                  placeholder="Min 8 characters"
+                  placeholder={t('auth.minChars')}
                   error={errors.newPassword?.message}
                   {...register('newPassword')}
                 />
               </FormField>
 
               <FormField
-                label="Repeat new password"
+                label={t('auth.repeatNewPassword')}
                 error={errors.confirmNewPassword?.message}
                 htmlFor="acc-confirm-password"
               >
                 <PasswordInput
                   id="acc-confirm-password"
                   autoComplete="new-password"
-                  placeholder="Repeat new password"
+                  placeholder={t('auth.repeatNewPassword')}
                   error={errors.confirmNewPassword?.message}
                   {...register('confirmNewPassword')}
                 />
@@ -162,7 +164,7 @@ export default function AccountPage() {
             </div>
 
             <FormField
-              label="Current password"
+              label={t('auth.currentPassword')}
               error={errors.currentPassword?.message}
               htmlFor="acc-current-password"
               required
@@ -178,11 +180,11 @@ export default function AccountPage() {
 
           <div className="account__actions">
             <Button type="submit" isLoading={isSubmitting} disabled={!canSave}>
-              Save changes
+              {t('auth.saveChanges')}
             </Button>
             <Button variant="secondary" type="button" onClick={handleLogout} disabled={isSubmitting}>
               <IconLogOut size={16} />
-              Sign out
+              {t('auth.signOut')}
             </Button>
           </div>
         </form>

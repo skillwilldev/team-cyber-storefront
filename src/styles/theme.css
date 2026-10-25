@@ -1,14 +1,61 @@
 /* ============================================
    THEME — light (default) + dark.
    The theme is the `data-theme` attribute on <html> (set by index.html before the first paint,
-   changed by <ThemeToggle> / lib/theme.js). Component stylesheets are NOT edited:
-   dark mode re-defines the shared tokens and overrides the few hard-coded colors below.
+   changed by <ThemeToggle> / lib/theme.js).
+
+   Components use ONLY tokens (var(--…)) for theme-dependent colors; dark mode just gives the same
+   tokens other values. Light values are defined in `:root` below (plus styles/vars.css and
+   styles/auth-tokens.css), dark values in `:root[data-theme='dark']`.
+   The short "dark-only additions" list at the end of the dark block is for things the light theme
+   does not have at all (white tile under product photos, an extra ring, a footer border).
    ============================================ */
 
 :root {
   color-scheme: light;
   --t-bg: #fff; /* page background */
   --t-on-fg: #fff; /* text/icon on top of a "foreground" (black) fill */
+
+  /* theme tokens: LIGHT values (what the components used to hard-code); dark values are in the block below */
+  --g-skeleton: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+  --t-disabled: #c4c4c4;
+  --t-disabled-text: #fff;
+  --t-disabled-text-outline: #c4c4c4;
+  --t-disabled-accent: #9CA3AF;
+  --t-hover-soft: #F9FAFB;
+  --t-popover-bg: var(--t-bg);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --t-text-soft: #656565;
+  --t-text-navy: #1d1d3b;
+  --t-text-strong: #4f4f4f;
+  --t-text-body: #333;
+  --ring-swatch: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  --t-rating-bg: #fff8e1;
+  --t-rating-text: #ffa000;
+  --t-star-empty: #d9d9d9;
+  --t-placeholder-bg: #ececec;
+  --t-placeholder-icon: #b3b3b3;
+  --t-skeleton-bg: #e6e6e6;
+  --t-icon-disabled: #c4c4c4;
+  --t-tag-bg: #e4e4e4;
+  --t-icon-hover-bg: #e9e9e9;
+  --t-step-bg: #cfcfcf;
+  --t-step-text: #fff;
+  --c-divider: #e6e6e6;
+  --t-success-bg: #ecfdf5;
+  --t-warning-bg: #fffbeb;
+  --t-warning-text: #b45309;
+  --t-input-bg: #fff;
+  --ring-swatch-thin: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  --t-quick-bg: #f4f4f4;
+  --g-auth-shell: linear-gradient(135deg, #eef2ff 0%, #f1f5f9 50%, #f0fdf4 100%);
+  --t-card-edge: rgba(0, 0, 0, 0.04);
+  --t-banner-text: #92400E;
+  --t-banner-code-bg: #FDE68A;
+  --t-alert-success-text: #065F46;
+  --t-alert-error-text: #991B1B;
+  --c-divider-input: #E5E7EB;
+  --t-thumb-bg: var(--c-surface);
+  --t-img-blend: multiply;
 }
 
 :root[data-theme='dark'] {
@@ -23,7 +70,7 @@
 
   /* shop tokens (styles/vars.css) */
   --c-black: #f2f2f4; /* main text / "black" fills */
-  --c-gray: #7d7d87;
+  --c-gray: #8b8b95; /* AA on the dark surfaces */
   --c-gray-text: #a3a3ad;
   --c-border: #3a3a43;
   --c-border-light: #2d2d35;
@@ -56,8 +103,8 @@
   --color-border-hover: #55555f;
   --color-text: #f2f2f4;
   --color-text-secondary: #b4b4bd;
-  --color-text-muted: #7d7d87;
-  --color-placeholder: #6e6e78;
+  --color-text-muted: #8b8b95;
+  --color-placeholder: #8b8b95; /* 4.7:1 on the dark input */
   --color-disabled-bg: #202026;
   --color-disabled-text: #6e6e78;
 
@@ -67,386 +114,77 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.45);
 
-  /* ---------- base ---------- */
-  body {
-    background: var(--t-bg);
-  }
+  /* theme tokens: DARK values */
+  --g-skeleton: linear-gradient(90deg, #26262c 25%, #31313a 50%, #26262c 75%);
+  --t-disabled-text-outline: var(--t-disabled-text);
+  --t-disabled-accent: var(--t-disabled);
+  --t-hover-soft: #202026;
+  --t-popover-bg: #1a1a1f;
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --t-text-navy: var(--t-text-strong);
+  --t-text-body: var(--t-text-strong);
+  --ring-swatch: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  --t-rating-bg: var(--color-warning-light);
+  --t-rating-text: var(--color-warning);
+  --t-star-empty: #5f5f69;
+  --t-placeholder-bg: #26262c;
+  --t-placeholder-icon: #5d5d67;
+  --t-skeleton-bg: #2a2a31;
+  --t-icon-disabled: #5d5d67;
+  --t-tag-bg: #34343c;
+  --t-icon-hover-bg: #2a2a31;
+  --t-step-bg: #3a3a43;
+  --t-step-text: var(--t-text-soft);
+  --c-divider: var(--c-border-light);
+  --t-success-bg: var(--color-success-light);
+  --t-warning-bg: var(--color-warning-light);
+  --t-warning-text: var(--color-warning);
+  --t-input-bg: var(--color-surface);
+  --ring-swatch-thin: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  --t-quick-bg: #222228;
+  --g-auth-shell: linear-gradient(135deg, #0e0e11 0%, #131318 50%, #0e1411 100%);
+  --t-card-edge: rgba(255, 255, 255, 0.06);
+  --t-banner-text: #fcd34d;
+  --t-banner-code-bg: #4a3a12;
+  --t-alert-success-text: #6ee7b7;
+  --t-alert-error-text: #fca5a5;
+  --c-divider-input: var(--c-border-light);
+  --t-thumb-bg: #fff;
+  --t-img-blend: normal;
 
-  .skeleton {
-    background: linear-gradient(90deg, #26262c 25%, #31313a 50%, #26262c 75%);
-    background-size: 200% 100%;
-  }
-
-  /* ---------- buttons: "black" fills become light, their text becomes dark ---------- */
-  .action-btn {
-    border-color: var(--c-black);
-  }
-  .action-btn--solid {
-    background: var(--c-black);
-    color: var(--t-on-fg);
-  }
-  .action-btn--outline {
-    background: var(--t-bg);
-    color: var(--c-black);
-  }
-  .action-btn:disabled {
-    border-color: var(--t-disabled);
-    background: var(--t-disabled);
-    color: var(--t-disabled-text);
-  }
-  .action-btn--outline:disabled {
-    background: var(--t-bg);
-    color: var(--t-disabled-text);
-  }
-
-  .product-card__btn,
-  .product-card__badge,
-  .query-error button,
-  .filters-page__apply,
-  .cart-summary__btn,
-  .cart-empty a,
-  .btn--dark,
-  .product__badge,
-  .addr-card__tag,
-  .addr-manager__add-icon,
-  .pagination__btn[aria-current='page'],
-  .header__badge,
+  /* ---------- dark-only additions: the component stylesheet has no rule for these (images, shadows, focus rings) ---------- */
   .header__btns .user-menu__avatar {
     background: var(--c-black);
+  }
+  .header__btns .user-menu__avatar,
+  .checkout-steps__item--current .checkout-steps__icon {
     color: var(--t-on-fg);
   }
-
   .product-card__btn:disabled,
   .cart-summary__btn:disabled,
-  .filters-page__apply:disabled {
-    background: var(--t-disabled);
-    color: var(--t-disabled-text);
-  }
-
-  .btn:disabled {
-    background: var(--t-disabled);
-    border-color: var(--t-disabled);
-    color: var(--t-disabled-text);
-  }
-  .btn--outline {
-    border-color: var(--c-black);
-  }
-
-  .button--primary {
-    color: var(--t-on-fg);
-  }
+  .filters-page__apply:disabled,
   .button--primary:disabled {
-    background-color: var(--t-disabled);
     color: var(--t-disabled-text);
   }
-  .button--secondary:hover:not(:disabled) {
-    background-color: #202026;
-  }
-
-  .toast {
-    background: var(--c-black);
-    color: var(--t-on-fg);
-  }
-  .toast__close:focus-visible {
-    outline-color: var(--t-on-fg);
-  }
-
-  /* ---------- header ---------- */
-  .header,
-  .header__menu {
-    background: var(--t-bg);
-  }
-  .header__left .logo,
-  .header__nav ul li,
-  .header__burger {
-    color: var(--c-black);
-  }
-  .header__left .header__search input {
-    background: var(--c-input);
-  }
-  .header__left .header__search input::placeholder,
-  .header__left .header__search label {
-    color: var(--t-text-soft);
-  }
-  /* mobile menu: links / buttons / label (not the theme switch) */
-  .header__menu li a,
-  .header__menu li button:not(.theme-toggle),
-  .header__menu .header__menu-theme span {
-    color: var(--c-black);
-  }
-
-  .user-menu__dropdown {
-    background: #1a1a1f;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  }
-
-  /* ---------- footer (already dark): just separate it from the dark page ---------- */
   .footer {
     border-top: 1px solid var(--c-border-light);
   }
-
-  /* ---------- text that was hard-coded black / grey ---------- */
-  .breadcrumbs li:last-child,
-  .breadcrumbs a:hover,
-  .filter__reset:hover,
-  .product-card__like:hover,
-  .catalog__count b,
-  .catalog__query a,
-  .confirm__lead b,
-  .confirm__link,
-  .order-page__lead b,
-  .order-row__sum b,
-  .order-summary__row--strong,
-  .checkout-step__title,
-  .checkout-step__hint a,
-  .checkout-steps__item--current,
-  .payment__tab--active,
-  .sort-select select,
-  .spec-group__row dt,
-  .addr-card__icon {
-    color: var(--c-black);
-  }
-
-  .cart-summary__subtotal,
-  .order-page__total {
-    color: var(--c-black) !important;
-  }
-
-  .filter__search input::placeholder,
-  .filter__search label,
-  .query-error p,
-  .sort-select,
-  .catalog__count,
-  .catalog__empty p,
-  .catalog__query,
-  .catalog__filters-error,
-  .catalog__range,
-  .filters-page__reset,
-  .stub p,
-  .product-card__rating,
-  .product__desc {
+  .sort-select {
     color: var(--t-text-soft);
   }
-
-  .addr-card__details,
-  .shipping-option__text,
-  .product__quick b,
-  .product__perks b,
-  .spec-group__row dd {
-    color: var(--t-text-strong);
+  .product-card__img img,
+  .product__photo img,
+  .product__thumbs button img,
+  .order-summary__item img,
+  .order-item img {
+    background: #fff;
   }
-
-  /* ---------- fills ---------- */
-  .checkbox__box {
-    background: var(--t-bg);
-    color: var(--t-on-fg);
-  }
-  .checkbox__input:checked + .checkbox__box {
-    background: var(--c-black);
-    border-color: var(--c-black);
-  }
-  .checkbox__input:focus-visible + .checkbox__box {
-    outline-color: var(--c-black);
-  }
-  .checkbox:hover .checkbox__box {
-    border-color: var(--c-black);
-  }
-  .checkbox--radio .checkbox__box::after {
-    background: var(--t-on-fg);
-  }
-  .checkbox__swatch {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  }
-
-  .filter__scroll::-webkit-scrollbar-thumb,
-  .price-range__slider input[type='range']::-webkit-slider-thumb,
-  .price-range__fill {
-    background: var(--c-black);
-  }
-  .price-range__slider input[type='range']::-moz-range-thumb {
-    background: var(--c-black);
-  }
-
-  .stars__empty {
-    color: #3a3a43;
-  }
-
-  .product-image-placeholder {
-    background: #26262c;
-    color: #5d5d67;
-  }
-  .product-card-skeleton .skeleton {
-    background-color: #2a2a31;
-  }
-
-  /* product photos are shot on white: keep them on a light tile (and don't multiply them into the dark) */
   .product-card__img img,
   .product__photo img,
   .product__thumbs button img {
-    background: #fff;
     border-radius: 8px;
-  }
-  .order-summary__item img,
-  .order-row__thumbs img,
-  .order-item img {
-    background: #fff;
-    mix-blend-mode: normal;
-  }
-
-  /* ---------- cart ---------- */
-  .qty-stepper {
-    background: var(--t-bg);
-  }
-  .qty-stepper button:disabled,
-  .cart-line__remove:disabled {
-    color: #5d5d67;
-  }
-  .cart-line__remove:hover:not(:disabled) {
-    background: var(--t-bg);
-  }
-
-  /* ---------- addresses ---------- */
-  .addr-card--selected {
-    border-color: var(--c-black);
-  }
-  .addr-card__radio {
-    border-color: var(--c-black);
-    background: var(--t-bg);
-  }
-  .addr-card__radio:checked {
-    background: radial-gradient(circle, var(--c-black) 0 5px, var(--t-bg) 6px);
-  }
-  .addr-card__radio:focus-visible {
-    outline-color: var(--c-black);
-  }
-  .addr-card__tag--light {
-    background: #34343c;
-    color: var(--c-black);
-  }
-  .addr-card__icon:hover:not(:disabled) {
-    background: #2a2a31;
-  }
-
-  /* ---------- checkout ---------- */
-  .checkout-steps__icon {
-    background: #3a3a43;
-    color: var(--t-text-soft);
-  }
-  .checkout-steps__item--current .checkout-steps__icon {
-    background: var(--c-black);
-    color: var(--t-on-fg);
-  }
-  .order-summary,
-  .order-summary__row--total,
-  .confirm__card,
-  .order-page__aside,
-  .order-row,
-  .product__memory button:disabled {
-    border-color: var(--c-border-light);
-  }
-  .order-page__total {
-    border-top-color: var(--c-border-light);
-  }
-  .payment__tab--active {
-    border-bottom-color: var(--c-black);
-  }
-  .shipping-option input {
-    border-color: var(--c-black);
-    background: var(--t-bg);
-  }
-  .shipping-option input:checked {
-    background: radial-gradient(circle, var(--c-black) 0 5px, var(--t-bg) 6px);
-  }
-  .shipping-option--active {
-    border-color: var(--c-black);
   }
   .card-preview {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  }
-  .order-row__status--paid {
-    background: var(--color-success-light);
-  }
-  .order-row__status--pending_payment {
-    background: var(--color-warning-light);
-    color: var(--color-warning);
-  }
-
-  .cyber-form .input {
-    background: var(--color-surface);
-  }
-  .cyber-form .input:hover:not(:disabled):not(.input--error),
-  .cyber-form .input:focus:not(.input--error) {
-    border-color: var(--c-black);
-  }
-  .cyber-form .input:focus:not(.input--error) {
-    box-shadow: 0 0 0 1px var(--c-black);
-  }
-  .cyber-check input {
-    accent-color: var(--c-black);
-  }
-
-  /* ---------- product page ---------- */
-  .product__colors button {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  }
-  .product__colors button[aria-checked='true'] {
-    box-shadow: 0 0 0 2px var(--t-bg), 0 0 0 3px var(--c-black);
-  }
-  .product__memory button[aria-pressed='true'] {
-    border-color: var(--c-black);
-  }
-  .product__memory button:disabled {
-    color: #5d5d67;
-  }
-  .product__quick li {
-    background: #222228;
-    color: var(--t-text-strong);
-  }
-  .details {
-    background: var(--t-bg);
-  }
-
-  /* ---------- auth / account ---------- */
-  .auth-shell,
-  .account {
-    background: linear-gradient(135deg, #0e0e11 0%, #131318 50%, #0e1411 100%);
-  }
-  .auth-shell__card,
-  .account__card {
-    border-color: rgba(255, 255, 255, 0.06);
-  }
-  .auth-page__dev-banner {
-    color: #fcd34d;
-  }
-  .auth-page__dev-banner code {
-    background-color: #4a3a12;
-  }
-  .alert--success {
-    color: #6ee7b7;
-  }
-  .alert--error {
-    color: #fca5a5;
-  }
-  .alert--warning {
-    color: #fcd34d;
-  }
-  .input:disabled {
-    border-color: var(--c-border-light);
-  }
-}
-
-/* smooth color change, only for the moment of switching (class is set by lib/theme.js) */
-@media (prefers-reduced-motion: no-preference) {
-  html.theme-switching,
-  html.theme-switching *,
-  html.theme-switching *::before,
-  html.theme-switching *::after {
-    transition:
-      background-color 0.25s ease,
-      color 0.25s ease,
-      border-color 0.25s ease,
-      fill 0.25s ease,
-      stroke 0.25s ease,
-      box-shadow 0.25s ease !important;
   }
 }

@@ -6,8 +6,8 @@
   max-width: 100%;
   max-height: 100%;
   border-radius: 8px;
-  background: #ececec;
-  color: #b3b3b3;
+  background: var(--t-placeholder-bg);
+  color: var(--t-placeholder-icon);
 }
 .product-image-placeholder svg {
   width: 40%;

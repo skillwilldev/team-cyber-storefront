@@ -30,7 +30,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px 24px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--c-divider);
   border-radius: 8px;
   transition: background-color 0.15s;
 }
@@ -75,13 +75,13 @@
 }
 
 .order-row__status--paid {
-  background: #ecfdf5;
+  background: var(--t-success-bg);
   color: var(--color-success);
 }
 
 .order-row__status--pending_payment {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--t-warning-bg);
+  color: var(--t-warning-text);
 }
 
 .order-row__body {
@@ -103,8 +103,8 @@
   height: 56px;
   object-fit: contain;
   border-radius: 6px;
-  background: var(--c-surface);
-  mix-blend-mode: multiply;
+  background: var(--t-thumb-bg);
+  mix-blend-mode: var(--t-img-blend);
 }
 
 .order-row__more {
@@ -125,7 +125,7 @@
 }
 
 .order-row__sum b {
-  color: #000;
+  color: var(--c-black);
   font-size: 20px;
   line-height: 28px;
   font-weight: 600;

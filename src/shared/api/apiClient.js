@@ -15,7 +15,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://shop-api-kbe6.onrender.
  */
 export class ApiError extends Error {
   constructor(status, data) {
-    super(data.message || 'Request failed');
+    // no English fallback text here: an empty message makes the UI fall back to a translated t('…') string
+    super(data.message || '');
     this.status = status;
     this.code = data.code || 'UNKNOWN_ERROR';
     this.errors = data.errors || null;
@@ -115,9 +116,10 @@ export async function apiRequest(endpoint, { auth = true, ...options } = {}) {
       !isSessionCheck
     ) {
       removeToken();
-      window.location.href = '/login';
-      // Throw to stop further execution
-      throw new ApiError(401, { message: 'Session expired. Please sign in again.', code: 'TOKEN_EXPIRED' });
+      // Do NOT hard-redirect (window.location.href = '/login') — it reloads the page and loses
+      // state.from, so useAddToCart can never return the user to the product they were viewing.
+      // Instead, throw so the calling hook can navigate('/login', { state: { from } }) itself.
+      throw new ApiError(401, { code: 'TOKEN_EXPIRED' });
     }
 
     throw new ApiError(response.status, data);

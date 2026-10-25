@@ -7,7 +7,15 @@ import { addressSchema } from '@shared/lib/validators';
 import { Alert, FormField, Input, useToast } from '@shared/ui';
 import { useAuth } from '@features/auth/hooks/useAuth';
 import { getGenericMessage } from '@features/checkout/lib/checkoutErrors';
-import { applyServerErrors, buildCreateBody, buildPatch, hasChanges, toFormValues } from '../../lib/addressForm';
+import { useTranslation } from 'react-i18next';
+import {
+  MAX_ADDRESSES,
+  applyServerErrors,
+  buildCreateBody,
+  buildPatch,
+  hasChanges,
+  toFormValues,
+} from '../../lib/addressForm';
 import '@/styles/cyber-form.css';
 import './AddressForm.css';
 
@@ -26,6 +34,7 @@ export default function AddressForm({ address, isFirst = false, onSaved, onCance
   const uid = useId();
   const { user } = useAuth();
   const toast = useToast();
+  const { t } = useTranslation();
   const create = useCreateAddress();
   const update = useUpdateAddress();
   const [banner, setBanner] = useState('');
@@ -59,19 +68,19 @@ export default function AddressForm({ address, isFirst = false, onSaved, onCance
       } else {
         saved = (await create.mutateAsync(buildCreateBody(values))).address;
       }
-      toast.success(isEdit ? 'Address updated' : 'Address added');
+      toast.success(isEdit ? t('addresses.updated') : t('addresses.added'));
       onSaved?.(saved);
     } catch (err) {
       if (err.code === 'VALIDATION_ERROR' && err.errors) {
         const orphans = applyServerErrors(err.errors, setError);
         if (orphans.length) setBanner(orphans.join(' '));
       } else if (err.code === 'ADDRESS_LIMIT_REACHED') {
-        setBanner('You can save up to 10 addresses. Delete one to add a new address.');
+        setBanner(t('addresses.limitError', { max: MAX_ADDRESSES }));
       } else if (err.code === 'ADDRESS_NOT_FOUND') {
-        toast.error('This address no longer exists');
+        toast.error(t('addresses.notFound'));
         onCancel?.();
       } else if (err.code !== 'TOKEN_EXPIRED') {
-        setBanner(getGenericMessage(err));
+        setBanner(getGenericMessage(err, t));
       }
     }
   };
@@ -83,52 +92,52 @@ export default function AddressForm({ address, isFirst = false, onSaved, onCance
       {banner && <Alert type="error" message={banner} />}
 
       <div className="address-form__grid">
-        <FormField label="Full name" error={errors.fullName?.message} htmlFor={id('fullName')} required>
+        <FormField label={t('addresses.fullName')} error={errors.fullName?.message} htmlFor={id('fullName')} required>
           <Input
             id={id('fullName')}
             autoComplete="name"
-            placeholder="Nino Beridze"
+            placeholder={t('addresses.phFullName')}
             error={errors.fullName?.message}
             {...register('fullName')}
           />
         </FormField>
 
-        <FormField label="Phone" error={errors.phone?.message} htmlFor={id('phone')} required>
+        <FormField label={t('addresses.phone')} error={errors.phone?.message} htmlFor={id('phone')} required>
           <Input
             id={id('phone')}
             type="tel"
             autoComplete="tel"
-            placeholder="+995 555 12 34 56"
+            placeholder={t('addresses.phPhone')}
             error={errors.phone?.message}
             {...register('phone')}
           />
         </FormField>
 
-        <FormField label="City" error={errors.city?.message} htmlFor={id('city')} required>
+        <FormField label={t('addresses.city')} error={errors.city?.message} htmlFor={id('city')} required>
           <Input
             id={id('city')}
             autoComplete="address-level2"
-            placeholder="Tbilisi"
+            placeholder={t('addresses.phCity')}
             error={errors.city?.message}
             {...register('city')}
           />
         </FormField>
 
-        <FormField label="Address" error={errors.address?.message} htmlFor={id('address')} required>
+        <FormField label={t('addresses.address')} error={errors.address?.message} htmlFor={id('address')} required>
           <Input
             id={id('address')}
             autoComplete="street-address"
-            placeholder="Rustaveli Ave 12, apt 5"
+            placeholder={t('addresses.phAddress')}
             error={errors.address?.message}
             {...register('address')}
           />
         </FormField>
 
-        <FormField label="Label (optional)" error={errors.label?.message} htmlFor={id('label')}>
+        <FormField label={t('addresses.labelOptional')} error={errors.label?.message} htmlFor={id('label')}>
           <Input
             id={id('label')}
             autoComplete="off"
-            placeholder="Home, Office…"
+            placeholder={t('addresses.phLabel')}
             maxLength={30}
             error={errors.label?.message}
             {...register('label')}
@@ -138,18 +147,18 @@ export default function AddressForm({ address, isFirst = false, onSaved, onCance
         {showDefaultCheckbox && (
           <label className="cyber-check address-form__default">
             <input type="checkbox" {...register('isDefault')} />
-            Use as my default address
+            {t('addresses.useAsDefault')}
           </label>
         )}
       </div>
 
       <div className="address-form__actions">
         <ActionButton type="submit" isLoading={isSubmitting} disabled={isEdit && !hasChanges(dirtyFields)}>
-          {isEdit ? 'Save changes' : 'Save address'}
+          {isEdit ? t('addresses.saveChanges') : t('addresses.saveAddress')}
         </ActionButton>
         {onCancel && (
           <ActionButton variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel')}
           </ActionButton>
         )}
       </div>

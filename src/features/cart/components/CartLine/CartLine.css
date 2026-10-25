@@ -74,6 +74,7 @@
   line-height: 28px;
   font-weight: 600;
   text-align: right;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
@@ -89,11 +90,11 @@
 
 .cart-line__remove:hover:not(:disabled) {
   color: var(--color-error);
-  background: #fff;
+  background: var(--t-bg);
 }
 
 .cart-line__remove:disabled {
-  color: #c4c4c4;
+  color: var(--t-icon-disabled);
 }
 
 .cart-line__warn,
@@ -137,7 +138,8 @@
 
   .cart-line__remove {
     grid-area: remove;
-    align-self: start;
+    /* align-self: start; */
+    width: 100%;
   }
 
   .cart-line__qty {
@@ -147,5 +149,35 @@
   .cart-line__total {
     grid-area: total;
     font-size: 18px;
+  }
+}
+
+/* very narrow phones (≤ 479px): image | info | trash  /  stepper ........ price
+   The stepper (~120px) no longer has to fit next to the price in the narrow right-hand column. */
+@media (max-width: 479px) {
+  .cart-line {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'img info remove'
+      'qty qty total';
+    gap: 15px 10px;
+    padding: 9px;
+  }
+
+  .cart-line__img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .cart-line__qty {
+    justify-self: start;
+  }
+
+  .cart-line__qty .qty-stepper {
+    flex-shrink: 0;
+  }
+
+  .cart-line__total {
+    font-size: 17px;
   }
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LoadingHint from '@/components/LoadingHint/LoadingHint';
 import QueryError from '@/components/QueryError/QueryError';
 import CartLine from '../../components/CartLine/CartLine';
@@ -26,11 +27,12 @@ function CartSkeleton() {
 }
 
 function CartEmpty() {
+  const { t } = useTranslation();
   return (
     <div className="cart-empty">
-      <h2>Your cart is empty</h2>
-      <p>Add something you like and it will show up here.</p>
-      <Link to="/">Back to catalog</Link>
+      <h2>{t('cart.empty')}</h2>
+      <p>{t('cart.emptyHint')}</p>
+      <Link to="/">{t('common.backToCatalog')}</Link>
     </div>
   );
 }
@@ -42,6 +44,7 @@ function CartEmpty() {
  */
 export default function CartPage() {
   const { data: cart, isPending, isError, error, refetch } = useCart({ refetchOnMount: 'always' });
+  const { t } = useTranslation();
 
   if (isPending) return <CartSkeleton />;
   if (isError) return <QueryError message={error.message} onRetry={() => refetch()} />;
@@ -51,10 +54,10 @@ export default function CartPage() {
 
   return (
     <>
-      <title>Cart — Cyber</title>
+      <title>{`${t('cart.title')} — Cyber`}</title>
       <div className="container cart-page">
         <h1 className="cart-page__title">
-          Shopping Cart{totalQty > 0 && <span> ({totalQty})</span>}
+          {t('cart.title')}{totalQty > 0 && <span> ({totalQty})</span>}
         </h1>
 
         {items.length === 0 ? (

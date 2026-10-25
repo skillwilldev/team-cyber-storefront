@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './LoadingHint.css';
 
 /**
@@ -7,6 +8,7 @@ import './LoadingHint.css';
  */
 export default function LoadingHint({ delay = 4000 }) {
   const [visible, setVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const id = setTimeout(() => setVisible(true), delay);
@@ -18,7 +20,7 @@ export default function LoadingHint({ delay = 4000 }) {
 
   return (
     <p className="loading-hint" role="status">
-      The server is waking up — the first request can take up to a minute. Please wait…
+      {t('loadingHint')}
     </p>
   );
 }

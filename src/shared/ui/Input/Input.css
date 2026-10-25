@@ -74,5 +74,5 @@
   background-color: var(--color-disabled-bg);
   color: var(--color-disabled-text);
   cursor: not-allowed;
-  border-color: #E5E7EB;
+  border-color: var(--c-divider-input);
 }

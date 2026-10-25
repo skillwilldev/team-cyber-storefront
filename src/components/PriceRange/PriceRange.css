@@ -54,7 +54,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #000;
+  background: var(--c-black);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -63,7 +63,7 @@
   height: 12px;
   border: none;
   border-radius: 50%;
-  background: #000;
+  background: var(--c-black);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -85,5 +85,5 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: #000;
+  background: var(--c-black);
 }

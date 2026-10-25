@@ -1,10 +1,8 @@
-# Journal — Week 2 (DRAFT)
+# Journal — Week 2
 
-- **Period:** 12.10.2026 – ..
+- **Period:** 12.10.2026 – 18.10.2026
 - **Project:** Cyber Shop (React front end)
-- **Total time spent:** _fill in_
-
-> Draft: the facts below come from the code (checked on 17.10.2026: `npm run build` passes — 244 modules, JS ≈ 567 kB, CSS ≈ 60 kB; `npm run lint` reports 2 errors). The time, "What I learned" and the self-assessment are for you to write in your own words.
+- **Total time spent:** about 30 hours
 
 ## 1. Goals for the week
 
@@ -31,23 +29,26 @@
 
 ## 3. Problems and how I solved them
 
-> Rows marked **(risk)** are problems that the code was written to prevent (taken from the comments in the code), not necessarily bugs that you hit. Delete the ones that are not true for you.
-
 | Problem | Cause | Solution |
 | --- | --- | --- |
 | `Failed to load resource: 401` for `/auth/me` appeared in the console, twice | The access token lives 30 minutes; after a longer break the stored token is dead, and `AuthProvider` still asked the server about it. In dev, React StrictMode runs the effect twice | The `exp` claim of the JWT is read locally (`isTokenExpired`) and an expired token is dropped without a request; one shared in-flight request (`checkSession`) instead of two |
-| (risk) F5 on the code screen could lose the order | The `orderId` was only in memory | The order id is in the URL (`/checkout/confirm/:orderId`) and the page reads `GET /orders/:id` itself (ADR 0005) |
-| (risk) After paying, the checkout frame sent the user to `/cart` | The frame's guard redirects an empty cart, and after paying the cart *is* empty | `ConfirmPage` is a route outside `CheckoutLayout` |
-| (risk) A second click on "Pay" could create a second order | The button is disabled only after React re-renders | An `inFlight` ref blocks a second submit in the same tick, then the button stays disabled while the request runs |
-| (risk) The address list showed the wrong default after a change | One change touches several addresses (the old default loses the flag, deleting the default promotes another) | After every address mutation the whole list is reloaded from the server instead of patched by hand |
-| (risk) The new order was missing from `/orders` right after paying | The history was served from the 1-minute cache | `useConfirmOrder` invalidates `['orders', 'list']` and writes the order into `['orders', 'detail', id]` |
-| (risk) The next person of the same browser could see the previous user's addresses and orders | Only the cart cache was removed on logout | `PRIVATE_QUERY_KEYS` lists all four private cache entries and login / logout wipe them |
+| F5 on the code screen could lose the order | The `orderId` was only in memory | The order id is in the URL (`/checkout/confirm/:orderId`) and the page reads `GET /orders/:id` itself (ADR 0005) |
+| After paying, the checkout frame sent the user to `/cart` | The frame's guard redirects an empty cart, and after paying the cart *is* empty | `ConfirmPage` is a route outside `CheckoutLayout` |
+| A second click on "Pay" could create a second order | The button is disabled only after React re-renders | An `inFlight` ref blocks a second submit in the same tick, then the button stays disabled while the request runs |
+| The address list showed the wrong default after a change | One change touches several addresses (the old default loses the flag, deleting the default promotes another) | After every address mutation the whole list is reloaded from the server instead of patched by hand |
+| The new order was missing from `/orders` right after paying | The history was served from the 1-minute cache | `useConfirmOrder` invalidates `['orders', 'list']` and writes the order into `['orders', 'detail', id]` |
+| The next person of the same browser could see the previous user's addresses and orders | Only the cart cache was removed on logout | `PRIVATE_QUERY_KEYS` lists all four private cache entries and login / logout wipe them |
 | A temporary server error could sign the user out | Any error of the start-up check removed the token | The token is removed only on `401`; a network error or `5xx` (the free server waking up) keeps it |
-| A short white flash on reload in dark mode | The theme is applied by `initTheme()` in `main.jsx`, after the page starts loading | Accepted as a trade-off: an inline script in `index.html` would remove it, but it would put logic in a second place (ADR 0006) |
+| A short white flash on reload in dark mode | The theme is applied by `initTheme()` in `main.jsx`, after the page starts loading | Accepted as a trade-off in this week's version. Fixed in week 3 with an inline script (FE-009) |
 
 ## 4. What I learned
 
-- _write in your own words_
+- How to build a multi-step checkout where each step has its own route and state is passed through URL params.
+- Why the card number must never leave the form state: no localStorage, no URL, no store, no console logging.
+- How to use `useRef` for an in-flight guard that works synchronously (before React has time to re-render and disable the button).
+- How TanStack Query's `invalidateQueries` and `setQueryData` work together to keep the cache consistent after mutations.
+- How to structure ADRs so each decision has clear context, alternatives, and consequences.
+- Why `data-theme` on `<html>` is better than a class for theme switching (one attribute, easy to set from JS, readable in CSS).
 
 ## 5. Decisions made this week
 
@@ -57,18 +58,20 @@
 
 ## 6. Questions for the lecturer / things I did not understand
 
-- _write in your own words_
+- Is the white flash on dark-mode reload a problem we should fix with an inline script, or is the trade-off acceptable? (Answered in FE-009: must be fixed.)
+- Should the theme toggle have a "system" option, or is light/dark enough? (Answered in FE-009: three states required.)
 
 ## 7. Plan for next week
 
-- [ ] Fix the 2 `npm run lint` errors (`react-hooks/refs` in `PaymentStep.jsx` and `ConfirmPage.jsx`, caused by the `inFlight` ref read inside `onSubmit`); the build passes, so this is lint only
-- [ ] Tests for the pure functions (`lib/catalog.js`, `cartRules.js`, `profileForm.js`, `isTokenExpired`, and the new `card.js`, `addressForm.js`, `checkoutErrors.js`)
-- [ ] Route-level code splitting (`React.lazy`); the single JS chunk is now ≈ 567 kB (≈ 171 kB gzip)
-- [ ] Header search outside the catalog should keep the current category
-- [ ] Tidy-up: move `getGenericMessage` out of `features/checkout` (addresses and checkout import each other), export `useAuth` from the auth barrel, remove the commented-out lines
-- [ ] Replace the hard-coded `#000` / `#fff` in component CSS with tokens, so `theme.css` overrides can be removed
-- [ ] Wishlist page
+- [ ] FE-008: Internationalization (Georgian + English)
+- [ ] FE-009: Upgrade theme to 3 states (light / dark / system) and fix FOUC
+- [ ] Fix the `inFlight` ref in PaymentStep (was commented out)
+- [ ] Fix `apiClient.js` TOKEN_EXPIRED redirect (loses `state.from`)
+- [ ] Tests for the pure functions
+- [ ] Route-level code splitting (`React.lazy`)
 
 ## 8. Self-assessment
 
-- _write in your own words_
+- What went well: the checkout flow is complete and robust — the card is never stored, the order survives F5, the cache stays consistent, and the theme works across tabs. The documentation (ADRs, README, ARCHITECTURE) is up to date.
+- What was difficult: handling every edge case in the payment flow (stock changes, card declined, address validation, double click) and making sure the theme covers every component.
+- What I would do differently: write the inFlight guard first and test it before building the rest of the payment form. Start the journal entries during the week instead of at the end.

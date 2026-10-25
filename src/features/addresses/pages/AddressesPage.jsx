@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import AddressManager from '../components/AddressManager/AddressManager';
+import { MAX_ADDRESSES } from '../lib/addressForm';
 import './AddressesPage.css';
 
 /**
@@ -7,13 +9,15 @@ import './AddressesPage.css';
  * At checkout step 1 the user picks one of THESE addresses (same data, same component).
  */
 export default function AddressesPage() {
+  const { t } = useTranslation();
+
   return (
     <>
-      <title>My addresses — Cyber</title>
+      <title>{t('addresses.pageTitle')} — Cyber</title>
       <div className="container addresses-page">
-        <h1 className="addresses-page__title">My addresses</h1>
+        <h1 className="addresses-page__title">{t('addresses.pageTitle')}</h1>
         <p className="addresses-page__lead">
-          Save up to 10 delivery addresses. The default one is preselected when you place an order.
+          {t('addresses.lead', { max: MAX_ADDRESSES })}
         </p>
         <AddressManager />
       </div>
