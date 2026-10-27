@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Footer from '../Footer/Footer';
 import Header from '../Header/Header';
+import { IconLoader } from '@shared/ui';
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -13,7 +14,16 @@ export default function Layout() {
     <>
       <Header />
       <main style={{ flexGrow: 1 }}>
-        <Outlet />
+        {/* lazy pages: the header and footer stay on screen while a page chunk is loading */}
+        <Suspense
+          fallback={
+            <div role="status" aria-live="polite" style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
+              <IconLoader size={32} />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </>

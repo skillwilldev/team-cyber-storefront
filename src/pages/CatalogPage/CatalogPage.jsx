@@ -134,9 +134,9 @@ export default function CatalogPage() {
 
           {data && items.length > 0 && (
             <ul className={`catalog__grid${isPlaceholderData ? ' catalog__grid--stale' : ''}`}>
-              {items.map((product) => (
+              {items.map((product, index) => (
                 <li key={product.id}>
-                  <ProductCard product={product} />
+                  <ProductCard product={product} priority={index < 4} />
                 </li>
               ))}
             </ul>

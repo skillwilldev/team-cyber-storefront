@@ -9,7 +9,7 @@ import { StarIcon } from '../icons/icons';
 import Stars from '../Stars/Stars';
 import './ProductCard.css';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, priority = false }) {
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
   const { t, i18n } = useTranslation();
@@ -34,7 +34,16 @@ export default function ProductCard({ product }) {
 
       <Link to={`/product/${slug}`} className="product-card__link">
         <div className="product-card__img">
-          <ProductImage src={image} alt={title} width={160} height={160} loading="lazy" />
+          {/* priority: the first cards on screen load at once (better LCP); the rest are lazy */}
+          <ProductImage
+            src={image}
+            alt={title}
+            width={160}
+            height={160}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
+            decoding="async"
+          />
         </div>
         {brand && <p className="product-card__brand">{brand}</p>}
         <h3 className="product-card__title">{title}</h3>
