@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { AuthProvider } from '@features/auth';
+import { AuthProvider } from '@features/auth/context/AuthProvider';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
 import { ToastProvider } from '@shared/ui';

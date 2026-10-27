@@ -1,29 +1,33 @@
+import { lazy } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import {
-  AccountPage,
-  AuthLayout,
-  ForgotPasswordPage,
-  LoginPage,
-  ProtectedRoute,
-  RegisterPage,
-} from '@features/auth';
-import { AddressesPage } from '@features/addresses';
-import { CartPage } from '@features/cart';
-import {
-  AddressStep,
-  CheckoutLayout,
-  ConfirmPage,
-  OrderPage,
-  OrdersPage,
-  PaymentStep,
-  ShippingStep,
-} from '@features/checkout';
+import AuthLayout from '@features/auth/components/AuthLayout/AuthLayout';
+import ProtectedRoute from '@features/auth/components/ProtectedRoute/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import CatalogPage from './pages/CatalogPage/CatalogPage';
-import FiltersPage from './pages/FiltersPage/FiltersPage';
-import ProductPage from './pages/ProductPage/ProductPage';
 import StubPage from './pages/StubPage/StubPage';
 import { useTranslation } from 'react-i18next';
+
+/**
+ * Route-level code splitting: only the layout and the catalog (the first screen) are in the
+ * main bundle. Every other page is downloaded on first visit (<Suspense> is in <Layout />).
+ * Pages are imported from their own files, not from the feature barrels (index.js), because a
+ * barrel re-exports every page and would pull them all back into the main bundle.
+ */
+const FiltersPage = lazy(() => import('./pages/FiltersPage/FiltersPage'));
+const ProductPage = lazy(() => import('./pages/ProductPage/ProductPage'));
+const LoginPage = lazy(() => import('@features/auth/pages/LoginPage/LoginPage'));
+const RegisterPage = lazy(() => import('@features/auth/pages/RegisterPage/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@features/auth/pages/ForgotPasswordPage/ForgotPasswordPage'));
+const AccountPage = lazy(() => import('@features/auth/pages/AccountPage/AccountPage'));
+const CartPage = lazy(() => import('@features/cart/pages/CartPage/CartPage'));
+const AddressesPage = lazy(() => import('@features/addresses/pages/AddressesPage'));
+const CheckoutLayout = lazy(() => import('@features/checkout/pages/CheckoutLayout/CheckoutLayout'));
+const AddressStep = lazy(() => import('@features/checkout/pages/AddressStep/AddressStep'));
+const ShippingStep = lazy(() => import('@features/checkout/pages/ShippingStep/ShippingStep'));
+const PaymentStep = lazy(() => import('@features/checkout/pages/PaymentStep/PaymentStep'));
+const ConfirmPage = lazy(() => import('@features/checkout/pages/ConfirmPage/ConfirmPage'));
+const OrderPage = lazy(() => import('@features/checkout/pages/OrderPage/OrderPage'));
+const OrdersPage = lazy(() => import('@features/checkout/pages/OrdersPage/OrdersPage'));
 
 /** Wrapper: reads i18n keys and passes translated text to StubPage. */
 function TranslatedStub({ titleKey, textKey }) {

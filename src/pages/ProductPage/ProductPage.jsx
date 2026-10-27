@@ -137,7 +137,7 @@ function ProductView({ product }) {
               </ul>
             )}
             <div className="product__photo">
-              <ProductImage src={photo} alt={title} />
+              <ProductImage src={photo} alt={title} fetchPriority="high" decoding="async" />
             </div>
           </div>
 
