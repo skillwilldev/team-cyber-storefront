@@ -1,2 +1,23 @@
 User-agent: *
 Allow: /
+
+# private screens (also marked noindex in the page itself)
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /addresses
+Disallow: /orders
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /wishlist
+Disallow: /filters
+
+# duplicates of the catalog: search results, sorting and price filters
+Disallow: /*?*q=
+Disallow: /*?*sort=
+Disallow: /*?*minPrice=
+Disallow: /*?*maxPrice=
+
+# The line "Sitemap: <site>/sitemap.xml" is appended automatically by `npm run build`
+# when VITE_SITE_URL is set (see scripts/generate-sitemap.mjs).

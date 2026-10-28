@@ -1,8 +1,7 @@
-import { StrictMode } from 'react';
+import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from '@features/auth/context/AuthProvider';
 import { ShopProvider } from '@features/shop';
 import { queryClient } from '@api/queryClient';
@@ -13,6 +12,11 @@ import App from './App';
 import './styles/global.css';
 
 initTheme();
+
+// Devtools exist only in `npm run dev`: in the production build this branch is removed together with the whole package
+const ReactQueryDevtools = import.meta.env.DEV
+  ? lazy(() => import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools })))
+  : () => null;
 
 /**
  * Provider order:
@@ -37,7 +41,9 @@ createRoot(document.getElementById('root')).render(
           </ShopProvider>
         </AuthProvider>
       </ToastProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <Suspense fallback={null}>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </Suspense>
     </QueryClientProvider>
   </StrictMode>,
 );

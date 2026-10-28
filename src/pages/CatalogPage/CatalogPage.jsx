@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useCategory, useProducts } from '@api/catalogQueries';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import Pagination from '../../components/Pagination/Pagination';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductCardSkeleton from '../../components/ProductCardSkeleton/ProductCardSkeleton';
 import QueryError from '../../components/QueryError/QueryError';
+import Seo from '../../components/Seo/Seo';
 import SortSelect from '../../components/SortSelect/SortSelect';
 import { useCatalogParams } from '../../hooks/useCatalogParams';
 import { MOBILE_QUERY, useMediaQuery } from '../../hooks/useMediaQuery';
@@ -44,7 +45,11 @@ export default function CatalogPage() {
   const { data, isPending, isError, error, refetch, isPlaceholderData } = productsQ;
 
   const page = params.page;
+  // scroll up when the page number changes — but not on the first render (see Layout: it avoids a forced reflow at startup)
+  const lastPage = useRef(page);
   useEffect(() => {
+    if (lastPage.current === page) return;
+    lastPage.current = page;
     window.scrollTo({ top: 0 });
   }, [page]);
 
@@ -73,9 +78,30 @@ export default function CatalogPage() {
   };
   const resetTo = linkTo({ q: '', sort: DEFAULT_SORT, page: 1, filters: emptyFilters() });
 
+  // SEO: a plain category page (optionally with a page number) is indexed and is its own canonical.
+  // Search results, filtered and re-sorted lists are duplicates of it: canonical → the category, and no indexing.
+  const isPlainView = !params.q && params.sort === DEFAULT_SORT && activeFilters === 0;
+  const canonicalQuery = toSearchParams({
+    ...params,
+    q: '',
+    sort: DEFAULT_SORT,
+    filters: emptyFilters(),
+    page: isPlainView ? page : 1,
+  }).toString();
+  const canonical = canonicalQuery ? `/?${canonicalQuery}` : '/';
+  const pageTitle = page > 1 ? `${categoryName} — ${t('a11y.page', { n: page })} — Cyber` : `${categoryName} — Cyber`;
+
   return (
     <div className="container">
-      <title>{`${categoryName} — Cyber`}</title>
+      <title>{pageTitle}</title>
+      <Seo
+        description={categoryQ.data ? t('seo.catalogDescription', { category: categoryName }) : undefined}
+        ogTitle={pageTitle}
+        canonical={canonical}
+        noindex={!isPlainView}
+      />
+      {/* the one <h1> of the page; the visual design has no heading here, so it is visible to search engines and screen readers only */}
+      <h1 className="sr-only">{categoryName}</h1>
       <Breadcrumbs items={crumbs} />
 
       <div className="catalog">
@@ -136,7 +162,7 @@ export default function CatalogPage() {
             <ul className={`catalog__grid${isPlaceholderData ? ' catalog__grid--stale' : ''}`}>
               {items.map((product, index) => (
                 <li key={product.id}>
-                  <ProductCard product={product} priority={index < 4} />
+                  <ProductCard product={product} priority={index < 2} eager={index < 4} />
                 </li>
               ))}
             </ul>
@@ -158,7 +184,7 @@ export default function CatalogPage() {
               })}
             </p>
           )}
-          <Pagination page={Math.min(page, totalPages)} total={totalPages} onChange={setPage} />
+          <Pagination page={Math.min(page, totalPages)} total={totalPages} onChange={setPage} hrefFor={(n) => linkTo({ page: n })} />
         </section>
       </div>
     </div>
