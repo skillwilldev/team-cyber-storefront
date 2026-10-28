@@ -63,12 +63,12 @@
 
 ## 7. Plan for next week
 
-- [ ] FE-008: Internationalization (Georgian + English)
-- [ ] FE-009: Upgrade theme to 3 states (light / dark / system) and fix FOUC
-- [ ] Fix the `inFlight` ref in PaymentStep (was commented out)
-- [ ] Fix `apiClient.js` TOKEN_EXPIRED redirect (loses `state.from`)
-- [ ] Tests for the pure functions
-- [ ] Route-level code splitting (`React.lazy`)
+- [x] FE-008: Internationalization (Georgian + English) — done in week 3
+- [x] FE-009: Upgrade theme to 3 states (light / dark / system) and fix FOUC — done in week 3
+- [x] Fix the `inFlight` ref in PaymentStep (was commented out) — done in week 3
+- [x] Fix `apiClient.js` TOKEN_EXPIRED redirect (loses `state.from`) — done in week 3
+- [ ] Tests for the pure functions — not done: 0 test files on 28.10.2026
+- [x] Route-level code splitting (`React.lazy`) — done in the last days of the project ([ADR 0009](../docs/adr/0009-performance-and-seo.md))
 
 ## 8. Self-assessment
 

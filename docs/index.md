@@ -1,6 +1,6 @@
 # Documentation index
 
-This folder contains the written documentation of the Cyber Shop front end.
+This folder contains the written documentation of the Cyber Shop front end. Last checked against the code on **28.10.2026** (`npm run build` and `npm run lint` were run the same day; the numbers in the documents come from that run).
 
 ## Where to start
 
@@ -25,10 +25,11 @@ An ADR is a short document about **one** decision: the situation, what was chose
 | [0006](./adr/0006-color-theme.md) | Color theme: light / dark / system, FOUC prevention with inline script, `data-theme` on `<html>` | FE-009 | Accepted (updated 2026-10-23) |
 | [0007](./adr/0007-i18n-strategy.md) | Internationalization: Georgian + English, JSON files, `Intl` for prices, what is and is not translated | FE-008 | Accepted; the React integration is superseded by 0008 |
 | [0008](./adr/0008-react-i18next.md) | i18n: `react-i18next` instead of the home-made Context | FE-008 | Accepted |
+| [0009](./adr/0009-performance-and-seo.md) | Performance and SEO: route-level code splitting, early first-screen requests, image CDN, `Seo` component, canonical / `noindex` rules | — | Accepted |
 
 ### ADR template
 
-Copy this when a new decision has to be recorded (next number: `0009`):
+Copy this when a new decision has to be recorded (next number: `0010`):
 
 ```md
 # ADR 000X: Short title of the decision
@@ -54,7 +55,7 @@ What gets better, what gets worse, what must be remembered later.
 
 - [Week 1](../journal/week-1.md)
 - [Week 2](../journal/week-2.md)
-- [Week 3](../journal/week-3.md) (i18n with react-i18next, 3-state theme without flash, theme tokens, bug fixes from lecturer feedback)
+- [Week 3](../journal/week-3.md) — 19.10 – 28.10.2026 (i18n with react-i18next, 3-state theme without flash, theme tokens, bug fixes from lecturer feedback, performance and SEO, final measurements and the project totals)
 
 ## Related code
 
@@ -70,3 +71,4 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/lib/theme.js`, `src/hooks/useTheme.js`, `src/components/ThemeToggle/`, `src/styles/theme.css`, `index.html` (inline script) | [0006](./adr/0006-color-theme.md) |
 | `src/locales/`, `src/lib/filterLabels.js`, `src/lib/specs.js`, `src/lib/i18n/format.js`, `index.html` (inline script, `lang`) | [0007](./adr/0007-i18n-strategy.md) |
 | `src/lib/i18n/` (`config.js`, `i18n.js`, `index.js`), `src/components/LanguageSwitcher/`, `src/main.jsx` | [0008](./adr/0008-react-i18next.md) |
+| `src/App.jsx` and `src/components/Layout/Layout.jsx` (`React.lazy`, `<Suspense>`), `index.html` (early requests, app shell), `vite.config.js` (inlined CSS, `__SITE_URL__`), `src/lib/image.js`, `src/components/ProductImage/`, `src/components/Seo/`, `src/lib/seo.js`, `public/robots.txt`, `public/_headers` | [0009](./adr/0009-performance-and-seo.md) |

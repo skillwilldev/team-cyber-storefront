@@ -2,7 +2,7 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
-> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme, i18n strategy, and the switch to react-i18next).
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme, i18n strategy, the switch to react-i18next, and performance + SEO).
 
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
@@ -29,7 +29,7 @@ This document explains how the Cyber Shop front end is built: where every piece 
 17. [Styling system](#17-styling-system)
 18. [Error handling strategy](#18-error-handling-strategy)
 19. [Accessibility notes](#19-accessibility-notes)
-20. [Performance notes](#20-performance-notes)
+20. [Performance and SEO notes](#20-performance-and-seo-notes)
 21. [API reference (as used by the front end)](#21-api-reference-as-used-by-the-front-end)
 22. [Dependency graph between modules](#22-dependency-graph-between-modules)
 23. [How to extend the project](#23-how-to-extend-the-project)
@@ -40,7 +40,7 @@ This document explains how the Cyber Shop front end is built: where every piece 
 
 ## 1. Big picture
 
-Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. A signed-in user can keep several **delivery addresses**, pay through a 3-step checkout (address → shipping → card → e-mail code → order page) and see the **history of orders**. The wishlist page and the About / Contact / Blog pages are placeholders.
+Cyber Shop is an online electronics store. A visitor can browse a category, filter, sort and search products, open a product page, register / sign in, add products to a **server-side cart**, and edit their profile. A signed-in user can keep several **delivery addresses**, pay through a 3-step checkout (address → shipping → card → e-mail code → order page) and see the **history of orders**. The wishlist page and the About / Contact / Blog pages are placeholders. The public pages are prepared for search engines and link previews (per-page title, description, canonical address, Open Graph, schema.org data) and for a fast first screen on a slow phone (route-level code splitting, early first-screen requests, resized WebP pictures) — see [section 20](#20-performance-and-seo-notes) and [ADR 0009](./docs/adr/0009-performance-and-seo.md).
 
 ```mermaid
 flowchart LR
@@ -52,6 +52,7 @@ flowchart LR
     LS[(localStorage<br/>accessToken, wishlist, theme, lang)]
   end
   API[(REST API<br/>shop-api on Render)]
+  CDN[(Image CDN<br/>wsrv.nl: resize + WebP)]
 
   UI -->|reads / mutates| RQ
   UI -->|reads| AUTH
@@ -59,6 +60,7 @@ flowchart LR
   AUTH <--> LS
   RQ -->|apiRequest| API
   AUTH -->|apiRequest| API
+  UI -->|product pictures| CDN
 ```
 
 The key architectural idea is a **strict split of state by origin**:
@@ -73,6 +75,7 @@ The key architectural idea is a **strict split of state by origin**:
 | Wishlist | `ShopContext` (+ `localStorage`) | The API has no wishlist endpoints yet |
 | Color theme (light / dark / system) | `data-theme` on `<html>` (+ `localStorage`, key `theme`) | CSS reads the attribute; `system` follows the OS preference live; the choice survives a refresh and is shared between tabs (ADR 0006) |
 | Language (ka / en) | i18next instance (`lib/i18n/`) read through `useTranslation()` (+ `localStorage`, key `lang`; + `<html lang>`) | Every UI string uses `t('key')` from the JSON dictionaries; `Intl` for prices, dates and ratings; no provider and no page reload on change (ADR 0007, ADR 0008) |
+| Page metadata (description, canonical, robots, Open Graph, JSON-LD) | The `<head>` of the document, written by `<Seo />` (`components/Seo`) | Search engines and link previews read `<head>`; the component changes the tags that `index.html` already has and restores them when the page is left (ADR 0009) |
 | Purely visual state (open dropdown, selected photo) | Local `useState` inside the component | Nobody else needs it |
 
 ---
@@ -83,20 +86,24 @@ The key architectural idea is a **strict split of state by origin**:
 | --- | --- | --- |
 | UI | React 19 | Function components and hooks only. `ref` is passed as a normal prop (React 19), see `Input` / `PasswordInput`. |
 | Build | Vite 8 | Dev server and production bundler. |
-| Optimisation | React Compiler (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`) | Automatic memoisation; that is why the code has very few `useMemo` / `useCallback` calls. Four components opt out with the `'use no memo'` directive because they combine React Hook Form with refs: `AccountPage`, `AddressForm`, `PaymentStep`, `ConfirmPage`. |
+| Optimisation | React Compiler (`babel-plugin-react-compiler` via `@rolldown/plugin-babel`) | Automatic memoisation; that is why the code has very few `useMemo` / `useCallback` calls. Three components opt out with the `'use no memo'` directive because they combine React Hook Form with refs: `AccountPage`, `AddressForm`, `ConfirmPage` (checked on 28.10.2026). |
 | Routing | React Router 7 (`react-router-dom`) | Declarative `<Routes>` with a nested layout route. |
 | Server state | TanStack Query 5 (+ Devtools in dev) | Single shared `QueryClient`. |
 | Forms | React Hook Form 7 + `@hookform/resolvers` | Uncontrolled inputs, `register()` spread. |
 | Validation | Zod 3 | All schemas in one file: `src/shared/lib/validators.js`. |
-| Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. Clean (0 errors, 0 warnings) when checked on 23.10.2026. |
+| Linting | ESLint 10 (flat config) + `react-hooks` + `react-refresh` | `npm run lint`. On 28.10.2026: 1 error, 0 warnings — `react-refresh/only-export-components` at `src/main.jsx:17` (the development-only lazy `ReactQueryDevtools` constant); see [section 24](#24-known-limitations-and-technical-debt). |
 | Language | JavaScript (ES modules, JSX) | Types come from `@types/react` for editor hints only. |
-| Fonts | Inter (Google Fonts, loaded in `index.html`) | |
+| Fonts | Inter (Google Fonts, loaded in `index.html` without blocking the first paint: `preload` → `stylesheet`) + **ADG2** (a local Georgian font, `src/assets/fonts/ADG2.woff2`, 29.9 kB, declared in `styles/fonts.css` with a Georgian `unicode-range`, so Latin letters and digits keep using Inter) | |
+| SEO | `components/Seo` + `lib/seo.js`, static tags in `index.html`, `public/robots.txt` | One `<h1>` per page, canonical addresses, `noindex` for private and duplicate screens, Open Graph / Twitter tags, schema.org `Product` and `BreadcrumbList` data on the product page (see [section 20](#20-performance-and-seo-notes), ADR 0009). |
+| Images | Free image CDN `wsrv.nl` (default) through `lib/image.js` | Product pictures are requested resized and as WebP with `srcset`; an automatic fallback to the original URL; switched off with an empty `VITE_IMAGE_PROXY`. |
 | Theming | CSS variables + the `data-theme` attribute | Light and dark values of the same tokens live in `styles/theme.css`; 3 choices: light / dark / system (see [section 17](#17-styling-system), ADR 0006, and the inline FOUC-prevention script in `index.html`). |
-| i18n | `i18next` 26 + `react-i18next` 17 + `Intl` | Georgian (default) and English; two JSON dictionaries with the same 391 keys; `useTranslation()` from `react-i18next`; plurals (`_one` / `_other`) and `{{param}}` interpolation; `Intl` for prices, dates, ratings (see ADR 0007 and ADR 0008). |
+| i18n | `i18next` 26 + `react-i18next` 17 + `Intl` | Georgian (default) and English; two JSON dictionaries with the same 393 keys; `useTranslation()` from `react-i18next`; plurals (`_one` / `_other`) and `{{param}}` interpolation; `Intl` for prices, dates, ratings (see ADR 0007 and ADR 0008). |
 
 ### Build configuration (`vite.config.js`)
 
-* Plugins: `@vitejs/plugin-react` and `@rolldown/plugin-babel` with `reactCompilerPreset()`.
+* Plugins: `@vitejs/plugin-react` and `@rolldown/plugin-babel` with `reactCompilerPreset()`, plus two small plugins written in the config itself:
+  * `siteUrlPlugin` replaces the placeholder `__SITE_URL__` in the Open Graph tags and in the structured data of `index.html` with `VITE_SITE_URL`; when the variable is empty the lines are removed (an Open Graph picture needs an absolute address, a wrong one is worse than none).
+  * `inlineMainCssPlugin` puts the main stylesheet (36.5 kB in the current build) straight into `index.html` as a `<style>` element, so the browser does not wait for a render-blocking CSS request. Stylesheets of lazy pages stay separate files, and a stylesheet larger than 80 kB is left alone.
 * Path aliases (also used by ESLint/IDE resolution through Vite):
 
 | Alias | Resolves to |
@@ -111,25 +118,27 @@ The key architectural idea is a **strict split of state by origin**:
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `VITE_API_URL` | `https://shop-api-kbe6.onrender.com/api` | Base URL of the REST API. The same value is hard-coded as a fallback in `apiClient.js`, so the app works without a `.env` file. |
+| `VITE_SITE_URL` | empty (`.env.example`); `http://localhost:4173` in the local `.env` | Public address of the deployed site, no trailing slash. Used for `canonical`, Open Graph and structured data. Empty → canonical addresses use `window.location.origin` and the Open Graph lines are removed from the built `index.html`. **Set the real address on the host before publishing.** |
+| `VITE_IMAGE_PROXY` | `https://wsrv.nl` (line left out → default; empty value → no CDN) | Image CDN that resizes pictures and converts them to WebP (`src/lib/image.js`). |
 
 ### SPA hosting
 
-All paths must be rewritten to `index.html`. `public/_redirects` (`/*  /index.html  200`) covers Netlify-style hosts; Render static sites need a rewrite `/*` → `/index.html`; Firebase needs `"rewrites": [{ "source": "**", "destination": "/index.html" }]`.
+All paths must be rewritten to `index.html`. `public/_redirects` (`/*  /index.html  200`) covers Netlify-style hosts; Render static sites need a rewrite `/*` → `/index.html`; Firebase needs `"rewrites": [{ "source": "**", "destination": "/index.html" }]`. `public/_headers` (Netlify / Cloudflare Pages format; other hosts ignore it) sets `Cache-Control: immutable` for the hashed files in `/assets/*`, one day for the icons and `og-image.png`, `must-revalidate` for `index.html`, and `X-Content-Type-Options` + `Referrer-Policy` for every path.
 
 ---
 
 ## 3. Folder structure
 
-The tree below is the **real** state of the repository (107 JavaScript / JSX files and 56 CSS files in `src/`; `node_modules/` and `dist/` are not shown). A folder written as `Name/ (.jsx + .css)` contains `Name.jsx` and `Name.css`.
+The tree below is the **real** state of the repository (176 files in `src/`: 115 JavaScript / JSX, 58 CSS, 2 JSON and 1 font; `node_modules/` and `dist/` are not shown; counted on 28.10.2026). A folder written as `Name/ (.jsx + .css)` contains `Name.jsx` and `Name.css`.
 
 ```
 cyber-shop/
-├─ index.html                 HTML shell: Inter font (Google Fonts), <div id="root">, theme-color meta, loads /src/main.jsx; inline <script> in <head> for FOUC prevention (theme + lang before first paint)
-├─ vite.config.js             Vite 8 + React plugin + React Compiler (Babel preset) + path aliases @, @api, @shared, @features
+├─ index.html                 HTML shell: default title / description / Open Graph / JSON-LD (Georgian), preconnect to the API and the image CDN, non-blocking Inter font, theme-color meta; TWO inline <script>s in <head> (early first-screen requests; FOUC prevention for theme + lang); a static header (app shell) inside <div id="root">; loads /src/main.jsx
+├─ vite.config.js             Vite 8 + React plugin + React Compiler (Babel preset) + path aliases @, @api, @shared, @features + two local plugins (__SITE_URL__ replacement, main CSS inlined into index.html)
 ├─ eslint.config.js           ESLint flat config: js recommended + react-hooks + react-refresh
 ├─ package.json               scripts (dev, build, lint, preview) and dependencies
 ├─ package-lock.json          exact dependency versions
-├─ .env / .env.example        VITE_API_URL (.env is git-ignored, .env.example is the template)
+├─ .env / .env.example        VITE_API_URL, VITE_SITE_URL, VITE_IMAGE_PROXY (.env is git-ignored, .env.example is the template)
 ├─ .gitignore, LICENSE        git ignore rules; MIT licence
 ├─ README.md                  how to install, run, build, deploy; routes; project status
 ├─ ARCHITECTURE.md            this document
@@ -143,20 +152,26 @@ cyber-shop/
 │     ├─ 0004-profile-current-password.md
 │     ├─ 0005-checkout-state-in-url.md
 │     ├─ 0006-color-theme.md
-│     └─ 0007-i18n-strategy.md
+│     ├─ 0007-i18n-strategy.md
+│     ├─ 0008-react-i18next.md
+│     └─ 0009-performance-and-seo.md
 │
 ├─ journal/                   weekly development journal
 │  ├─ week-1.md               05.10 – 11.10.2026 (FE-001 … FE-005)
 │  ├─ week-2.md               12.10 – 18.10.2026 (FE-006, FE-007: addresses, checkout, orders, dark theme)
-│  └─ week-3.md               19.10 – 25.10.2026 (FE-008 i18n, FE-009 3-state theme, lecturer fixes)
+│  └─ week-3.md               19.10 – 28.10.2026 (FE-008 i18n, FE-009 3-state theme, lecturer fixes, performance + SEO, final measurements)
 │
 ├─ public/                    copied to the build as they are
 │  ├─ favicon.svg, icons.svg  static assets
+│  ├─ og-image.png            1200 × 630 picture for link previews (Open Graph / Twitter), 22.7 kB
+│  ├─ robots.txt              allows the public pages, closes private screens and duplicate catalog URLs (search, sort, price)
+│  ├─ _headers                HTTP caching and security headers (Netlify / Cloudflare Pages format)
 │  └─ _redirects              SPA fallback for Netlify-style hosting (/*  /index.html  200)
 │
 └─ src/
-   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render; `import '@/lib/i18n'` initialises i18next; `initTheme()` before the first render
-   ├─ App.jsx                 the whole route table (public, protected, checkout, 404)
+   ├─ main.jsx                entry point: provider stack (Query → Toast → Auth → Shop → Router) + render; `import '@/lib/i18n'` initialises i18next; `initTheme()` before the first render; the Query Devtools are loaded lazily and only in `npm run dev`
+   ├─ App.jsx                 the whole route table (public, protected, checkout, 404); 15 of the pages are `React.lazy` chunks, only `Layout` and `CatalogPage` are in the main bundle
+   ├─ assets/fonts/ADG2.woff2  local Georgian font (see styles/fonts.css)
    │
    ├─ api/                    SERVER-STATE LAYER: plain request functions (xxxApi.js) + TanStack Query hooks (xxxQueries.js)
    │  ├─ queryClient.js         the one shared QueryClient + defaults (staleTime 60 s, no retry on 4xx)
@@ -175,7 +190,7 @@ cyber-shop/
    │
    ├─ shared/                 CROSS-CUTTING building blocks, no business logic
    │  ├─ api/
-   │  │  └─ apiClient.js        apiRequest(), ApiError, getToken / setToken / removeToken, isTokenExpired
+   │  │  └─ apiClient.js        apiRequest() (also takes the answers of the early requests started in index.html), ApiError, getToken / setToken / removeToken, isTokenExpired
    │  ├─ lib/
    │  │  └─ validators.js       all Zod schemas: login, register, forgotPassword, verifyCode, resetPassword, profile, address
    │  └─ ui/                   UI KIT (import from the barrel @shared/ui)
@@ -254,20 +269,22 @@ cyber-shop/
    │     └─ hooks/useShop.js    wishlistCount, isInWishlist, toggleWishlist (guest → /login)
    │
    ├─ pages/                  CATALOG-SIDE PAGES
-   │  ├─ CatalogPage/ (.jsx + .css)   product grid + filters + sort + pagination
+   │  ├─ CatalogPage/ (.jsx + .css)   product grid + filters + sort + pagination; SEO: sr-only <h1>, canonical, noindex for filtered / sorted / searched lists
    │  ├─ FiltersPage/ (.jsx + .css)   mobile filters screen with the "Apply" button
-   │  ├─ ProductPage/ (.jsx + .css)   single product (gallery, quick specs, spec tables, related)
-   │  └─ StubPage/ (.jsx + .css)      placeholder pages and the 404 page
+   │  ├─ ProductPage/ (.jsx + .css)   single product (gallery, quick specs, spec tables, related); SEO: description, canonical, og:image, JSON-LD Product + BreadcrumbList
+   │  └─ StubPage/ (.jsx + .css)      placeholder pages and the 404 page (noindex)
    │
    ├─ components/             SHOP-SPECIFIC REUSABLE COMPONENTS (each: Name/Name.jsx + Name.css, unless noted)
-   │  ├─ Layout/                Header + <Outlet /> + Footer, scroll to top (.jsx only)
+   │  ├─ Layout/                Header + <Suspense> around <Outlet /> + Footer, scroll to top on route change, `noindex` for private routes (.jsx only)
+   │  ├─ Seo/                   per-page SEO tags (description, canonical, robots, Open Graph, Twitter, JSON-LD) written into <head>; renders nothing (.jsx only)
    │  ├─ Header/                logo, search, nav, wishlist + cart badges, profile slot, mobile menu
    │  ├─ UserMenu/              avatar dropdown: Account, Orders, Address, Logout
    │  ├─ ThemeToggle/           ONE button that cycles light → dark → system (icons stacked, the label names the next mode); used in the Header and, with `withLabel`, in the mobile menu
    │  ├─ LanguageSwitcher/      KA / EN segmented pill with a sliding thumb (`role="group"`, buttons with `aria-pressed`); used in the Header and in the mobile menu
    │  ├─ Footer/                footer (placeholder links)
    │  ├─ Logo/                  SVG text logo (Logo.jsx only)
-   │  ├─ ProductCard/, ProductCardSkeleton/, ProductImage/, Stars/
+   │  ├─ ProductCard/, ProductCardSkeleton/, Stars/
+   │  ├─ ProductImage/          picture with resized WebP `srcset`, a fallback chain (resized → original → placeholder) and a placeholder
    │  ├─ FilterPanel/, Checkbox/, PriceRange/, SortSelect/, Pagination/
    │  ├─ Breadcrumbs/, LoadingHint/, QueryError/
    │  ├─ ActionButton/          big black / outlined button of the mockups (Back / Next / Pay); a <Link> or a <button>
@@ -279,9 +296,11 @@ cyber-shop/
    │  ├─ i18n/                  i18n without React components: config.js (languages, default, `Intl` locales, `<html lang>`), i18n.js (i18next init, side effect), format.js (formatPriceI18n, formatDateI18n, formatRatingI18n, getCategoryName, getFilterOptionLabel), index.js (barrel)
    │  ├─ specs.js               product spec names → i18n keys (`SPEC_I18N_KEYS`), quick specs and grouping (accept `t`)
    │  ├─ filterLabels.js        filter titles (`getFilterTitle(group, t)`) and colour swatches
+   │  ├─ seo.js                 SITE_NAME, SITE_URL, `absoluteUrl()`, `toSnippet()` (text → ≈155-character description on a word boundary)
+   │  ├─ image.js               image CDN helpers: `canOptimize`, `optimizedUrl`, `buildImageProps` ({ src, srcSet })
    │  └─ theme.js               color theme: initTheme, setTheme, getTheme, getPreference + store for useSyncExternalStore; 3 states: light | dark | system (touches the DOM and localStorage, so not pure)
    │
-   ├─ locales/                 TRANSLATION DICTIONARIES (JSON, 391 keys each, identical in both files)
+   ├─ locales/                 TRANSLATION DICTIONARIES (JSON, 393 keys each, identical in both files)
    │  ├─ ka.json                Georgian (default language)
    │  └─ en.json                English
    │
@@ -292,12 +311,36 @@ cyber-shop/
    │
    └─ styles/                 GLOBAL CSS
       ├─ vars.css               shop colour variables (--c-*)
+      ├─ fonts.css              @font-face of the local Georgian font ADG2 (Georgian unicode-range only, font-display: swap)
       ├─ auth-tokens.css        auth / form design tokens (--color-*, spacing, radius, shadow)
       ├─ cyber-form.css         .cyber-form / .cyber-check: inputs drawn like the checkout / address mockups
       ├─ reset.css              CSS reset
       ├─ theme.css              light / dark: the theme tokens (light values in :root, dark values under :root[data-theme='dark']) + a short list of dark-only additions (photo tile, focus ring, footer border)
-      └─ global.css             imports vars, reset, auth-tokens and theme + base styles + utilities
+      └─ global.css             imports vars, fonts, reset, auth-tokens and theme + base styles + utilities
 ```
+
+### Project in numbers (measured on 28.10.2026)
+
+Counted from the files of this repository and from `npm run lint` / `npm run build` run on the same day (Node 22, npm 10). The repository has no `.git` folder in the archive that was analysed, so commit counts are not part of this table.
+
+| Metric | Value |
+| --- | --- |
+| Files in `src/` | 176 (115 JS / JSX, 58 CSS, 2 JSON, 1 font) |
+| Lines of code in `src/` | 7,831 JS / JSX + 5,283 CSS + 902 JSON = 14,016 |
+| Components | 21 shop components in `src/components/` (+ the `icons/` folder), 7 UI-kit components in `src/shared/ui/`, 17 page components (4 in `src/pages/`, 4 auth, 1 cart, 1 addresses, 7 checkout / orders) |
+| Feature modules | 5 (`auth`, `cart`, `addresses`, `checkout`, `shop`), each with an `index.js` barrel |
+| Routes | 21 route entries, 15 of them are lazy chunks |
+| API paths used | 21 (`/auth/me` is used with `GET` and `PATCH`) |
+| Translation keys | 393 in `ka.json` and 393 in `en.json` (identical key sets) |
+| Dependencies | 10 runtime + 12 development packages |
+| ADRs | 9 (`docs/adr/0001` … `0009`) |
+| Journal | 3 weekly files, about 75 hours in total (25 + 30 + 20, the author's own figures) |
+| Production build | 274 modules, 32 JavaScript chunks, 18 CSS files, built in ≈ 8.7 s |
+| First-screen JavaScript | ≈ 494 kB (≈ 156 kB gzip): the `index` chunk 303.8 kB + the 5 chunks `index.html` preloads |
+| All JavaScript (every chunk) | ≈ 704 kB |
+| `index.html` after the build | 46.0 kB (11.4 kB gzip) with the main CSS (36.5 kB) already inside |
+| Lint | 1 error, 0 warnings |
+| Automated tests | 0 |
 
 ### Conventions
 
@@ -311,7 +354,7 @@ pages / features  →  components  →  shared (ui, api, lib)  →  lib / hooks 
        api (query hooks)  →  shared/api/apiClient
 ```
 
-* **Pure logic is extracted** from components into `lib/` files (`catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutRoutes.js`, `checkoutErrors.js`, `checkoutFormat.js`, `format.js`, `specs.js`) so it has no React dependency and can be unit-tested directly.
+* **Pure logic is extracted** from components into `lib/` files (`catalog.js`, `seo.js`, `image.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutRoutes.js`, `checkoutErrors.js`, `checkoutFormat.js`, `i18n/format.js`, `specs.js`) so it has no React dependency and can be unit-tested directly.
 * **Plain fetch functions are separated from React hooks** (`catalogApi.js` vs `catalogQueries.js`, and the same for cart, addresses and checkout).
 * **Every private cache key is registered** in `PRIVATE_QUERY_KEYS` (`api/queryKeys.js`), so login and logout wipe it automatically.
 
@@ -333,7 +376,9 @@ pages / features  →  components  →  shared (ui, api, lib)  →  lib / hooks 
         </ShopProvider>
       </AuthProvider>
     </ToastProvider>
-    <ReactQueryDevtools initialIsOpen={false} />   // dev only (the "flower" button)
+    <Suspense fallback={null}>
+      <ReactQueryDevtools initialIsOpen={false} />   // dev only (the "flower" button), loaded lazily
+    </Suspense>
   </QueryClientProvider>
 </StrictMode>
 ```
@@ -345,9 +390,13 @@ Why this order?
 3. `AuthProvider` must wrap `ShopProvider` because the wishlist is stored *per user id*.
 4. `BrowserRouter` is innermost of the providers; `useShop()` and `useAddToCart()` use router hooks (`useNavigate`, `useLocation`) so they must be called under the router.
 
+In the production build the Devtools branch is removed together with the whole package: `main.jsx` creates `ReactQueryDevtools` with `lazy(() => import(...))` only when `import.meta.env.DEV` is true, otherwise it is an empty component. (This conditional constant is also the one error that `npm run lint` reports, see [section 24](#24-known-limitations-and-technical-debt).)
+
 `App.jsx` then renders the route table (next section). The global stylesheet `styles/global.css` is imported once in `main.jsx`.
 
 Right after the imports, before the first render, `main.jsx` calls `initTheme()` (`lib/theme.js`): it reads the saved color theme from `localStorage` (or the OS preference) and sets `data-theme` on `<html>`. The theme is not a provider — see [6.5](#65-color-theme-libthemejs).
+
+**Before `main.jsx` runs** the browser has already executed two inline scripts of `index.html` and painted a static header (the *app shell*): the first one starts the first-screen API requests, the second one applies the theme and the language. React replaces the shell completely when `createRoot` starts, and the logo does not move. Details: [section 20](#20-performance-and-seo-notes).
 
 Language has no provider either: `main.jsx` imports `@/lib/i18n` once (`import '@/lib/i18n'`), which initialises i18next as a side effect, and `react-i18next` (`initReactI18next`) lets any component call `useTranslation()`. See [6.6](#66-language--i18n-libi18n-react-i18next).
 
@@ -406,7 +455,15 @@ All routes are children of one layout route, so the **Header and Footer are alwa
 </Route>
 ```
 
-`Layout` also calls `window.scrollTo(0, 0)` whenever `pathname` changes, so every navigation starts at the top of the page.
+`Layout` also calls `window.scrollTo(0, 0)` whenever `pathname` changes, so every navigation starts at the top of the page. It deliberately skips the **first** render: the page is already at the top, and `scrollTo()` at start-up forces the browser to recalculate the layout ("Forced reflow" in Lighthouse). `CatalogPage` uses the same rule for its page-number scroll.
+
+### Code splitting
+
+Only `Layout` and `CatalogPage` (the first screen) are in the main bundle. The other **15 pages** are loaded on the first visit with `React.lazy`: `FiltersPage`, `ProductPage`, `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `AccountPage`, `CartPage`, `AddressesPage`, `CheckoutLayout`, `AddressStep`, `ShippingStep`, `PaymentStep`, `ConfirmPage`, `OrderPage`, `OrdersPage`. A `<Suspense>` boundary sits **inside `Layout`, around `<Outlet />`**, so the header and the footer stay on screen while a chunk loads (a centred spinner with `role="status"` is shown in the middle). Pages are imported from their own files and **not** from the feature barrels (`index.js`), because a barrel re-exports every page and would pull them all back into the main bundle.
+
+### Indexing of routes
+
+`Layout` renders `<Seo noindex />` for `/login`, `/register`, `/forgot-password`, `/account`, `/cart`, `/addresses`, `/checkout…`, `/orders…`, `/wishlist` and `/filters` (`NOINDEX_PREFIXES`); `StubPage` (placeholders and the 404 page) is `noindex` too. The same private paths are closed in `public/robots.txt`. See [section 20](#20-performance-and-seo-notes).
 
 ### ProtectedRoute behaviour
 
@@ -526,7 +583,7 @@ The language (`'ka'` | `'en'`) is held by the i18next instance and saved in `loc
 | `getFilterTitle(group, t)` (`lib/filterLabels.js`) | `t('filter.<key>')`, falling back to the API label for unknown filters |
 | `SPEC_I18N_KEYS`, `getSpecLabel(key, t)` (`lib/specs.js`) | Maps the Georgian spec **names** from the API to `specs.*` keys; the spec **values** are shown as the API sends them |
 
-Dictionaries: `src/locales/ka.json` and `src/locales/en.json`, 391 keys each (identical key sets, checked on 23.10.2026), grouped by feature: `common`, `header`, `theme`, `lang`, `catalog`, `sort`, `filter`, `product`, `specs`, `cart*`, `auth`, `checkout`, `orders`, `addresses`, `validation`, `a11y`, `errors`, and so on.
+Dictionaries: `src/locales/ka.json` and `src/locales/en.json`, 393 keys each (identical key sets, checked on 28.10.2026), grouped by feature: `common`, `header`, `theme`, `lang`, `catalog`, `sort`, `filter`, `product`, `specs`, `cart*`, `auth`, `checkout`, `orders`, `addresses`, `validation`, `a11y`, `errors`, and so on.
 
 **What is and is not translated** (the API has one language): everything written in the code is translated; category names use `nameEn`; filter titles and options are translated on the front end; product titles are English already; the spec values and product descriptions stay as the API sends them. The proper long-term fix is for the API to accept an `Accept-Language` header. Reasons and alternatives: [ADR 0007](./docs/adr/0007-i18n-strategy.md) (the original strategy) and [ADR 0008](./docs/adr/0008-react-i18next.md) (the switch to react-i18next).
 
@@ -546,6 +603,7 @@ Every HTTP call in the app goes through this one function.
 | Response | JSON is parsed when the content type is JSON; an empty body (e.g. 204) gives `{}` |
 | Errors | Non-2xx responses throw an **`ApiError`** |
 | Session loss | On `401` with code `TOKEN_EXPIRED` or `INVALID_TOKEN`: remove token and throw an `ApiError` (the calling hook navigates to `/login` with `state.from` preserved, so the user returns to the same page after re-login) |
+| Early requests | For a `GET` the function first looks into `window.__earlyRequests[url]`. The first-screen requests are started by an inline script in `index.html` while the JavaScript bundle is still downloading; the answer is used **once** (the entry is deleted), and if it failed the normal `fetch` below is made. |
 | Exceptions to the redirect | `POST /auth/login`, `POST /auth/register` (a 401 there is a normal form error) and `GET /auth/me` (the startup check, handled by `AuthProvider`) |
 
 ```js
@@ -622,6 +680,8 @@ sequenceDiagram
 * The `AVAILABILITY_GROUP` ("In stock", "On sale") is **appended** to the category's own filter list on the client, because it maps to the API flags `inStock` and `onSale` and is not a category attribute.
 * Sets the document title with the React 19 `<title>` element.
 
+**SEO of the catalog page.** `CatalogPage` renders one `<h1>` (class `sr-only`, the visual design has no heading here) with the category name and a `<title>` (`Category — Cyber`, with the page number from page 2). A *plain view* is a list without search text, with the default sort and without filters: it is indexed and is its own canonical (`/?category=…&page=N`). Search results, filtered lists and re-sorted lists are duplicates of the category, so they get `noindex` and a canonical address that points to the category. A category that does not exist (`404` from `GET /categories/:slug`) renders `StubPage` (`noindex`). `ProductCard` receives `priority` (the first two cards: `loading="eager"` + `fetchPriority="high"`, the probable LCP picture) and `eager` (the first four: loaded at once); the rest are lazy.
+
 ### 8.3 `lib/catalog.js` — the URL ⇄ state ⇄ API translator
 
 | Export | Signature | What it does |
@@ -693,7 +753,7 @@ A dual-handle slider plus two numeric text inputs.
 
 ### 8.8 `Pagination`
 
-`getPages(page, total)` returns a compact list: all pages when `total ≤ 5`; otherwise `1 2 3 … N`, `1 … N-2 N-1 N`, or `1 … p-1 p p+1 … N`. Buttons carry `aria-label="Page N"` and `aria-current="page"`. The component renders nothing when there is only one page.
+`getPages(page, total)` returns a compact list: all pages when `total ≤ 5`; otherwise `1 2 3 … N`, `1 … N-2 N-1 N`, or `1 … p-1 p p+1 … N`. Buttons carry `aria-label="Page N"` and `aria-current="page"`. The component renders nothing when there is only one page. With the optional `hrefFor(page)` prop (the catalog passes it) the numbers and the arrows are real **links** (`<Link to="/?page=2">`, the arrows have `rel="prev"` / `rel="next"`), so search engines can follow them to every page of the catalog and Ctrl / Cmd-click opens a page in a new tab; a normal click is handled by React Router without a reload. Without `hrefFor` the old behaviour is kept: buttons that call `onChange(page)`.
 
 ---
 
@@ -729,7 +789,13 @@ The API returns `specs` as `{ "<Georgian name>": "value" }` for every category. 
 
 ### `ProductImage`
 
-Shows the image; if `src` is `null` or the image fails to load (`onError`), shows a neutral placeholder. It remembers **which URL failed** (`failedSrc`), so a different URL (another product, a fixed image) is tried again automatically. Decorative images (`alt=""`) hide the placeholder from screen readers.
+Shows the image; if `src` is `null` or the image fails to load (`onError`), shows a neutral placeholder. It remembers **which URL failed and how many times** (`failure = { src, level }`), so a different URL (another product, a fixed image) is tried again automatically. Decorative images (`alt=""`) hide the placeholder from screen readers.
+
+With the optional props `widths` and `sizes` the picture is requested through the image CDN (`lib/image.js`): `<img src srcset sizes>` with resized WebP versions (`https://wsrv.nl/?url=<original>&w=<width>&output=webp&q=75&we`; `we` = never enlarge a small original). There are three levels: **0** the resized version, **1** the original URL (when the CDN fails), **2** the placeholder. Used with `widths` 160 / 240 / 320 / 480 in `ProductCard` (shown at 104 px on mobile and 160 px on desktop), 80 / 160 / 240 for gallery thumbnails, 320 / 480 / 640 / 700 for the main product picture (`loading="eager"`, `fetchPriority="high"`) and 96 / 192 / 288 in `CartLine`. The reason: the API serves every picture in its original size (700 × 700, 50–77 kB) although a card shows it at 104–160 px.
+
+### SEO of the product page
+
+`ProductView` sets `<title>` (`Title — Cyber`), a description (the product description cut to ≈ 155 characters by `toSnippet()`, or the translated `seo.productDescription` text), the canonical address `/product/:slug`, `og:type=product`, `og:image` (the first picture) and two JSON-LD blocks: a schema.org **`Product`** (name, images, brand, `sku`, `aggregateRating` when there are reviews, an `Offer` with price, currency, `InStock` / `OutOfStock`) and a **`BreadcrumbList`** (Home › Category › Product). All of it goes through `<Seo />`.
 
 ### Formatting of prices, dates and ratings
 
@@ -1133,7 +1199,10 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 
 | Component | Responsibility |
 | --- | --- |
-| `Layout` | Header + `<main style="flex-grow:1">` + Footer; scrolls to top on every path change |
+| `Layout` | Header + `<main style="flex-grow:1">` with `<Suspense>` around `<Outlet />` + Footer; scrolls to top on every path change except the first render; renders `<Seo noindex />` on private routes |
+| `Seo` | Renders nothing; per-page SEO in `<head>`. Props (all optional, only what is passed is changed): `description`, `canonical`, `noindex`, `image`, `ogTitle`, `type`, `jsonLd`. It **updates the tags that `index.html` already contains** (description, `og:*`, `twitter:*`, robots) instead of rendering more `<meta>` elements, which would duplicate them, adds a `<link rel="canonical">` and a `<script type="application/ld+json">` (text is set with `textContent`), and **restores the defaults** when the page is left (the default description follows the current language: `meta.description`) |
+| `ProductImage` | `<img>` with resized WebP `srcset` through the image CDN, fallback chain resized → original → placeholder (see [section 9](#productimage)) |
+| `Pagination` | Page numbers and arrows as real links when `hrefFor` is passed (see [8.8](#88-pagination)) |
 | `Header` | Logo, `HeaderSearch`, nav (`Home`, `About`, `Contact Us`, `Blog`), wishlist icon with badge, cart icon with badge (`cart.totalQty`, 0 for guests/while loading), profile slot (spinner while auth loads, `UserMenu` when signed in, sign-in icon otherwise), the language switch (`LanguageSwitcher`) and the theme switch (`ThemeToggle`) at the right end, and a burger button that opens a mobile menu (nav + cart + auth actions: Account, Orders, Address, Logout, theme switch, language switch) |
 | `UserMenu` | Avatar circle with the first letter of the name; dropdown with name, e-mail, "Account", "Orders" (`/orders`), "Address" and "Logout", each with a small icon from the header icon set (`UserIcon`, `OrdersIcon`, `MapPinIcon`, `LogoutIcon`). Closes on outside click and `Escape`. Logout navigates to `/` |
 | `ThemeToggle` | One `button` that cycles light → dark → system. Three stacked icons (sun, moon, monitor), the active one is shown; the `aria-label` / `title` name the **next** mode. With `withLabel` (mobile menu) it is a full-width row with the name of the current mode. Reads and changes the theme through `useTheme()`; the choice is saved to `localStorage` (see [6.5](#65-color-theme-libthemejs)) |
@@ -1194,15 +1263,56 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 
 ---
 
-## 20. Performance notes
+## 20. Performance and SEO notes
+
+### 20.1 Runtime behaviour
 
 * **Caching:** 1 min default freshness; 10 min for categories; unused entries are garbage-collected after the default 5 min.
 * **Request cancellation** through `AbortSignal`.
 * **Debouncing:** search (400 ms) and price slider (400 ms).
 * **No spinner flash** between catalog pages (`keepPreviousData`).
-* **Lazy images:** product cards and cart lines use `loading="lazy"`.
-* **React Compiler** removes most manual memoisation work.
-* Production build (measured on 23.10.2026): 282 modules, JS ≈ 682 kB (≈ 207 kB gzip), CSS ≈ 72 kB (≈ 13 kB gzip), build time ≈ 12 s. Vite warns that the single JS chunk exceeds 500 kB — see the improvement list in [section 24](#24-known-limitations-and-technical-debt). Earlier measurements: ≈ 511 kB (before checkout, addresses and orders), ≈ 567 kB on 17.10.2026. Both dictionaries are bundled statically (no lazy loading), and `i18next` + `react-i18next` are part of the bundle.
+* **React Compiler** removes most manual memoisation work (only 11 `useMemo` / `useCallback` calls are left in the whole `src/`).
+* **No forced reflow at start-up:** `Layout` and `CatalogPage` do not call `scrollTo()` on the first render.
+
+### 20.2 Loading speed (first screen on a slow phone)
+
+| Technique | Where | What it does |
+| --- | --- | --- |
+| **Route-level code splitting** | `App.jsx`, `Layout.jsx` | 15 pages are `React.lazy` chunks; a `<Suspense>` in `Layout` keeps the header and footer visible (section 5). |
+| **Early first-screen requests** | inline `<script>` in `index.html` + `apiClient.js` | On `/` without a query string the script starts `GET /categories/smartphones` and `GET /products?category=smartphones&sort=rating-desc&page=1&limit=8|9` (8 on mobile, 9 on desktop, the same as `CatalogPage`) at once, while the bundle is still downloading. `apiRequest()` takes the answers from `window.__earlyRequests` (each one is used once); a failed or non-matching request is simply made again by the app. |
+| **Preload of the LCP picture** | the same script | When the product list arrives, the picture of the first product is preloaded with `fetchpriority=high` and the same `imagesrcset` / `imagesizes` as `ProductCard`, so the browser does not wait for React to render the `<img>`. The widths in the script must be kept in sync with `lib/image.js` and `ProductCard`. |
+| **App shell** | `index.html` | A static header (only the logo) is inside `<div id="root">`, so the page is painted before the bundle is ready; React replaces it when the app starts. |
+| **Resized WebP pictures** | `lib/image.js`, `ProductImage` | A 700 × 700 original of 50–77 kB becomes a 160–480 px WebP; `ProductCard` gives explicit `width` / `height` (160 × 160) so the layout does not jump. Only the first two cards are `fetchPriority=high`; the first four are eager, the rest lazy. |
+| **Main CSS inlined** | `vite.config.js` | `inlineMainCssPlugin` moves the main stylesheet (36.5 kB) into `index.html`: one request less before the first paint. |
+| **Non-blocking fonts** | `index.html`, `styles/fonts.css` | Inter: `preload` → `stylesheet` on `onload` (and a `<noscript>` fallback); the Georgian font ADG2 has `font-display: swap` and a Georgian `unicode-range`. |
+| **Early connections** | `index.html` | `preconnect` to the API (Render), the image CDN (`wsrv.nl`), `fonts.googleapis.com` and `fonts.gstatic.com`. |
+| **HTTP caching** | `public/_headers` | Hashed files in `/assets/*` are cached for a year (`immutable`); `index.html` is always re-checked. |
+| **Dev-only code removed** | `main.jsx` | The Query Devtools package is not in the production bundle. |
+
+### 20.3 Measured build (28.10.2026, `npm run build`)
+
+| Measurement | Value |
+| --- | --- |
+| Modules transformed | 274 |
+| Build time | ≈ 8.7 s |
+| JavaScript chunks | 32 (the largest: `index` 303.8 kB / 95.6 kB gzip, `useTranslation` 100.1 kB / 33.9 kB, `validators` 93.4 kB / 25.4 kB (Zod), `i18n` 43.9 kB / 11.3 kB) |
+| **First-screen JavaScript** | `index` + 5 preloaded chunks (`useTranslation`, `QueryError`, `LoadingHint`, `i18n`, `icons`) = **≈ 494 kB (≈ 156 kB gzip)** |
+| All JavaScript, every chunk | ≈ 704 kB (the split adds some shared-chunk overhead) |
+| CSS | 18 files, ≈ 72 kB in total; the main one (36.5 kB) is inside `index.html` |
+| `index.html` | 46.0 kB (11.4 kB gzip) |
+| Vite size warning | none (the single-chunk warning of the earlier versions is gone) |
+
+Earlier measurements (one single JS chunk): ≈ 511 kB (before checkout, addresses and orders), ≈ 567 kB on 17.10.2026, ≈ 682 kB (≈ 207 kB gzip, 282 modules) on 23.10.2026. Compared with the last single chunk, the JavaScript needed for the first screen is now about **27 % smaller (≈ 494 kB instead of ≈ 682 kB; ≈ 156 kB instead of ≈ 207 kB gzip)**. Both dictionaries are still bundled statically (they are inside the `i18n` chunk), and `i18next` + `react-i18next` are part of the first screen. Lighthouse scores were **not** measured for this document, so no score is quoted.
+
+### 20.4 SEO
+
+A single-page app sends the same `index.html` for every URL, so the SEO is built from three layers:
+
+1. **Static defaults in `index.html`** (what crawlers and link previews see before any JavaScript runs): Georgian `<title>` and description, `robots`, Open Graph and Twitter tags, a JSON-LD `Organization` + `WebSite` (with a `SearchAction` that points to `/?q=`), the `lang` attribute. The lines with `__SITE_URL__` are filled in (or removed) by the build.
+2. **Per-page tags from `<Seo />`** (section 16): description, canonical, `noindex`, `og:*`, `twitter:*` and JSON-LD for the catalog and the product pages; the page `<title>` is written with a plain `<title>` element in the page (React 19 moves it to `<head>`).
+3. **Files for crawlers:** `public/robots.txt` allows the public pages, closes the private screens (`/cart`, `/checkout`, `/account`, `/addresses`, `/orders`, `/login`, `/register`, `/forgot-password`, `/wishlist`, `/filters`) and the duplicates of the catalog (`?q=`, `?sort=`, `?minPrice=`, `?maxPrice=`); `public/og-image.png` is the 1200 × 630 preview picture.
+
+The rules of the catalog page (what is indexed, what is `noindex` and where the canonical points) are in [8.2](#82-catalogpage-responsibilities) and the product data in [section 9](#seo-of-the-product-page). The decision and its trade-offs: [ADR 0009](./docs/adr/0009-performance-and-seo.md).
 
 ---
 
@@ -1256,6 +1366,10 @@ flowchart TD
   main --> Toast[shared/ui<br/>ToastProvider]
   main --> libtheme[lib/theme<br/>initTheme]
   main --> libi18n[lib/i18n<br/>i18next init]
+  Layout --> Seo[components/Seo] --> libseo[lib/seo]
+  Pages --> Seo
+  ProductImage --> libimage[lib/image]
+  components --> ProductImage
 
   App --> Layout
   App --> Pages[pages/*]
@@ -1350,7 +1464,7 @@ Copy the pattern of `AddressForm` (React Hook Form + Zod resolver): a pure `lib/
 
 ## 24. Known limitations and technical debt
 
-Checked on 23.10.2026: `npm run build` passes and `npm run lint` is clean (0 errors, 0 warnings).
+Checked on 28.10.2026: `npm run build` passes (274 modules, no size warning). `npm run lint` reports **1 error and 0 warnings**: `react-refresh/only-export-components` at `src/main.jsx:17` — the constant `ReactQueryDevtools` (a lazy component in development, an empty component in production) is declared in the entry file. It does not affect the build or the behaviour; moving the constant to its own file would remove it.
 
 **Product gaps (by design for now)**
 
@@ -1363,19 +1477,23 @@ Checked on 23.10.2026: `npm run build` passes and `npm run lint` is clean (0 err
 
 **Code-level observations**
 
-* **Double-submit guard in `PaymentStep`:** the `inFlight` ref blocks a second submit in the same tick, before React disables the button. `PaymentStep`, `ConfirmPage`, `AccountPage` and `AddressForm` opt out of the React Compiler with `'use no memo'`. Earlier versions of this document listed two `react-hooks/refs` lint errors here; they no longer appear.
+* **Double-submit guard in `PaymentStep`:** the `inFlight` ref blocks a second submit in the same tick, before React disables the button. `ConfirmPage`, `AccountPage` and `AddressForm` opt out of the React Compiler with `'use no memo'` (`PaymentStep` does not). Earlier versions of this document listed two `react-hooks/refs` lint errors here; they no longer appear.
 * **Search from non-catalog pages:** `HeaderSearch` always navigates to `/` and builds the query from the *current* URL; searching from a product or cart page therefore drops the category and falls back to the default (`smartphones`).
 * **Spec labels** (`lib/specs.js`) are written for smartphones; other categories show unknown keys in the generic "Other" group.
 * **Three icon files and two "shared component" locations:** `shared/ui/Icons/Icons.jsx` (forms, auth), `components/icons/icons.jsx` (shop) and `components/icons/checkoutIcons.jsx` (checkout, addresses), and `components/` vs `shared/ui/`. Consolidating them would simplify the structure.
 * **Mixed import styles:** relative paths, `@/…`, `@api/…`, `@shared/…`, `@features/…` are all used.
 * **Features import each other:** `features/addresses` imports `getGenericMessage` from `@features/checkout/lib/checkoutErrors`, while `features/checkout` imports the `@features/addresses` barrel — a circular dependency between two features (it works because only functions are imported, but it is fragile). `getGenericMessage` / `isNetworkError` belong in `shared/lib`.
 * **Deep imports bypass the barrels:** `useAuth` is not exported by the `@features/auth` barrel, so 15 files import `@features/auth/hooks/useAuth` directly. Exporting it from `features/auth/index.js` would remove the deep path.
-* **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider` (line 16), a commented `oldPrice` line in `ProductCard` (line 48), `profileLabel` in `Header` is always `'Sign in'`. `AuthProvider.logout` still has a `console.error('err logout', …)`.
-* **Languages in the code:** comments and identifiers are in English (checked on 23.10.2026: no Cyrillic text anywhere in the project). Georgian appears only where it must: `src/locales/ka.json`, the Georgian spec names the API uses as keys (`SPEC_I18N_KEYS` in `lib/specs.js`, the icon map in `ProductPage.jsx`) and the "ქარ" label of the language switch.
-* **Dark theme:** components use theme tokens, and the dark values live in `styles/theme.css`. About 20 hard-coded colors remain in 6 stylesheets (footer, payment card, star / heart accents, thumbnail tile); a new hard-coded color will not follow the theme. Product photos are shown on a white tile because they are shot on white. `theme.css` uses CSS nesting for the dark-only additions. The inline script in `index.html` duplicates the resolve logic of `lib/theme.js` and has to be kept in sync. (**Fixed in FE-009:** the FOUC — flash of wrong theme on reload — is eliminated by that inline script, which applies the theme before the first paint.)
+* **Leftover comments / dead code:** a commented `createContext` line in `AuthProvider` (line 16). `AuthProvider.logout` still has a `console.error('err logout', …)` (line 96), the only `console` call in `src/`; there are no `TODO` / `FIXME` markers.
+* **Languages in the code:** comments and identifiers are in English (checked on 28.10.2026: no Cyrillic text anywhere in `src/`, `public/` or `index.html`). Georgian appears only where it must: `src/locales/ka.json`, the default title, description and Open Graph texts in `index.html` (they are what a crawler sees before JavaScript), the Georgian spec names the API uses as keys (`SPEC_I18N_KEYS` in `lib/specs.js`, the icon map in `ProductPage.jsx`) and the "ქარ" label of the language switch.
+* **Dark theme:** components use theme tokens, and the dark values live in `styles/theme.css`. 18 lines with hard-coded colors remain in 6 stylesheets (`ProductCard`, `Stars`, `FilterPanel`, `Footer`, `CardPreview`, `CartLine`: footer, payment card, star / heart accents, thumbnail tile); a new hard-coded color will not follow the theme. Product photos are shown on a white tile because they are shot on white. `theme.css` uses CSS nesting for the dark-only additions. The inline script in `index.html` duplicates the resolve logic of `lib/theme.js` and has to be kept in sync. (**Fixed in FE-009:** the FOUC — flash of wrong theme on reload — is eliminated by that inline script, which applies the theme before the first paint.)
 * **Partial translation (FE-008):** the API is single-language, so product specs values, descriptions and brand names are shown as the API sends them, and English filter option labels are derived from the English `value` slug (first letter capitalised). Spec **names** are translated through `SPEC_I18N_KEYS`; an unknown spec name is shown as it comes. The proper fix is an `Accept-Language` header on the API side (ADR 0008). The language is kept in `localStorage`, not in the URL, so a shared link does not carry the language.
 * **Token in `localStorage`:** simple and common, but readable by any script running on the page (XSS risk). HttpOnly cookies would be the more secure alternative if the API supported them.
-* **Bundle size:** one JS chunk of about 567 kB; routes could be code-split with `React.lazy` + `Suspense` (account, cart, addresses, checkout and forgot-password pages are good first candidates).
+* **Bundle size:** the route-level code splitting is done (≈ 494 kB of JavaScript for the first screen instead of ≈ 682 kB). What is left: the `validators` chunk (93 kB, Zod) and the `useTranslation` chunk (100 kB) are loaded on the first screen, and both dictionaries are bundled statically (loading only the current language would shrink the `i18n` chunk).
+* **SEO limits of a single-page app:** the per-page tags are written by JavaScript, so a crawler that does not run JavaScript sees only the static Georgian defaults of `index.html`; the real fix is pre-rendering or server-side rendering. The link previews of messengers (they do not run JavaScript) therefore show the same texts for every page. `public/robots.txt` says that `npm run build` appends the `Sitemap:` line through `scripts/generate-sitemap.mjs`, **but that script and its `package.json` hook do not exist in the repository**, so there is no `sitemap.xml` yet.
+* **`VITE_SITE_URL`:** the local `.env` contains `http://localhost:4173`. It must be replaced by the real public address on the host, otherwise the canonical and Open Graph addresses point to localhost.
+* **Image CDN is a third party:** product pictures go through `wsrv.nl`. If it is blocked or slow, `ProductImage` falls back to the original URL (level 1); `VITE_IMAGE_PROXY=` (empty) switches the CDN off. The widths in the inline script of `index.html` must be kept in sync with `lib/image.js` and `ProductCard`.
+* **Lighthouse:** no Lighthouse run is recorded in this repository, so the performance work above is described by what it changes and by the measured build sizes, not by a score.
 * **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutErrors.js`, `checkoutFormat.js`, `checkoutRoutes.js`, `specs.js`, `i18n/format.js`, `isTokenExpired`) are ideal first targets; `passesLuhn`, `isExpiryValid` and `detectBrand` have clear input / output tables.
 * **Free-tier API:** cold starts of up to a minute are expected; the UI explains it but cannot avoid it.
 
@@ -1405,4 +1523,12 @@ Checked on 23.10.2026: `npm run build` passes and `npm run lint` is clean (0 err
 | **`pending_payment` / `paid`** | The two order statuses the front end knows: the order exists but the code is not confirmed yet / the code is confirmed |
 | **`devCode`** | A learning-mode field of the API that contains the confirmation code; the UI never fills it in automatically |
 | **`'use no memo'`** | A directive that tells the React Compiler not to optimise one component |
+| **Code splitting** | Splitting the bundle into several files that are loaded on demand (`React.lazy` + `<Suspense>`) |
+| **App shell** | The static header inside `index.html` that is painted before the JavaScript bundle is ready |
+| **LCP** | Largest Contentful Paint: the time until the biggest element of the first screen (here the first product picture) is shown |
+| **Canonical** | `<link rel="canonical">`: the main address of a page; duplicates (filtered, sorted, searched lists) point to it |
+| **`noindex`** | A robots instruction that asks search engines not to put a page into their index |
+| **Open Graph** | `og:*` meta tags that messengers and social networks read to build a link preview |
+| **JSON-LD** | Structured data (schema.org) in a `<script type="application/ld+json">`: `Product`, `BreadcrumbList`, `Organization`, `WebSite` |
+| **Image CDN** | An external service (`wsrv.nl`) that resizes a picture and converts it to WebP on request (ADR 0009) |
 | **FE-00x** | Task identifiers from the course/project backlog referenced in code comments (FE-001/002 auth, FE-004 profile, FE-005 cart, FE-006 checkout, FE-008 i18n, FE-009 theme) |

@@ -8,7 +8,7 @@
 
 [ADR 0007](./0007-i18n-strategy.md) chose a small home-made solution: two JSON files, an `I18nProvider` (React Context) and our own `useTranslation()` hook, and it explicitly rejected `react-i18next` as too heavy for two languages.
 
-Since then the dictionaries grew to **391 keys per language** in about 28 sections (cart, auth, checkout, orders, addresses, validation, accessibility texts, …), and the UI now needs the things a library already provides: plurals (`1 year` / `2 years`, `1 item` / `5 items`), `{{param}}` interpolation and a tested way to react to a language change. The task description itself names `react-i18next` as the standard choice, and says a home-made solution is fine only if the decision is justified.
+Since then the dictionaries grew to **391 keys per language** (393 on 28.10.2026) in about 28 sections (29 on 28.10.2026) (cart, auth, checkout, orders, addresses, validation, accessibility texts, …), and the UI now needs the things a library already provides: plurals (`1 year` / `2 years`, `1 item` / `5 items`), `{{param}}` interpolation and a tested way to react to a language change. The task description itself names `react-i18next` as the standard choice, and says a home-made solution is fine only if the decision is justified.
 
 Facts that did not change:
 
@@ -21,7 +21,7 @@ Facts that did not change:
 | --- | --- |
 | Library | `i18next` 26 + `react-i18next` 17, one namespace (`translation`). |
 | Set-up | `src/lib/i18n/i18n.js` calls `i18n.use(initReactI18next).init(...)`; `main.jsx` imports it once (`import '@/lib/i18n'`). There is **no provider** in the tree. Components call `useTranslation()` from `react-i18next` and get `{ t, i18n }`; `i18n.language` is the current language. |
-| Dictionaries | Unchanged: `src/locales/ka.json` and `src/locales/en.json`, bundled statically (`useSuspense: false`, nothing to wait for). Keys are meaning-based and nested (`cart.empty`, `orders.status.paid`), the **same 391 keys in both files** (checked on 23.10.2026). No text is left in the components. |
+| Dictionaries | Unchanged: `src/locales/ka.json` and `src/locales/en.json`, bundled statically (`useSuspense: false`, nothing to wait for). Keys are meaning-based and nested (`cart.empty`, `orders.status.paid`), the **same 391 keys in both files** (checked on 23.10.2026; 393 keys in both files on 28.10.2026). No text is left in the components. |
 | Interpolation and plurals | The i18next defaults: `{{name}}` and `key_one` / `key_other`. The JSON files did not have to change when the library was introduced. Georgian does not distinguish the two forms in these strings, so both Georgian keys have the same text. |
 | Fallback | `ka → en`, `en → ka`, default `ka`. A missing key renders as the key itself, so it is visible in review. `nsSeparator` is turned off because keys contain dots, not colons. |
 | Persistence | `localStorage`, key `lang` (`ka` / `en`), default `ka`. The language is written when it is **changed** (`languageChanged` event), so a first-time visitor is not pinned to the default. |
@@ -61,7 +61,7 @@ Facts that did not change:
 
 **Negative / trade-offs**
 
-- Two new dependencies (`i18next`, `react-i18next`); the single JS chunk is bigger (see [ARCHITECTURE.md → Performance notes](../../ARCHITECTURE.md#20-performance-notes)). Both dictionaries are loaded together.
+- Two new dependencies (`i18next`, `react-i18next`); the single JS chunk was bigger when this ADR was written (≈ 682 kB; code splitting came later, see [ARCHITECTURE.md → Performance and SEO notes](../../ARCHITECTURE.md#20-performance-and-seo-notes) and [ADR 0009](./0009-performance-and-seo.md)). Both dictionaries are loaded together; they are inside the `i18n` chunk.
 - **The API is single-language, so the translation is partial.** The UI is fully translated, server data only in part, and spec values stay in Georgian in both languages. The right fix is on the API side: accept an `Accept-Language` header and return localized `name`, `description` and `specs`. Until then the limit is recorded here.
 - The language is not in the URL: a shared link does not carry it.
 - The inline script in `index.html` and `lib/i18n/config.js` both know the `lang` key; keep them in sync.
