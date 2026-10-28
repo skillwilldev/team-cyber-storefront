@@ -64,4 +64,4 @@ State is split by origin, so every kind of state has one home:
 - The team must understand the TanStack Query vocabulary (query keys, `staleTime`, `placeholderData`, mutation scope).
 - Query keys must be built from **all** inputs of a request; a missing value in the key means wrong cache hits.
 - Without TypeScript, wrong prop names or response shapes are found at run time, not at build time.
-- The production build is a single JS chunk of about 511 kB (about 156 kB gzip); route-level code splitting with `React.lazy` is a possible improvement.
+- The production build is a single JS chunk of about 511 kB (about 156 kB gzip); route-level code splitting with `React.lazy` is a possible improvement. *(Update 28.10.2026: done, see [ADR 0009](./0009-performance-and-seo.md); the first screen now needs about 494 kB of JavaScript, 156 kB gzip.)*

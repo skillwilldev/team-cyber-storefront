@@ -59,11 +59,11 @@ Also done: README, ARCHITECTURE.md, the docs index and four ADRs.
 
 ## 7. Plan for next week
 
-- [ ] Checkout (FE-006)
-- [ ] Fix the header search so it keeps the current category when used outside the catalog
-- [ ] Add tests for the pure functions (`lib/catalog.js`, `cartRules.js`, `profileForm.js`)
-- [ ] Reduce the bundle size with route-level code splitting (`React.lazy`)
-- [ ] Wishlist page
+- [x] Checkout (FE-006) — done in week 2
+- [ ] Fix the header search so it keeps the current category when used outside the catalog — still open on 28.10.2026 (listed in ARCHITECTURE.md → Known limitations)
+- [ ] Add tests for the pure functions (`lib/catalog.js`, `cartRules.js`, `profileForm.js`) — not done: 0 test files on 28.10.2026
+- [x] Reduce the bundle size with route-level code splitting (`React.lazy`) — done in the last days of the project (week 3, [ADR 0009](../docs/adr/0009-performance-and-seo.md))
+- [ ] Wishlist page — still a placeholder on 28.10.2026 (the data is stored locally, the API has no wishlist)
 
 ## 8. Self-assessment
 
