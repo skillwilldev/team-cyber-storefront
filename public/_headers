@@ -1,0 +1,19 @@
+# Netlify / Cloudflare Pages: HTTP headers (ignored by hosts that do not support the _headers file)
+
+# Vite gives every built file a content hash in its name, so it can be cached "forever"
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# icons and the preview picture rarely change
+/favicon.svg
+  Cache-Control: public, max-age=86400
+/og-image.png
+  Cache-Control: public, max-age=86400
+
+# index.html must always be re-checked, otherwise visitors would not get a new release
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

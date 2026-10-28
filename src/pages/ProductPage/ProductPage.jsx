@@ -23,8 +23,10 @@ import LoadingHint from '../../components/LoadingHint/LoadingHint';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductImage from '../../components/ProductImage/ProductImage';
 import QueryError from '../../components/QueryError/QueryError';
+import Seo from '../../components/Seo/Seo';
 import Stars from '../../components/Stars/Stars';
 import { getColorHex } from '../../lib/filterLabels';
+import { absoluteUrl, toSnippet } from '../../lib/seo';
 import { buildSpecGroups, getQuickSpecs, getSpecLabel } from '../../lib/specs';
 import StubPage from '../StubPage/StubPage';
 import './ProductPage.css';
@@ -102,9 +104,56 @@ function ProductView({ product }) {
   const categorySlug = product.category?.slug ?? 'smartphones';
   const categoryLabel = getCategoryName(category ?? product.category, lang) || 'Category';
 
+  // SEO: unique description, canonical address and schema.org structured data (rich snippet: price, availability, rating)
+  const productPath = `/product/${product.slug}`;
+  const productUrl = absoluteUrl(productPath);
+  const description = toSnippet(
+    product.description || t('seo.productDescription', { title, price: formatPriceI18n(price, currency, lang) }),
+  );
+  const images = gallery.map((src) => absoluteUrl(src));
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: title,
+      ...(images.length > 0 && { image: images }),
+      ...(product.description && { description: toSnippet(product.description, 500) }),
+      ...(brand && { brand: { '@type': 'Brand', name: brand } }),
+      sku: String(product.id),
+      ...(reviewsCount > 0 && rating > 0 && {
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(rating), reviewCount: Number(reviewsCount) },
+      }),
+      offers: {
+        '@type': 'Offer',
+        url: productUrl,
+        priceCurrency: currency || 'GEL',
+        price: Number(price),
+        itemCondition: 'https://schema.org/NewCondition',
+        availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { name: t('common.home'), url: absoluteUrl('/') },
+        { name: categoryLabel, url: absoluteUrl(`/?category=${categorySlug}`) },
+        { name: title, url: productUrl },
+      ].map((item, i) => ({ '@type': 'ListItem', position: i + 1, name: item.name, item: item.url })),
+    },
+  ];
+
   return (
     <>
       <title>{`${title} — Cyber`}</title>
+      <Seo
+        description={description}
+        ogTitle={title}
+        canonical={productPath}
+        image={images[0]}
+        type="product"
+        jsonLd={jsonLd}
+      />
       <div className="container">
         <Breadcrumbs
           items={[
@@ -130,14 +179,22 @@ function ProductView({ product }) {
                       aria-current={i === photoIndex}
                       onClick={() => setPhotoIndex(i)}
                     >
-                      <ProductImage src={src} alt="" />
+                      <ProductImage src={src} alt="" widths={[80, 160, 240]} sizes="80px" width={80} height={100} loading="lazy" />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             <div className="product__photo">
-              <ProductImage src={photo} alt={title} fetchPriority="high" decoding="async" />
+              <ProductImage
+                src={photo}
+                alt={title}
+                widths={[320, 480, 640, 700]}
+                sizes="(max-width: 1023px) 320px, 514px"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+              />
             </div>
           </div>
 

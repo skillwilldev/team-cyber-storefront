@@ -84,7 +84,22 @@ export async function apiRequest(endpoint, { auth = true, ...options } = {}) {
     ...(options.headers || {}),
   };
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  // The first catalog requests are started by a script in index.html while the JS bundle is still loading.
+  // Each early answer is used once; if it failed, the normal request below is made.
+  const url = `${API_URL}${endpoint}`;
+  if (!options.method || options.method.toUpperCase() === 'GET') {
+    const early = window.__earlyRequests?.[url];
+    if (early) {
+      delete window.__earlyRequests[url];
+      try {
+        return await early;
+      } catch {
+        /* fall through to a normal request */
+      }
+    }
+  }
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });

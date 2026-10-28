@@ -22,8 +22,14 @@
   background: var(--c-black);
   color: var(--t-on-fg);
 }
-.pagination__arrow:disabled {
+.pagination__arrow:disabled,
+.pagination__arrow--disabled {
   opacity: 0.3;
+}
+.pagination__btn,
+.pagination__arrow {
+  color: inherit;
+  text-decoration: none;
 }
 .pagination__dots {
   width: 32px;

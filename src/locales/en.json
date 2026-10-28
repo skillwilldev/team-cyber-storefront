@@ -1,5 +1,9 @@
 {
-  "meta": { "description": "Cyber — online electronics store." },
+  "meta": { "description": "Cyber — online electronics store: smartphones and gadgets, good prices and fast delivery." },
+  "seo": {
+    "catalogDescription": "Buy {{category}} online at Cyber: prices, specifications and fast delivery.",
+    "productDescription": "{{title}} — {{price}}. Specifications, reviews and fast delivery. Order online at Cyber."
+  },
   "common": {
     "home": "Home",
     "catalog": "Catalog",

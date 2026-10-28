@@ -4,7 +4,33 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Cyber — online electronics store." />
+    <title>Cyber — ელექტრონიკის ონლაინ მაღაზია</title>
+    <meta
+      name="description"
+      content="Cyber — ონლაინ ელექტრონიკის მაღაზია: სმარტფონები და გაჯეტები, კარგი ფასები და სწრაფი მიწოდება."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <!-- Open Graph / Twitter: what messengers and social networks show for a link (they do not run JavaScript).
+         Lines with __SITE_URL__ are filled in (or removed when VITE_SITE_URL is not set) by vite.config.js. -->
+    <meta property="og:site_name" content="Cyber" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ka_GE" />
+    <meta property="og:title" content="Cyber — ელექტრონიკის ონლაინ მაღაზია" />
+    <meta
+      property="og:description"
+      content="Cyber — ონლაინ ელექტრონიკის მაღაზია: სმარტფონები და გაჯეტები, კარგი ფასები და სწრაფი მიწოდება."
+    />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cyber — ელექტრონიკის ონლაინ მაღაზია" />
+    <meta name="twitter:image" content="__SITE_URL__/og-image.png" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"Cyber","url":"__SITE_URL__/"},{"@type":"WebSite","name":"Cyber","url":"__SITE_URL__/","potentialAction":{"@type":"SearchAction","target":"__SITE_URL__/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
+    <!-- Connect to the API (Render) and the image CDN in advance: saves a DNS + TLS round trip on a slow mobile network -->
+    <link rel="preconnect" href="https://shop-api-kbe6.onrender.com" crossorigin />
+    <link rel="preconnect" href="https://wsrv.nl" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Fonts load without blocking the first paint (preload, then switch to a stylesheet) -->
@@ -21,7 +47,6 @@
       />
     </noscript>
     <meta name="theme-color" content="#ffffff" />
-    <title>Cyber</title>
     <!--
       FOUC prevention (FE-009): this inline script runs BEFORE the first paint.
       It reads the saved theme preference from localStorage and applies the resolved
@@ -29,6 +54,58 @@
       It also reads the saved language and sets <html lang>.
       This is one of the rare cases where code lives outside React, in index.html.
     -->
+    <script>
+      // Early start of the first-screen requests (only on the catalog home page without a query string).
+      // They are sent while the JavaScript bundle is still downloading and parsing (the slowest part on a phone).
+      // src/shared/api/apiClient.js takes the answers from window.__earlyRequests (each one is used once);
+      // if a request failed or the URL does not match, the app makes its own request as usual.
+      // As soon as the product list arrives, the picture of the FIRST product (the LCP element) is preloaded
+      // with a high priority — the browser does not have to wait for React to render the <img>.
+      (function () {
+        try {
+          if (location.pathname !== '/' || location.search) return;
+          var api = '%VITE_API_URL%';
+          if (api.indexOf('%') !== -1) api = 'https://shop-api-kbe6.onrender.com/api';
+          var proxy = '%VITE_IMAGE_PROXY%';
+          if (proxy.indexOf('%') !== -1) proxy = 'https://wsrv.nl';
+          var limit = window.matchMedia('(max-width: 1023px)').matches ? 8 : 9; // same as CatalogPage
+          var early = (window.__earlyRequests = {});
+          var start = function (path) {
+            var url = api + path;
+            early[url] = fetch(url).then(function (r) {
+              if (!r.ok) throw new Error(String(r.status));
+              return r.json();
+            });
+            early[url].catch(function () {});
+            return early[url];
+          };
+          start('/categories/smartphones');
+          start('/products?category=smartphones&sort=rating-desc&page=1&limit=' + limit).then(function (data) {
+            var src = data && data.items && data.items[0] && data.items[0].image;
+            if (typeof src !== 'string' || !/^https?:\/\//i.test(src)) return;
+            var link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.setAttribute('fetchpriority', 'high');
+            if (proxy && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(src)) {
+              // keep in sync with src/lib/image.js and ProductCard (widths and sizes)
+              link.setAttribute(
+                'imagesrcset',
+                [160, 240, 320, 480]
+                  .map(function (w) {
+                    return proxy + '/?url=' + encodeURIComponent(src) + '&w=' + w + '&output=webp&q=75&we ' + w + 'w';
+                  })
+                  .join(', ')
+              );
+              link.setAttribute('imagesizes', '(max-width: 1023px) 104px, 160px');
+            } else {
+              link.href = src;
+            }
+            document.head.appendChild(link);
+          });
+        } catch (e) {}
+      })();
+    </script>
     <script>
       (function () {
         try {
@@ -53,7 +130,22 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static first paint (app shell): the same header bar as src/components/Header, only the logo.
+           The page is painted at once, without waiting for the JavaScript bundle (better FCP / Speed Index on a phone).
+           React replaces this block completely when the app starts (createRoot), the logo does not move. -->
+      <header class="header">
+        <div class="container">
+          <div class="header__inner">
+            <a class="header__logo" href="/" aria-label="cyber">
+              <svg viewBox="0 0 66 26" role="img" aria-label="cyber" fill="currentColor">
+                <text x="0" y="21" font-family="Inter, sans-serif" font-size="27" font-weight="700" textLength="66" lengthAdjust="spacingAndGlyphs">cyber</text>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </header>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -9,7 +9,16 @@ import { StarIcon } from '../icons/icons';
 import Stars from '../Stars/Stars';
 import './ProductCard.css';
 
-export default function ProductCard({ product, priority = false }) {
+// resized WebP versions offered to the browser (the card shows the picture 104 px high on mobile, 160 px on desktop)
+const IMAGE_WIDTHS = [160, 240, 320, 480];
+const IMAGE_SIZES = '(max-width: 1023px) 104px, 160px';
+
+/**
+ * priority — the picture that is probably the LCP element: loaded at once with a high fetch priority.
+ * eager    — a card that is visible without scrolling: loaded at once, normal priority.
+ * Every other card is lazy (loaded when it is about to appear on screen).
+ */
+export default function ProductCard({ product, priority = false, eager = false }) {
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
   const { t, i18n } = useTranslation();
@@ -34,13 +43,14 @@ export default function ProductCard({ product, priority = false }) {
 
       <Link to={`/product/${slug}`} className="product-card__link">
         <div className="product-card__img">
-          {/* priority: the first cards on screen load at once (better LCP); the rest are lazy */}
           <ProductImage
             src={image}
             alt={title}
+            widths={IMAGE_WIDTHS}
+            sizes={IMAGE_SIZES}
             width={160}
             height={160}
-            loading={priority ? 'eager' : 'lazy'}
+            loading={priority || eager ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
             decoding="async"
           />

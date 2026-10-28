@@ -41,7 +41,16 @@ export default function CartLine({ item }) {
   return (
     <li className={`cart-line${stockIssue ? ' cart-line--issue' : ''}`} aria-busy={isBusy}>
       <Link to={href} className="cart-line__img" tabIndex={-1} aria-hidden="true">
-        <ProductImage src={product.image} alt="" width={96} height={96} loading="lazy" />
+        <ProductImage
+          src={product.image}
+          alt=""
+          widths={[96, 192, 288]}
+          sizes="96px"
+          width={96}
+          height={96}
+          loading="lazy"
+          decoding="async"
+        />
       </Link>
 
       <div className="cart-line__info">
