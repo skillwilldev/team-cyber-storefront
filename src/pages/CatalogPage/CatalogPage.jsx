@@ -153,6 +153,11 @@ export default function CatalogPage() {
                   </li>
                 ))}
               </ul>
+              {/* reserve the room of the "Showing 1-9 of N" line and of the pagination: the footer must not jump when the data arrives */}
+              <p className="catalog__range" aria-hidden="true">
+                &nbsp;
+              </p>
+              <div className="catalog__pagination-slot" aria-hidden="true" />
             </>
           )}
 
@@ -162,7 +167,7 @@ export default function CatalogPage() {
             <ul className={`catalog__grid${isPlaceholderData ? ' catalog__grid--stale' : ''}`}>
               {items.map((product, index) => (
                 <li key={product.id}>
-                  <ProductCard product={product} priority={index < 2} eager={index < 4} />
+                  <ProductCard product={product} priority={index < 2} eager={index < 4} headingLevel={2} />
                 </li>
               ))}
             </ul>

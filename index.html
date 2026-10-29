@@ -33,6 +33,9 @@
     <link rel="preconnect" href="https://wsrv.nl" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Georgian font used by the header / nav text: loaded early, so the swap happens before the first paint and the nav does not shift (CLS).
+         Vite replaces the path with the hashed file name in the build (check dist/index.html). -->
+    <link rel="preload" href="/src/assets/fonts/ADG2.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Fonts load without blocking the first paint (preload, then switch to a stylesheet) -->
     <link
       rel="preload"

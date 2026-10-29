@@ -1,6 +1,15 @@
+/* The hint appears after a few seconds of waiting. It is fixed to the bottom of the screen and takes NO place in the page flow,
+   so when it shows up nothing moves (an in-flow block pushed the whole list and the footer down: layout shift). */
 .loading-hint {
-  margin-bottom: 16px;
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 20;
+  max-width: 480px;
+  margin: 0 auto;
   padding: 12px 16px;
+  border: 1px solid var(--c-border-light);
   border-radius: 8px;
   background: var(--c-surface);
   font-size: 14px;

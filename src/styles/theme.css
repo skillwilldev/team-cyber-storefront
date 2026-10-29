@@ -30,7 +30,7 @@
   --t-text-body: #333;
   --ring-swatch: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
   --t-rating-bg: #fff8e1;
-  --t-rating-text: #ffa000;
+  --t-rating-text: #9a5f00; /* 4.9:1 on --t-rating-bg (the old #ffa000 was 1.9:1) */
   --t-star-empty: #d9d9d9;
   --t-placeholder-bg: #ececec;
   --t-placeholder-icon: #b3b3b3;
