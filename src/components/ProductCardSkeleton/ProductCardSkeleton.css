@@ -1,43 +1,41 @@
-.product-card-skeleton {
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  background: var(--c-surface);
-  border-radius: 8px;
-}
+/* The skeleton uses the real .product-card classes for its size (see ProductCardSkeleton.jsx);
+   this file only paints the grey blocks. Do not add paddings / heights / margins here. */
 .product-card-skeleton .skeleton {
   background-color: var(--t-skeleton-bg);
 }
-.product-card-skeleton__img {
-  height: 160px;
-  margin-top: 48px;
+.product-card-skeleton .product-card__btn {
+  /* .product-card__btn paints a black button; here it must be a grey block (needs a higher specificity than .skeleton) */
+  background: var(--g-skeleton);
+  background-color: var(--t-skeleton-bg);
+  background-size: 200% 100%;
 }
-.product-card-skeleton__line {
-  height: 18px;
-  margin-top: 16px;
+.product-card-skeleton__pic {
+  height: 100%;
+  aspect-ratio: 1 / 1;
 }
-.product-card-skeleton__line--short {
-  width: 60%;
-  margin: 8px auto 0;
+/* a block-level bar as high as one line of text of its parent (the text is only &nbsp;) */
+.product-card-skeleton__bar {
+  margin: 0 auto;
+  border-radius: 4px;
 }
-.product-card-skeleton__price {
+.product-card-skeleton__bar--brand {
+  width: 35%;
+}
+.product-card-skeleton__bar--title {
+  width: 80%;
+}
+.product-card-skeleton__bar--price {
   width: 50%;
-  height: 32px;
-  margin: 16px auto 0;
 }
-.product-card-skeleton__btn {
-  height: 48px;
-  margin: 20px 14px 0;
+.product-card-skeleton .product-card__old {
+  text-decoration: none;
 }
-@media (max-width: 1023px) {
-  .product-card-skeleton {
-    padding: 24px 12px;
-  }
-  .product-card-skeleton__img {
-    height: 104px;
-    margin-top: 40px;
-  }
-  .product-card-skeleton__btn {
-    margin: 12px 0 0;
-  }
+/* the rating rows are 16 px (desktop) and 20 px (mobile badge) high in the real card */
+.product-card-skeleton__stars {
+  width: 96px;
+  height: 16px;
+}
+.product-card-skeleton__badge {
+  width: 48px;
+  height: 20px;
 }

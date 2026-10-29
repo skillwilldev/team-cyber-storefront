@@ -181,3 +181,9 @@
     padding: 0 10px;
   }
 }
+
+/* same size as <Pagination> (32 px buttons + margin 40 0 56): placeholder while the first page is loading */
+.catalog__pagination-slot {
+  height: 32px;
+  margin: 40px 0 56px;
+}

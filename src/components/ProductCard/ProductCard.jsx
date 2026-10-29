@@ -18,7 +18,9 @@ const IMAGE_SIZES = '(max-width: 1023px) 104px, 160px';
  * eager    — a card that is visible without scrolling: loaded at once, normal priority.
  * Every other card is lazy (loaded when it is about to appear on screen).
  */
-export default function ProductCard({ product, priority = false, eager = false }) {
+export default function ProductCard({ product, priority = false, eager = false, headingLevel = 3 }) {
+  // the title is a heading; its level must follow the heading above the list (h1 → h2 in the catalog, h2 → h3 on the product page)
+  const Heading = `h${headingLevel}`;
   const { isInWishlist, toggleWishlist } = useShop();
   const { addToCart, isAdding } = useAddToCart();
   const { t, i18n } = useTranslation();
@@ -56,7 +58,7 @@ export default function ProductCard({ product, priority = false, eager = false }
           />
         </div>
         {brand && <p className="product-card__brand">{brand}</p>}
-        <h3 className="product-card__title">{title}</h3>
+        <Heading className="product-card__title">{title}</Heading>
       </Link>
 
       <p className="product-card__rating product-card__rating--desktop">
