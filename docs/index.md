@@ -1,6 +1,6 @@
 # Documentation index
 
-This folder contains the written documentation of the Cyber Shop front end. Last checked against the code on **28.10.2026** (`npm run build` and `npm run lint` were run the same day; the numbers in the documents come from that run).
+This folder contains the written documentation of the Cyber Shop front end. Last checked against the code on **31.10.2026** (`npm run build` and `npm run lint` were run; Lighthouse scores measured on the production build).
 
 ## Where to start
 
@@ -8,7 +8,10 @@ This folder contains the written documentation of the Cyber Shop front end. Last
 | --- | --- |
 | [`../README.md`](../README.md) | How to install, run, build and deploy the project |
 | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) | How the code is organised: folders (full annotated tree), data flow, modules (auth, cart, addresses, checkout), API reference, known limitations |
+| [`performance.md`](./performance.md) | Performance report: before/after measurements, Lighthouse scores, bundle analysis |
+| [`final-report.md`](./final-report.md) | Final project report: features, architecture, optimization, project in numbers, conclusions |
 | [`adr/`](./adr) | **Why** the important technical decisions were made |
+| [`performance/`](./performance) | Lighthouse screenshots (evidence) |
 | [`../journal/`](../journal) | Weekly development journal |
 
 ## Architecture Decision Records (ADR)
@@ -26,10 +29,12 @@ An ADR is a short document about **one** decision: the situation, what was chose
 | [0007](./adr/0007-i18n-strategy.md) | Internationalization: Georgian + English, JSON files, `Intl` for prices, what is and is not translated | FE-008 | Accepted; the React integration is superseded by 0008 |
 | [0008](./adr/0008-react-i18next.md) | i18n: `react-i18next` instead of the home-made Context | FE-008 | Accepted |
 | [0009](./adr/0009-performance-and-seo.md) | Performance and SEO: route-level code splitting, early first-screen requests, image CDN, `Seo` component, canonical / `noindex` rules | — | Accepted |
+| [0010](./adr/0010-api-image-limitations.md) | API image limitations: product pictures at a single 700×700 size; front-end workaround with `wsrv.nl` CDN | FE-010 | Accepted |
+| [0011](./adr/0011-caching-strategy.md) | Caching strategy: what is cached, for how long, and when it is cleared | FE-010 | Accepted |
 
 ### ADR template
 
-Copy this when a new decision has to be recorded (next number: `0010`):
+Copy this when a new decision has to be recorded (next number: `0012`):
 
 ```md
 # ADR 000X: Short title of the decision
@@ -51,11 +56,17 @@ Each option with a short reason why it was not chosen.
 What gets better, what gets worse, what must be remembered later.
 ```
 
+## Performance
+
+- [Performance Report](./performance.md) — before/after measurements, changes, target assessment
+- [Lighthouse Screenshots](./performance/) — visual evidence of the scores
+
 ## Journal
 
-- [Week 1](../journal/week-1.md)
-- [Week 2](../journal/week-2.md)
+- [Week 1](../journal/week-1.md) — 05.10 – 11.10.2026 (project setup, catalog, product page, auth, cart)
+- [Week 2](../journal/week-2.md) — 12.10 – 18.10.2026 (checkout, addresses, orders)
 - [Week 3](../journal/week-3.md) — 19.10 – 28.10.2026 (i18n with react-i18next, 3-state theme without flash, theme tokens, bug fixes from lecturer feedback, performance and SEO, final measurements and the project totals)
+- [Week 4](../journal/week-4.md) — 29.10 – 31.10.2026 (optimization measurements FE-010, ADR 0010 + 0011, performance report, final report, presentation)
 
 ## Related code
 
@@ -72,3 +83,5 @@ Where each decision is implemented. Only the cart files reference ADR 0003 direc
 | `src/locales/`, `src/lib/filterLabels.js`, `src/lib/specs.js`, `src/lib/i18n/format.js`, `index.html` (inline script, `lang`) | [0007](./adr/0007-i18n-strategy.md) |
 | `src/lib/i18n/` (`config.js`, `i18n.js`, `index.js`), `src/components/LanguageSwitcher/`, `src/main.jsx` | [0008](./adr/0008-react-i18next.md) |
 | `src/App.jsx` and `src/components/Layout/Layout.jsx` (`React.lazy`, `<Suspense>`), `index.html` (early requests, app shell), `vite.config.js` (inlined CSS, `__SITE_URL__`), `src/lib/image.js`, `src/components/ProductImage/`, `src/components/Seo/`, `src/lib/seo.js`, `public/robots.txt`, `public/_headers` | [0009](./adr/0009-performance-and-seo.md) |
+| `src/lib/image.js`, `src/components/ProductImage/ProductImage.jsx`, `index.html` (LCP preload), `.env.example` | [0010](./adr/0010-api-image-limitations.md) |
+| `src/api/queryClient.js`, `src/api/queryKeys.js`, `src/api/catalogQueries.js`, `src/features/auth/context/AuthProvider.jsx` | [0011](./adr/0011-caching-strategy.md) |

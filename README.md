@@ -282,7 +282,7 @@ Every cart request returns the **whole cart**, which is written straight into th
 - Static defaults in `index.html` (title, description, Open Graph, Twitter, schema.org `Organization` + `WebSite`) and per-page tags written by the `Seo` component.
 - A plain category page is indexed and is its own canonical; search results, filtered and re-sorted lists point to the category and are `noindex`. Private screens (`/cart`, `/checkout`, `/account`, `/addresses`, `/orders`, `/login`, `/register`, `/forgot-password`) are `noindex` and closed in `robots.txt`.
 - The product page has a unique title and description, the canonical address, `og:image` and schema.org `Product` (price, availability, rating) and `BreadcrumbList`.
-- Limits: the tags are written by JavaScript (a crawler without JavaScript sees the Georgian defaults of `index.html`); there is no `sitemap.xml` yet; Lighthouse scores were not measured, so none are quoted. See [ARCHITECTURE.md → Known limitations](./ARCHITECTURE.md#24-known-limitations-and-technical-debt).
+- Limits: the tags are written by JavaScript (a crawler without JavaScript sees the Georgian defaults of `index.html`); there is no `sitemap.xml` yet. See [ARCHITECTURE.md → Known limitations](./ARCHITECTURE.md#24-known-limitations-and-technical-debt) and [`docs/performance.md`](./docs/performance.md) for Lighthouse scores.
 
 ---
 
@@ -339,8 +339,11 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | --- | --- |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Folder structure, data flow, module and API reference |
 | [`docs/index.md`](./docs/index.md) | Index of the documentation |
-| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md), [0005 checkout state in the URL](./docs/adr/0005-checkout-state-in-url.md), [0006 color theme](./docs/adr/0006-color-theme.md), [0007 i18n strategy](./docs/adr/0007-i18n-strategy.md), [0008 react-i18next](./docs/adr/0008-react-i18next.md), [0009 performance and SEO](./docs/adr/0009-performance-and-seo.md) |
-| [`journal/`](./journal) | Weekly development journal: [week 1](./journal/week-1.md), [week 2](./journal/week-2.md), [week 3](./journal/week-3.md) |
+| [`docs/performance.md`](./docs/performance.md) | Performance report: before/after measurements, Lighthouse scores, bundle analysis |
+| [`docs/final-report.md`](./docs/final-report.md) | Final project report with all sections |
+| [`docs/adr/`](./docs/adr) | Architecture decision records: [0001 stack](./docs/adr/0001-frontend-stack.md), [0002 token storage](./docs/adr/0002-token-storage.md), [0003 cart quantity stepper](./docs/adr/0003-cart-quantity-stepper.md), [0004 profile current password](./docs/adr/0004-profile-current-password.md), [0005 checkout state in the URL](./docs/adr/0005-checkout-state-in-url.md), [0006 color theme](./docs/adr/0006-color-theme.md), [0007 i18n strategy](./docs/adr/0007-i18n-strategy.md), [0008 react-i18next](./docs/adr/0008-react-i18next.md), [0009 performance and SEO](./docs/adr/0009-performance-and-seo.md), [0010 API image limitations](./docs/adr/0010-api-image-limitations.md), [0011 caching strategy](./docs/adr/0011-caching-strategy.md) |
+| [`docs/performance/`](./docs/performance) | Lighthouse screenshots (Desktop and Mobile) |
+| [`journal/`](./journal) | Weekly development journal: [week 1](./journal/week-1.md), [week 2](./journal/week-2.md), [week 3](./journal/week-3.md), [week 4](./journal/week-4.md) |
 
 ---
 
@@ -360,7 +363,7 @@ Build command: `npm run build` · Publish directory: `dist` · Set `VITE_API_URL
 | Georgian + English interface (FE-008, bonus) | ✅ done; the API is single-language, so spec values stay in Georgian (ADR 0008) |
 | Wishlist page | 🚧 placeholder (data is stored locally; no page and no API yet) |
 | Code splitting | ✅ done: 32 JS chunks, first screen ≈ 494 kB (≈ 156 kB gzip); no Vite size warning |
-| Performance: early requests, app shell, image CDN, inlined CSS, caching headers | ✅ done (ADR 0009); Lighthouse scores not measured |
+| Performance: early requests, app shell, image CDN, inlined CSS, caching headers | ✅ done (ADR 0009); Lighthouse Mobile Perf 90, A11y 100, SEO 100 |
 | SEO: titles, descriptions, canonical, `noindex`, Open Graph, JSON-LD, `robots.txt` | ✅ done (ADR 0009) |
 | `sitemap.xml` | 🚧 not generated: `robots.txt` mentions `scripts/generate-sitemap.mjs`, but the script does not exist |
 | About / Contact / Blog | 🚧 placeholders |
@@ -374,7 +377,7 @@ A detailed list of limitations and improvement ideas is in **[ARCHITECTURE.md �
 
 ## Project in numbers
 
-Measured on 28.10.2026 from the files of the repository and from `npm run lint` and `npm run build` (the project was developed over three weeks, 05.10 – 28.10.2026, about 75 hours according to the journal).
+Measured on 28.10.2026 from the files of the repository and from `npm run lint` and `npm run build` (the project was developed over four weeks, 05.10 – 31.10.2026, about 85 hours according to the journal).
 
 | Metric | Value |
 | --- | --- |
@@ -386,7 +389,7 @@ Measured on 28.10.2026 from the files of the repository and from `npm run lint` 
 | API paths used | 21 |
 | Translation keys | 393 per language (Georgian, English) |
 | Dependencies | 10 runtime + 12 development |
-| ADRs / journal files | 9 / 3 |
+| ADRs / journal files | 11 / 4 |
 | Production build | 274 modules, 32 JS chunks, ≈ 8.7 s |
 | First-screen JavaScript | ≈ 494 kB (≈ 156 kB gzip); all chunks together ≈ 704 kB |
 | Lint | 1 error, 0 warnings |

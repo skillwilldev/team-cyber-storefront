@@ -2,7 +2,7 @@
 
 This document explains how the Cyber Shop front end is built: where every piece of code lives, how data moves through the app, what each module and function is responsible for, and the reasoning behind the main design decisions. It is written so that a new developer can open any file and immediately understand *what it does*, *who calls it* and *what it depends on*.
 
-> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme, i18n strategy, the switch to react-i18next, and performance + SEO).
+> The reasoning behind the key decisions is recorded separately in [`docs/adr/`](./docs/adr) (stack, token storage, cart quantity stepper, profile current password, checkout state in the URL, color theme, i18n strategy, the switch to react-i18next, performance + SEO, API image limitations, and caching strategy).
 
 > Scope: this repository contains the **front end only** (a single-page application). The back end is a separate, ready-made REST API (`https://shop-api-kbe6.onrender.com/api`).
 
@@ -319,7 +319,7 @@ cyber-shop/
       └─ global.css             imports vars, fonts, reset, auth-tokens and theme + base styles + utilities
 ```
 
-### Project in numbers (measured on 28.10.2026)
+### Project in numbers (measured on 28.10.2026, ADR and journal counts updated on 31.10.2026)
 
 Counted from the files of this repository and from `npm run lint` / `npm run build` run on the same day (Node 22, npm 10). The repository has no `.git` folder in the archive that was analysed, so commit counts are not part of this table.
 
@@ -333,8 +333,8 @@ Counted from the files of this repository and from `npm run lint` / `npm run bui
 | API paths used | 21 (`/auth/me` is used with `GET` and `PATCH`) |
 | Translation keys | 393 in `ka.json` and 393 in `en.json` (identical key sets) |
 | Dependencies | 10 runtime + 12 development packages |
-| ADRs | 9 (`docs/adr/0001` … `0009`) |
-| Journal | 3 weekly files, about 75 hours in total (25 + 30 + 20, the author's own figures) |
+| ADRs | 11 (`docs/adr/0001` … `0011`) |
+| Journal | 4 weekly files, about 85 hours in total (25 + 30 + 20 + 10, the author's own figures) |
 | Production build | 274 modules, 32 JavaScript chunks, 18 CSS files, built in ≈ 8.7 s |
 | First-screen JavaScript | ≈ 494 kB (≈ 156 kB gzip): the `index` chunk 303.8 kB + the 5 chunks `index.html` preloads |
 | All JavaScript (every chunk) | ≈ 704 kB |
@@ -1302,7 +1302,7 @@ Shop-specific icons (cart, heart, search, burger, chevron, star, etc.) live sepa
 | `index.html` | 46.0 kB (11.4 kB gzip) |
 | Vite size warning | none (the single-chunk warning of the earlier versions is gone) |
 
-Earlier measurements (one single JS chunk): ≈ 511 kB (before checkout, addresses and orders), ≈ 567 kB on 17.10.2026, ≈ 682 kB (≈ 207 kB gzip, 282 modules) on 23.10.2026. Compared with the last single chunk, the JavaScript needed for the first screen is now about **27 % smaller (≈ 494 kB instead of ≈ 682 kB; ≈ 156 kB instead of ≈ 207 kB gzip)**. Both dictionaries are still bundled statically (they are inside the `i18n` chunk), and `i18next` + `react-i18next` are part of the first screen. Lighthouse scores were **not** measured for this document, so no score is quoted.
+Earlier measurements (one single JS chunk): ≈ 511 kB (before checkout, addresses and orders), ≈ 567 kB on 17.10.2026, ≈ 682 kB (≈ 207 kB gzip, 282 modules) on 23.10.2026. Compared with the last single chunk, the JavaScript needed for the first screen is now about **27 % smaller (≈ 494 kB instead of ≈ 682 kB; ≈ 156 kB instead of ≈ 207 kB gzip)**. Both dictionaries are still bundled statically (they are inside the `i18n` chunk), and `i18next` + `react-i18next` are part of the first screen. Lighthouse scores (measured 31.10.2026 on the production build): Mobile catalog — Performance **90**, Accessibility **100**, SEO **100**; Desktop catalog — Performance **100**, Accessibility **97**, SEO **100**. Full report: `docs/performance.md`; screenshots: `docs/performance/`.
 
 ### 20.4 SEO
 
@@ -1493,7 +1493,7 @@ Checked on 28.10.2026: `npm run build` passes (274 modules, no size warning). `n
 * **SEO limits of a single-page app:** the per-page tags are written by JavaScript, so a crawler that does not run JavaScript sees only the static Georgian defaults of `index.html`; the real fix is pre-rendering or server-side rendering. The link previews of messengers (they do not run JavaScript) therefore show the same texts for every page. `public/robots.txt` says that `npm run build` appends the `Sitemap:` line through `scripts/generate-sitemap.mjs`, **but that script and its `package.json` hook do not exist in the repository**, so there is no `sitemap.xml` yet.
 * **`VITE_SITE_URL`:** the local `.env` contains `http://localhost:4173`. It must be replaced by the real public address on the host, otherwise the canonical and Open Graph addresses point to localhost.
 * **Image CDN is a third party:** product pictures go through `wsrv.nl`. If it is blocked or slow, `ProductImage` falls back to the original URL (level 1); `VITE_IMAGE_PROXY=` (empty) switches the CDN off. The widths in the inline script of `index.html` must be kept in sync with `lib/image.js` and `ProductCard`.
-* **Lighthouse:** no Lighthouse run is recorded in this repository, so the performance work above is described by what it changes and by the measured build sizes, not by a score.
+* **Lighthouse:** scores are now recorded in `docs/performance.md` with screenshots in `docs/performance/`. Mobile catalog: Performance 90, Accessibility 100, SEO 100; Desktop catalog: Performance 100, Accessibility 97, SEO 100. All mandatory targets (Performance >= 85, Accessibility >= 90, bundle < 300 KB gzip) are met.
 * **No automated tests.** The pure modules (`lib/catalog.js`, `cartRules.js`, `cartErrors.js`, `profileForm.js`, `addressForm.js`, `card.js`, `checkoutErrors.js`, `checkoutFormat.js`, `checkoutRoutes.js`, `specs.js`, `i18n/format.js`, `isTokenExpired`) are ideal first targets; `passesLuhn`, `isExpiryValid` and `detectBrand` have clear input / output tables.
 * **Free-tier API:** cold starts of up to a minute are expected; the UI explains it but cannot avoid it.
 
