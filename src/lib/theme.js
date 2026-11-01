@@ -10,9 +10,12 @@
  * The PREFERENCE is saved in localStorage under THEME_KEY ('light' | 'dark' | 'system').
  * The RESOLVED theme on <html> is always 'light' or 'dark'.
  *
- * initTheme() is called by the inline script in index.html (FOUC prevention)
- * AND in main.jsx (to set up listeners). After that this module handles
- * toggle, save, sync between tabs and exposes a store for React.
+ * The inline script in index.html repeats the resolve logic (reading
+ * localStorage and applying data-theme) synchronously before the first paint
+ * to prevent FOUC.  initTheme() in main.jsx re-applies the theme once the
+ * module is loaded, and subscribe() sets up the storage and matchMedia
+ * listeners for live syncing.  After that this module handles toggle, save,
+ * sync between tabs and exposes a store for React.
  */
 
 export const THEME_KEY = 'theme';
@@ -62,7 +65,7 @@ function sync() {
   notify();
 }
 
-/** Applies the saved theme (or the OS one). Called by the inline script and main.jsx. */
+/** Applies the saved theme (or the OS one). Called in main.jsx; the inline script in index.html has its own copy of this logic. */
 export function initTheme() {
   const preference = readStored() ?? SYSTEM;
   apply(resolve(preference));

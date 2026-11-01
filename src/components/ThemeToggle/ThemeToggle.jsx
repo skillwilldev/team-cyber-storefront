@@ -5,9 +5,9 @@ import './ThemeToggle.css';
 
 /** Order of the cycle: light → dark → system → light … */
 const MODES = [
-  { value: 'light', Icon: SunIcon, switchKey: 'theme.switchToLight' },
-  { value: 'dark', Icon: MoonIcon, switchKey: 'theme.switchToDark' },
-  { value: 'system', Icon: MonitorIcon, switchKey: 'theme.switchToSystem' },
+  { value: 'light', Icon: SunIcon, labelKey: 'theme.light', switchKey: 'theme.switchToLight' },
+  { value: 'dark', Icon: MoonIcon, labelKey: 'theme.dark', switchKey: 'theme.switchToDark' },
+  { value: 'system', Icon: MonitorIcon, labelKey: 'theme.system', switchKey: 'theme.switchToSystem' },
 ];
 
 /**
@@ -15,6 +15,9 @@ const MODES = [
  * The three icons are stacked; the active one turns and fades in, the others turn and fade out.
  * `withLabel` (mobile menu) turns it into a full-width row with the name of the current mode.
  * The three states of FE-009 are kept: `system` still follows the OS preference live.
+ *
+ * aria-label names the current mode AND the next mode so screen-reader users know
+ * what is active and what a click will do (e.g., "Theme: system. Switch to dark theme").
  */
 export default function ThemeToggle({ className = '', withLabel = false }) {
   const { preference, setTheme } = useTheme();
@@ -22,14 +25,16 @@ export default function ThemeToggle({ className = '', withLabel = false }) {
 
   const current = Math.max(0, MODES.findIndex((m) => m.value === preference));
   const next = MODES[(current + 1) % MODES.length];
+  const currentLabel = t(MODES[current].labelKey);
   const nextLabel = t(next.switchKey);
+  const ariaLabel = `${t('theme.ariaStatus', { current: currentLabel })}. ${nextLabel}`;
 
   return (
     <button
       type="button"
       className={`theme-toggle${withLabel ? ' theme-toggle--row' : ''} ${className}`.trim()}
       onClick={() => setTheme(next.value)}
-      aria-label={nextLabel}
+      aria-label={ariaLabel}
       title={nextLabel}
     >
       <span className="theme-toggle__icons" aria-hidden="true">

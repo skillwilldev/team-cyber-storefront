@@ -51,7 +51,8 @@
     "system": "System theme",
     "switchToLight": "Switch to light theme",
     "switchToDark": "Switch to dark theme",
-    "switchToSystem": "Follow system theme"
+    "switchToSystem": "Follow system theme",
+    "ariaStatus": "Theme: {{current}}"
   },
   "lang": {
     "ka": "ქართული",
