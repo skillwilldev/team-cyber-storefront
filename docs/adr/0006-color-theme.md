@@ -24,7 +24,7 @@ Facts about the existing code:
 | Three states | The **stored preference** is `light`, `dark`, or `system`. The **resolved theme** on `<html>` is always `light` or `dark`. When `system`, it follows `prefers-color-scheme` live (via `matchMedia` listener). |
 | Persistence | `localStorage`, key `theme` (`light` / `dark` / `system`). Until the user chooses, the default is `system` (OS preference). If `localStorage` is blocked, the theme still works for the session. |
 | FOUC prevention | An **inline `<script>` in `index.html` `<head>`** reads `localStorage.theme` and applies `data-theme`, `color-scheme`, and `<meta name="theme-color">` **before the first paint**. This is the one exception to ADR 0002's "only the module entry" rule. |
-| Start-up | `initTheme()` in `lib/theme.js`, called in `main.jsx`, sets up event listeners for `storage` and `matchMedia` changes. The actual theme is already applied by the inline script. |
+| Start-up | The inline script in `index.html` repeats the resolve logic (read `localStorage`, apply `data-theme`, `color-scheme`, `<meta theme-color>`) synchronously before the first paint. `initTheme()` in `lib/theme.js`, called in `main.jsx`, re-applies the theme from the module. `subscribe()` (used by `useSyncExternalStore`) sets up the `storage` and `matchMedia` event listeners. |
 | React access | A small external store (`lib/theme.js`) read with `useSyncExternalStore` in the `useTheme` hook. No Context provider. Returns both `theme` (resolved) and `preference` (stored). |
 | Several tabs | The `storage` event re-applies the theme in the other tabs. |
 | Dark colors | One file `styles/theme.css`: the **theme tokens** (`--t-*`, shadows, gradients) have their light values in `:root` and their dark values under `:root[data-theme='dark']`, together with the dark values of the shop (`--c-*`) and auth (`--color-*`) tokens. Components use only tokens for theme-dependent colors, so they are **not duplicated**. A short "dark-only additions" list (photo tile, footer border, card ring) sits at the end of the dark block. About 20 hard-coded colors are left on purpose: the always-dark footer and payment card, star and heart accents, the white thumbnail tile. |
@@ -63,7 +63,7 @@ Facts about the existing code:
 ## Where this is implemented
 
 - `index.html` — inline `<script>` for FOUC prevention.
-- `src/lib/theme.js` — `initTheme`, `getTheme`, `getPreference`, `setTheme`, `toggleTheme`, `subscribe`.
+- `src/lib/theme.js` — `initTheme` (re-applies theme from module), `subscribe` (sets up `storage` + `matchMedia` listeners), `getTheme`, `getPreference`, `setTheme`, `toggleTheme`.
 - `src/hooks/useTheme.js` — `useSyncExternalStore` wrapper (returns `theme`, `preference`, `isDark`, `setTheme`, `toggleTheme`).
 - `src/components/ThemeToggle/` — the cycling switch (light → dark → system).
 - `src/components/Header/Header.jsx`, `Header.css` — placement (desktop and mobile menu).

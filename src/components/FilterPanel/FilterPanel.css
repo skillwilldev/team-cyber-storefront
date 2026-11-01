@@ -39,7 +39,7 @@
 }
 .filter__scroll {
   scrollbar-width: thin;
-  scrollbar-color: #000 transparent;
+  scrollbar-color: var(--c-black) transparent;
 }
 .filter__search {
   position: relative;

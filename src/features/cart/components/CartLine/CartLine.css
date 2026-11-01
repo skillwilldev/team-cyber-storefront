@@ -25,7 +25,7 @@
   height: 96px;
   overflow: hidden;
   border-radius: 8px;
-  background: #fff;
+  background: var(--t-thumb-bg); /* intentionally white — product photos are on a white background (see ADR 0006) */
 }
 
 .cart-line__img img {

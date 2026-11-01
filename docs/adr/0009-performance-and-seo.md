@@ -57,4 +57,4 @@ Constraints: the front end only (the API and the host cannot be changed), no ser
 - The image CDN is a third party; the fallback to the original URL covers a failure, but not slowness.
 - `public/robots.txt` mentions a sitemap generator (`scripts/generate-sitemap.mjs`) that is **not** in the repository, so `sitemap.xml` does not exist yet.
 - `VITE_SITE_URL` must be set to the real address on the host (the local `.env` has `http://localhost:4173`).
-- Lighthouse scores were not measured; the numbers above are build sizes, not scores.
+- Lighthouse scores (31.10.2026, catalog page, `vite preview`): Mobile Performance **90**, Accessibility **100**; Desktop Performance **100**, Accessibility **97**. See `docs/performance.md` for full details and screenshots.

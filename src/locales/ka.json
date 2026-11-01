@@ -51,7 +51,8 @@
     "system": "სისტემის თემა",
     "switchToLight": "ნათელ თემაზე გადასვლა",
     "switchToDark": "მუქ თემაზე გადასვლა",
-    "switchToSystem": "სისტემის თემის მიყოლა"
+    "switchToSystem": "სისტემის თემის მიყოლა",
+    "ariaStatus": "თემა: {{current}}"
   },
   "lang": {
     "ka": "ქართული",
